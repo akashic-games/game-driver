@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/akashic-games/game-driver/blob/v0-master/img/akashic.png" />
+<img src="https://github.com/akashic-games/game-driver/blob/ae1x-master/img/akashic.png" />
 </p>
 
 # game-driver
@@ -41,7 +41,7 @@ npm test
 
 ## ライセンス
 本リポジトリは MIT License の元で公開されています。
-詳しくは [LICENSE](https://github.com/akashic-games/game-driver/blob/v0-master/LICENSE) をご覧ください。
+詳しくは [LICENSE](https://github.com/akashic-games/game-driver/blob/ae1x-master/LICENSE) をご覧ください。
 
 ただし、画像ファイルおよび音声ファイルは
 [CC BY 2.1 JP](https://creativecommons.org/licenses/by/2.1/jp/) の元で公開されています。
