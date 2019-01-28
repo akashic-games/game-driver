@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "lib": ["es5"],
+    "declaration": true,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "outDir": "../lib"
+  },
+  "files": [
+    "../helpers/lib/MockAmflow.d.ts",
+    "../helpers/lib/MockPlatform.d.ts",
+    "../helpers/lib/MockResourceFactory.d.ts",
+    "../helpers/lib/MockGame.d.ts",
+    "../helpers/lib/ErrorCollector.d.ts",
+    "./auxiliary/MemoryAmflowClientSpec.ts",
+    "./auxiliary/ReplayAmflowProxySpec.ts",
+    "./PdiUtilSpec.ts",
+    "./ClockSpec.ts",
+    "./ProfilerClockSpec.ts",
+    "./TickBufferSpec.ts",
+    "./GameSpec.ts",
+    "./PointEventResolverSpec.ts",
+    "./EventConverterSpec.ts",
+    "./EventBufferSpec.ts",
+    "./JoinResolverSpec.ts",
+    "./TickGeneratorSpec.ts",
+    "./StorageResolverSpec.ts",
+    "./TickControllerSpec.ts",
+    "./GameLoopSpec.ts",
+    "./GameDriverSpec.ts"
+  ]
+}
