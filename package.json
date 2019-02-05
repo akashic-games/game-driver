@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "0.11.19",
+  "version": "0.11.20",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
