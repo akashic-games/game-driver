@@ -104,7 +104,7 @@ export class GameLoop {
 	_lastRequestedStartPointAge: number;
 	_lastRequestedStartPointTime: number;
 	_waitingNextTick: boolean;
-	_gotLatestTick: boolean;
+	_consumedLatestTick: boolean;
 	_skipping: boolean;
 	_lastPollingTickTime: number;
 
@@ -159,6 +159,7 @@ export class GameLoop {
 		this._lastRequestedStartPointAge = -1;
 		this._lastRequestedStartPointTime = -1;
 		this._waitingNextTick = false;
+		this._consumedLatestTick = false;
 		this._skipping = false;
 		this._lastPollingTickTime = 0;
 
@@ -203,7 +204,7 @@ export class GameLoop {
 		this._game._started.add(this._onGameStarted, this);
 		this._game._operationPluginOperated.add(this._onGameOperationPluginOperated, this);
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
-		this._tickBuffer.gotLatestTickTrigger.add(this._onGotLatestTick, this);
+		this._tickBuffer.gotNoTickTrigger.add(this._onGotLatestTick, this);
 		this._tickBuffer.start();
 		this._updateGamePlaybackRate();
 
@@ -441,9 +442,9 @@ export class GameLoop {
 		}
 
 		if (!this._skipping) {
-			if ((frameGap > this._skipThreshold || this._tickBuffer.currentAge === 0) ||
-			    (this._omitInterpolatedTickOnReplay && this._gotLatestTick && timeGap > this._skipThreshold)) {
-				// ここでは常に `frameGap(timeGap) > 0` であることに注意。0の時にskipに入ってもすぐ戻ってしまう
+			if ((frameGap > this._skipThreshold || this._tickBuffer.currentAge === 0) &&
+			    (this._tickBuffer.hasNextTick() || (this._omitInterpolatedTickOnReplay && this._consumedLatestTick))) {
+				// ここでは常に `frameGap > 0` であることに注意。0の時にskipに入ってもすぐ戻ってしまう
 				this._startSkipping();
 			}
 		}
@@ -451,15 +452,16 @@ export class GameLoop {
 		let consumedFrame = 0;
 		for (; consumedFrame < this._skipTicksAtOnce; ++consumedFrame) {
 			if (!this._tickBuffer.hasNextTick()) {
-				if (!this._waitingNextTick && !this._gotLatestTick) {
-					this._tickBuffer.requestTicks();
+				if (!this._waitingNextTick) {
 					this._startWaitingNextTick();
+					if (!this._consumedLatestTick)
+						this._tickBuffer.requestTicks();
 				}
 				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
 					// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
 					// (経緯上ここだけフラグ名と逆っぽい挙動になってしまっている点に注意。TODO フラグを改名する)
 					this._doLocalTick();
-					if (this._gotLatestTick) {
+					if (this._consumedLatestTick) {
 						// 最新のティックが存在しない場合は現在時刻を目標時刻に合わせる。
 						this._currentTime = targetTime;
 					}
@@ -703,6 +705,7 @@ export class GameLoop {
 	}
 
 	_onGotNextFrameTick(): void {
+		this._consumedLatestTick = false;
 		if (!this._waitingNextTick)
 			return;
 		if (this._loopMode === LoopMode.FrameByFrame) {
@@ -713,7 +716,7 @@ export class GameLoop {
 	}
 
 	_onGotLatestTick(): void {
-		this._gotLatestTick = true;
+		this._consumedLatestTick = true;
 	}
 
 	_onGotStartPoint(err: Error, startPoint?: amf.StartPoint): void {
@@ -758,7 +761,7 @@ export class GameLoop {
 		this._tickBuffer.setCurrentAge(startPoint.frame);
 		this._currentTime = startPoint.timestamp || startPoint.data.timestamp || 0;  // data.timestamp は後方互換性のために存在。現在は使っていない。
 		this._waitingNextTick = false; // 現在ageを変えた後、さらに後続のTickが足りないかどうかは_onFrameで判断する。
-		this._gotLatestTick = false; // 同上。
+		this._consumedLatestTick = false; // 同上。
 		this._lastRequestedStartPointAge = -1;  // 現在ageを変えた時はリセットしておく(場合によっては不要だが、安全のため)。
 		this._lastRequestedStartPointTime = -1;  // 同上。
 		this._omittedTickDuration = 0;

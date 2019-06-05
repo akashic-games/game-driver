@@ -80,7 +80,7 @@ export class TickBuffer {
 	 * 最新Tick取得した結果、新たに消化すべきTickが存在しないときにfireされる `g.Trigger` 。
 	 * 取得済みのTickの消化待ちにかかわらず発火されることに注意。
 	 */
-	gotLatestTickTrigger: g.Trigger<void>;
+	gotNoTickTrigger: g.Trigger<void>;
 
 	/**
 	 * ストレージを含むTickを取得した時にfireされる `g.Trigger` 。
@@ -125,7 +125,7 @@ export class TickBuffer {
 		this.currentAge = 0;
 		this.knownLatestAge = -1;
 		this.gotNextTickTrigger = new g.Trigger<void>();
-		this.gotLatestTickTrigger = new g.Trigger<void>();
+		this.gotNoTickTrigger = new g.Trigger<void>();
 		this.gotStorageTrigger = new g.Trigger<StorageOnTick>();
 		this._amflow = param.amflow;
 		this._prefetchThreshold = param.prefetchThreshold || TickBuffer.DEFAULT_PREFETCH_THRESHOLD;
@@ -387,7 +387,7 @@ export class TickBuffer {
 			this.gotNextTickTrigger.fire();
 		}
 		if (!inserted.ticks.length) {
-			this.gotLatestTickTrigger.fire();
+			this.gotNoTickTrigger.fire();
 		}
 	}
 
