@@ -458,13 +458,14 @@ export class GameLoop {
 						this._tickBuffer.requestTicks();
 				}
 				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+					if (this._consumedLatestTick) {
+						// 最新のティックが存在しない場合は現在時刻を目標時刻に合わせる。
+						// (_doLocalTick() により現在時刻が this._frameTime 進むのでその直前まで進める)
+						this._currentTime = targetTime - this._frameTime;
+					}
 					// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
 					// (経緯上ここだけフラグ名と逆っぽい挙動になってしまっている点に注意。TODO フラグを改名する)
 					this._doLocalTick();
-					if (this._consumedLatestTick) {
-						// 最新のティックが存在しない場合は現在時刻を目標時刻に合わせる。
-						this._currentTime = targetTime;
-					}
 				}
 				break;
 			}
