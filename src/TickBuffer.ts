@@ -386,7 +386,7 @@ export class TickBuffer {
 		if (mayGotNext && (inserted.start <= this.currentAge && this.currentAge < inserted.end)) {
 			this.gotNextTickTrigger.fire();
 		}
-		if (!inserted.ticks.length) {
+		if (!ticks || ticks.length === 0) {
 			this.gotNoTickTrigger.fire();
 		}
 	}
