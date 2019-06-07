@@ -717,7 +717,8 @@ export class GameLoop {
 	}
 
 	_onGotNoTick(): void {
-		this._consumedLatestTick = true;
+		if (this._waitingNextTick)
+			this._consumedLatestTick = true;
 	}
 
 	_onGotStartPoint(err: Error, startPoint?: amf.StartPoint): void {
