@@ -379,14 +379,16 @@ export class TickBuffer {
 	_onTicks(err: Error, ticks: pl.TickList): void {
 		if (err)
 			throw new Error();
-		if (!ticks)
+		if (!ticks) {
+			this.gotNoTickTrigger.fire();
 			return;
+		}
 		let mayGotNext = (this.currentAge === this._nearestAbsentAge);
 		let inserted = this.addTickList(ticks);
 		if (mayGotNext && (inserted.start <= this.currentAge && this.currentAge < inserted.end)) {
 			this.gotNextTickTrigger.fire();
 		}
-		if (!ticks || ticks.length === 0) {
+		if (!inserted.ticks.length) {
 			this.gotNoTickTrigger.fire();
 		}
 	}
