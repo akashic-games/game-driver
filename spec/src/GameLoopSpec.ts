@@ -118,7 +118,7 @@ describe("GameLoop", function () {
 			targetTimeFunc: null,
 			targetTimeOffset: null,
 			originDate: null,
-			omitInterpolatedTickOnReplay: false,
+			omitInterpolatedTickOnReplay: true,
 			targetAge: null
 		});
 		var loopConf = {
@@ -264,7 +264,8 @@ describe("GameLoop", function () {
 			executionMode: ExecutionMode.Active,
 			configuration: {
 				loopMode: LoopMode.Realtime,
-				skipAwareGame: false
+				skipAwareGame: false,
+				omitInterpolatedTickOnReplay: false
 			},
 			startedAt: 140
 		});
@@ -359,7 +360,8 @@ describe("GameLoop", function () {
 			executionMode: ExecutionMode.Passive,
 			configuration: {
 				loopMode: LoopMode.Replay,
-				targetTimeFunc: timeFunc
+				targetTimeFunc: timeFunc,
+				omitInterpolatedTickOnReplay: false
 			},
 			startedAt
 		});
@@ -529,8 +531,8 @@ describe("GameLoop", function () {
 				expect(this.lastOmittedLocalTickCount).toBeGreaterThan(0);
 			}
 
-			// omitInterpolatedTickOnReplay をつけているので、最終ティック(age 5の3000+140msから求まるage 9の3133.33+140ms)以後も、最後の目標時刻(3500ms)直前まで動く
-			if ((3500 + 140 - 33.4) < self.getCurrentTime() && self.getCurrentTime() < 3500 + 140) {
+			// omitInterpolatedTickOnReplay をつけているので、最終ティック(age 5の3000+140msから求まるage 9の3133.33+140ms)以後も、最後の目標時刻(3500ms)まで動く
+			if ((3500 + 140 - 33.4) < self.getCurrentTime() && self.getCurrentTime() <= 3500 + 140) {
 				clearInterval(timer);
 				expect(passedTestAges).toEqual([4, 6]);
 				done();
@@ -622,7 +624,8 @@ describe("GameLoop", function () {
 				targetTimeFunc: (() => 3250),
 				originDate: 9800,  // startedAt が 10000 なので差 -200 が加算されて targetTime は 3050 として扱われるのが期待動作
 				jumpTryThreshold: 1,    // とにかくスナップショットを探す
-				jumpIgnoreThreshold: 1  // 飛べるスナップショットがあったら飛ぶ
+				jumpIgnoreThreshold: 1,  // 飛べるスナップショットがあったら飛ぶ
+				omitInterpolatedTickOnReplay: false
 			},
 			startedAt
 		});
