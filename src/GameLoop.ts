@@ -204,7 +204,7 @@ export class GameLoop {
 		this._game._started.add(this._onGameStarted, this);
 		this._game._operationPluginOperated.add(this._onGameOperationPluginOperated, this);
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
-		this._tickBuffer.gotNoTickTrigger.add(this._onGotLatestTick, this);
+		this._tickBuffer.gotNoTickTrigger.add(this._onGotNoTick, this);
 		this._tickBuffer.start();
 		this._updateGamePlaybackRate();
 
@@ -716,7 +716,7 @@ export class GameLoop {
 		this._stopWaitingNextTick();
 	}
 
-	_onGotLatestTick(): void {
+	_onGotNoTick(): void {
 		this._consumedLatestTick = true;
 	}
 
