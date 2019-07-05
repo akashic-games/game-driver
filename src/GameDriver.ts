@@ -245,6 +245,9 @@ export class GameDriver {
 
 	doInitialize(param: GameDriverInitializeParameterObject): Promise<void> {
 		var p = new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
+			if (!this._game) {
+				return reject(new Error("Game has been destroyed."));
+			}
 			if (this._gameLoop && this._gameLoop.running) {
 				return reject(new Error("Game is running. Must be stopped."));
 			}
