@@ -101,6 +101,7 @@ export class GameDriver {
 	_playToken: string;
 	_permission: amf.Permission;
 	_hidden: boolean;
+	_destroyed: boolean; // ゲームをdestroy済みかどうかのフラグ。destroy時にのみtrueになる。
 
 	constructor(param: GameDriverParameterObject) {
 		this.errorTrigger = new g.Trigger<any>();
@@ -123,6 +124,7 @@ export class GameDriver {
 		this._playToken = null;
 		this._permission = null;
 		this._hidden = false;
+		this._destroyed = false;
 	}
 
 	/**
@@ -245,9 +247,6 @@ export class GameDriver {
 
 	doInitialize(param: GameDriverInitializeParameterObject): Promise<void> {
 		var p = new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
-			if (!this._game) {
-				return reject(new Error("Game has been destroyed."));
-			}
 			if (this._gameLoop && this._gameLoop.running) {
 				return reject(new Error("Game is running. Must be stopped."));
 			}
@@ -262,14 +261,20 @@ export class GameDriver {
 			}
 			resolve();
 		}).then(() => {
-			return this._doSetDriverConfiguration(param.driverConfiguration);
+			return this._assertFunction(function() {
+				return this._doSetDriverConfiguration(param.driverConfiguration);
+			});
 		});
 		if (!param.configurationUrl)
 			return p;
 		return p.then<g.GameConfiguration>(() => {
-			return this._loadConfiguration(param.configurationUrl, param.assetBase, param.configurationBase);
+			return this._assertFunction(function() {
+				return this._loadConfiguration(param.configurationUrl, param.assetBase, param.configurationBase);
+			});
 		}).then<void>((conf: g.GameConfiguration) => {
-			return this._createGame(conf, this._player, param);
+			return this._assertFunction(function () {
+				return this._createGame(conf, this._player, param);
+			});
 		});
 	}
 
@@ -299,6 +304,7 @@ export class GameDriver {
 			this._playToken = null;
 			this._permission = null;
 			this._hidden = false;
+			this._destroyed = true;
 			resolve();
 		});
 	}
@@ -321,25 +327,27 @@ export class GameDriver {
 		}
 		var p = Promise.resolve();
 		if (this._playId !== dconf.playId)
-			p = p.then<void>(() => this._doOpenAmflow(dconf.playId));
+			p = p.then<void>(() => this._assertFunction(function() { return this._doOpenAmflow(dconf.playId); }));
 		if (this._playToken !== dconf.playToken)
-			p = p.then<void>(() => this._doAuthenticate(dconf.playToken));
+			p = p.then<void>(() => this._assertFunction(function() { return this._doAuthenticate(dconf.playToken); }));
 		return p.then<void>(() => {
-			return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
-				if (dconf.eventBufferMode != null) {
-					if (dconf.eventBufferMode.defaultEventPriority == null) {
-						dconf.eventBufferMode.defaultEventPriority = this._permission.maxEventPriority;
+			return this._assertFunction(function() {
+				return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
+					if (dconf.eventBufferMode != null) {
+						if (dconf.eventBufferMode.defaultEventPriority == null) {
+							dconf.eventBufferMode.defaultEventPriority = this._permission.maxEventPriority;
+						}
+						if (this._eventBuffer) {
+							this._eventBuffer.setMode(dconf.eventBufferMode);
+						}
 					}
-					if (this._eventBuffer) {
-						this._eventBuffer.setMode(dconf.eventBufferMode);
+					if (dconf.executionMode != null) {
+						if (this._gameLoop) {
+							this._gameLoop.setExecutionMode(dconf.executionMode);
+						}
 					}
-				}
-				if (dconf.executionMode != null) {
-					if (this._gameLoop) {
-						this._gameLoop.setExecutionMode(dconf.executionMode);
-					}
-				}
-				resolve();
+					resolve();
+				});
 			});
 		});
 	}
@@ -349,10 +357,12 @@ export class GameDriver {
 			if (!this._openedAmflow)
 				return resolve();
 			this._platform.amflow.close((err?: any) => {
-				this._openedAmflow = false;
-				if (err)
-					return reject(err);
-				resolve();
+				return this._assertFunction(function() {
+					this._openedAmflow = false;
+					if (err)
+						return reject(err);
+					resolve();
+				});
 			});
 		});
 	}
@@ -363,17 +373,21 @@ export class GameDriver {
 		}
 		var p = this._doCloseAmflow();
 		return p.then<void>(() => {
-			return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
-				if (playId === null)
-					return resolve();
-				this._platform.amflow.open(playId, (err?: any) => {
-					if (err)
-						return reject(err);
-					this._openedAmflow = true;
-					this._playId = playId;
-					if (this._game)
-						this._updateGamePlayId(this._game);
-					resolve();
+			return this._assertFunction(function () {
+				return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
+					if (playId === null)
+						return resolve();
+					this._platform.amflow.open(playId, (err?: any) => {
+						return this._assertFunction(function() {
+							if (err)
+								return reject(err);
+							this._openedAmflow = true;
+							this._playId = playId;
+							if (this._game)
+								this._updateGamePlayId(this._game);
+							resolve();
+						});
+					});
 				});
 			});
 		});
@@ -384,14 +398,16 @@ export class GameDriver {
 			return Promise.resolve();
 		return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
 			this._platform.amflow.authenticate(playToken, (err: Error, permission?: amf.Permission) => {
-				if (err)
-					return reject(err);
-				this._playToken = playToken;
-				this._permission = permission;
-				if (this._game) {
-					this._game.isSnapshotSaver = this._permission.writeTick;
-				}
-				resolve();
+				return this._assertFunction(function() {
+					if (err)
+						return reject(err);
+					this._playToken = playToken;
+					this._permission = permission;
+					if (this._game) {
+						this._game.isSnapshotSaver = this._permission.writeTick;
+					}
+					resolve();
+				});
 			});
 		});
 	}
@@ -399,10 +415,12 @@ export class GameDriver {
 	_loadConfiguration(configurationUrl: string, assetBase: string, configurationBase: string): Promise<g.GameConfiguration> {
 		return new Promise((resolve: (conf: g.GameConfiguration) => void, reject: (err: any) => void) => {
 			this._loadConfigurationFunc(configurationUrl, assetBase, configurationBase, (err: any, conf?: g.GameConfiguration) => {
-				if (err)
-					return reject(err);
-				this.configurationLoadedTrigger.fire(conf);
-				resolve(conf);
+				return this._assertFunction(function() {
+					if (err)
+						return reject(err);
+					this.configurationLoadedTrigger.fire(conf);
+					resolve(conf);
+				});
 			});
 		});
 	}
@@ -412,8 +430,10 @@ export class GameDriver {
 			// AMFlowは第0スタートポイントに関して「書かれるまで待つ」という動作をするため、「なければ書き込む」ことはできない。
 			var zerothStartPoint = { frame: 0, timestamp: 0, data };
 			this._platform.amflow.putStartPoint(zerothStartPoint, (err: any) => {
-				if (err) return reject(err);
-				resolve();
+				return this._assertFunction(function() {
+					if (err) return reject(err);
+					resolve();
+				});
 			});
 		});
 	}
@@ -421,11 +441,13 @@ export class GameDriver {
 	_getZerothStartPointData(): Promise<StartPointData> {
 		return new Promise<StartPointData>((resolve: (data: StartPointData) => void, reject: (err: any) => void) => {
 			this._platform.amflow.getStartPoint({ frame: 0 }, (err: Error, startPoint: amf.StartPoint) => {
-				if (err) return reject(err);
-				var data = <StartPointData>startPoint.data;
-				if (typeof data.seed !== "number")  // 型がないので一応確認
-					return reject(new Error("GameDriver#_getRandomSeed: No seed found."));
-				resolve(data);
+				return this._assertFunction(function() {
+					if (err) return reject(err);
+					var data = <StartPointData>startPoint.data;
+					if (typeof data.seed !== "number")  // 型がないので一応確認
+						return reject(new Error("GameDriver#_getRandomSeed: No seed found."));
+					resolve(data);
+				});
 			});
 		});
 	}
@@ -443,72 +465,76 @@ export class GameDriver {
 		} else {
 			p = Promise.resolve();
 		}
-		p = p.then<StartPointData>(() => this._getZerothStartPointData());
+		p = p.then<StartPointData>(() => this._assertFunction(function() { return this._getZerothStartPointData(); }));
 		return p.then<void>((zerothData: StartPointData) => {
-			var pf = this._platform;
-			var driverConf = param.driverConfiguration || {
-				eventBufferMode: { isReceiver: true, isSender: false },
-				executionMode: ExecutionMode.Active
-			};
-			var seed = zerothData.seed;
-			var args = param.gameArgs;
-			var globalArgs = zerothData.globalArgs;
-			var startedAt = zerothData.startedAt;
-			var rendererRequirement = {
-				primarySurfaceWidth: conf.width,
-				primarySurfaceHeight: conf.height,
-				rendererCandidates: (<any>conf).renderers   // TODO: akashic-engineのGameConfigurationにrenderersの定義を加える
-			};
-			pf.setRendererRequirement(rendererRequirement);
-			var game = new Game({
-				configuration: conf,
-				player: player,
-				resourceFactory: pf.getResourceFactory(),
-				assetBase: param.assetBase,
-				isSnapshotSaver: this._permission.writeTick,
-				operationPluginViewInfo: (pf.getOperationPluginViewInfo ? pf.getOperationPluginViewInfo() : null),
-				gameArgs: args,
-				globalGameArgs: globalArgs
-			});
-			var eventBuffer = new EventBuffer({ game: game, amflow: pf.amflow });
-			eventBuffer.setMode(driverConf.eventBufferMode);
-			pf.setPlatformEventHandler(eventBuffer);
-			game.setEventFilterFuncs({
-				addFilter: eventBuffer.addFilter.bind(eventBuffer),
-				removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
-			});
-			game.renderers.push(pf.getPrimarySurface().renderer());
-
-			var gameLoop = new GameLoop({
-				game: game,
-				amflow: pf.amflow,
-				platform: pf,
-				executionMode: driverConf.executionMode,
-				eventBuffer: eventBuffer,
-				configuration: param.loopConfiguration,
-				startedAt: startedAt,
-				profiler: param.profiler
-			});
-
-			game.setCurrentTimeFunc(gameLoop.getCurrentTime.bind(gameLoop));
-			game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(seed) });
-			this._updateGamePlayId(game);
-			if (this._hidden)
-				game._setMuted(true);
-
-			game.snapshotTrigger.handle((startPoint: amf.StartPoint) => {
-				this._platform.amflow.putStartPoint(startPoint, (err: Error) => {
-					if (err)
-						this.errorTrigger.fire(err);
+			return this._assertFunction(function() {
+				var pf = this._platform;
+				var driverConf = param.driverConfiguration || {
+					eventBufferMode: { isReceiver: true, isSender: false },
+					executionMode: ExecutionMode.Active
+				};
+				var seed = zerothData.seed;
+				var args = param.gameArgs;
+				var globalArgs = zerothData.globalArgs;
+				var startedAt = zerothData.startedAt;
+				var rendererRequirement = {
+					primarySurfaceWidth: conf.width,
+					primarySurfaceHeight: conf.height,
+					rendererCandidates: (<any>conf).renderers   // TODO: akashic-engineのGameConfigurationにrenderersの定義を加える
+				};
+				pf.setRendererRequirement(rendererRequirement);
+				var game = new Game({
+					configuration: conf,
+					player: player,
+					resourceFactory: pf.getResourceFactory(),
+					assetBase: param.assetBase,
+					isSnapshotSaver: this._permission.writeTick,
+					operationPluginViewInfo: (pf.getOperationPluginViewInfo ? pf.getOperationPluginViewInfo() : null),
+					gameArgs: args,
+					globalGameArgs: globalArgs
 				});
-			});
+				var eventBuffer = new EventBuffer({ game: game, amflow: pf.amflow });
+				eventBuffer.setMode(driverConf.eventBufferMode);
+				pf.setPlatformEventHandler(eventBuffer);
+				game.setEventFilterFuncs({
+					addFilter: eventBuffer.addFilter.bind(eventBuffer),
+					removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
+				});
+				game.renderers.push(pf.getPrimarySurface().renderer());
 
-			this._game = game;
-			this._eventBuffer = eventBuffer;
-			this._gameLoop = gameLoop;
-			this._rendererRequirement = rendererRequirement;
-			this.gameCreatedTrigger.fire(game);
-			this._game._loadAndStart({ args: param.gameArgs || undefined }); // TODO: Game#_restartWithSnapshot()と統合すべき
+				var gameLoop = new GameLoop({
+					game: game,
+					amflow: pf.amflow,
+					platform: pf,
+					executionMode: driverConf.executionMode,
+					eventBuffer: eventBuffer,
+					configuration: param.loopConfiguration,
+					startedAt: startedAt,
+					profiler: param.profiler
+				});
+
+				game.setCurrentTimeFunc(gameLoop.getCurrentTime.bind(gameLoop));
+				game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(seed) });
+				this._updateGamePlayId(game);
+				if (this._hidden)
+					game._setMuted(true);
+
+				game.snapshotTrigger.handle((startPoint: amf.StartPoint) => {
+					this._platform.amflow.putStartPoint(startPoint, (err: Error) => {
+						return this._assertFunction(function() {
+							if (err)
+								this.errorTrigger.fire(err);
+						});
+					});
+				});
+
+				this._game = game;
+				this._eventBuffer = eventBuffer;
+				this._gameLoop = gameLoop;
+				this._rendererRequirement = rendererRequirement;
+				this.gameCreatedTrigger.fire(game);
+				this._game._loadAndStart({ args: param.gameArgs || undefined }); // TODO: Game#_restartWithSnapshot()と統合すべき
+			});
 		});
 	}
 
@@ -517,6 +543,14 @@ export class GameDriver {
 		game.external.send = (data: any) => {
 			this._platform.sendToExternal(this._playId, data);
 		};
+	}
+
+	// 非同期で実行される関数をラップするための関数。非同期時はゲームがdestroy済みかどうか分からないのでここで関数実行前に確認する。
+	_assertFunction(func: Function): any {
+		if (this._destroyed) {
+			throw new Error("Game has been destroyed.");
+		}
+		return func.apply(this);
 	}
 }
 
