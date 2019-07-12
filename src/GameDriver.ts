@@ -323,16 +323,18 @@ export class GameDriver {
 			}
 		}
 		var p = Promise.resolve();
-		if (this._playId !== dconf.playId)
+		if (this._playId !== dconf.playId) {
 			p = p.then<void>(() => {
 				this._assertLive();
 				return this._doOpenAmflow(dconf.playId);
 			});
-		if (this._playToken !== dconf.playToken)
+		}
+		if (this._playToken !== dconf.playToken) {
 			p = p.then<void>(() => {
 				this._assertLive();
 				return this._doAuthenticate(dconf.playToken);
 			});
+		}
 		return p.then<void>(() => {
 			this._assertLive();
 			return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
@@ -359,9 +361,8 @@ export class GameDriver {
 			if (!this._openedAmflow)
 				return resolve();
 			this._platform.amflow.close((err?: any) => {
-				this._assertLive();
 				this._openedAmflow = false;
-				if (err)
+				if (err || this._destroyed)
 					return reject(err);
 				resolve();
 			});
@@ -379,8 +380,7 @@ export class GameDriver {
 				if (playId === null)
 					return resolve();
 				this._platform.amflow.open(playId, (err?: any) => {
-					this._assertLive();
-					if (err)
+					if (err || this._destroyed)
 						return reject(err);
 					this._openedAmflow = true;
 					this._playId = playId;
@@ -397,8 +397,7 @@ export class GameDriver {
 			return Promise.resolve();
 		return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
 			this._platform.amflow.authenticate(playToken, (err: Error, permission?: amf.Permission) => {
-				this._assertLive();
-				if (err)
+				if (err || this._destroyed)
 					return reject(err);
 				this._playToken = playToken;
 				this._permission = permission;
@@ -413,8 +412,7 @@ export class GameDriver {
 	_loadConfiguration(configurationUrl: string, assetBase: string, configurationBase: string): Promise<g.GameConfiguration> {
 		return new Promise((resolve: (conf: g.GameConfiguration) => void, reject: (err: any) => void) => {
 			this._loadConfigurationFunc(configurationUrl, assetBase, configurationBase, (err: any, conf?: g.GameConfiguration) => {
-				this._assertLive();
-				if (err)
+				if (err || this._destroyed)
 					return reject(err);
 				this.configurationLoadedTrigger.fire(conf);
 				resolve(conf);
@@ -427,8 +425,7 @@ export class GameDriver {
 			// AMFlowは第0スタートポイントに関して「書かれるまで待つ」という動作をするため、「なければ書き込む」ことはできない。
 			var zerothStartPoint = { frame: 0, timestamp: 0, data };
 			this._platform.amflow.putStartPoint(zerothStartPoint, (err: any) => {
-				this._assertLive();
-				if (err) return reject(err);
+				if (err || this._destroyed) return reject(err);
 				resolve();
 			});
 		});
@@ -437,8 +434,7 @@ export class GameDriver {
 	_getZerothStartPointData(): Promise<StartPointData> {
 		return new Promise<StartPointData>((resolve: (data: StartPointData) => void, reject: (err: any) => void) => {
 			this._platform.amflow.getStartPoint({ frame: 0 }, (err: Error, startPoint: amf.StartPoint) => {
-				this._assertLive();
-				if (err) return reject(err);
+				if (err || this._destroyed) return reject(err);
 				var data = <StartPointData>startPoint.data;
 				if (typeof data.seed !== "number")  // 型がないので一応確認
 					return reject(new Error("GameDriver#_getRandomSeed: No seed found."));
@@ -519,8 +515,7 @@ export class GameDriver {
 
 			game.snapshotTrigger.handle((startPoint: amf.StartPoint) => {
 				this._platform.amflow.putStartPoint(startPoint, (err: Error) => {
-					this._assertLive();
-					if (err)
+					if (err || this._destroyed)
 						this.errorTrigger.fire(err);
 				});
 			});
