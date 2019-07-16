@@ -13,6 +13,8 @@ import { GameLoop } from "./GameLoop";
 import { PdiUtil } from "./PdiUtil";
 import { Profiler } from "./Profiler";
 
+const GAME_DESTROYED_MESSAGE = "GAME_DESTROYED";
+
 export interface GameDriverParameterObject {
 	/**
 	 * ゲーム実行に用いられる環境依存レイヤ。
@@ -337,22 +339,19 @@ export class GameDriver {
 		}
 		return p.then<void>(() => {
 			this._assertLive();
-			return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
-				if (dconf.eventBufferMode != null) {
-					if (dconf.eventBufferMode.defaultEventPriority == null) {
-						dconf.eventBufferMode.defaultEventPriority = this._permission.maxEventPriority;
-					}
-					if (this._eventBuffer) {
-						this._eventBuffer.setMode(dconf.eventBufferMode);
-					}
+			if (dconf.eventBufferMode != null) {
+				if (dconf.eventBufferMode.defaultEventPriority == null) {
+					dconf.eventBufferMode.defaultEventPriority = this._permission.maxEventPriority;
 				}
-				if (dconf.executionMode != null) {
-					if (this._gameLoop) {
-						this._gameLoop.setExecutionMode(dconf.executionMode);
-					}
+				if (this._eventBuffer) {
+					this._eventBuffer.setMode(dconf.eventBufferMode);
 				}
-				resolve();
-			});
+			}
+			if (dconf.executionMode != null) {
+				if (this._gameLoop) {
+					this._gameLoop.setExecutionMode(dconf.executionMode);
+				}
+			}
 		});
 	}
 
@@ -362,8 +361,11 @@ export class GameDriver {
 				return resolve();
 			this._platform.amflow.close((err?: any) => {
 				this._openedAmflow = false;
-				if (err || this._destroyed)
+				if (err) {
 					return reject(err);
+				} else if (this._destroyed) {
+					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				}
 				resolve();
 			});
 		});
@@ -376,18 +378,19 @@ export class GameDriver {
 		var p = this._doCloseAmflow();
 		return p.then<void>(() => {
 			this._assertLive();
-			return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
-				if (playId === null)
-					return resolve();
-				this._platform.amflow.open(playId, (err?: any) => {
-					if (err || this._destroyed)
-						return reject(err);
-					this._openedAmflow = true;
-					this._playId = playId;
-					if (this._game)
-						this._updateGamePlayId(this._game);
-					resolve();
-				});
+			if (playId === null) {
+				return;
+			}
+			this._platform.amflow.open(playId, (err?: any) => {
+				if (err) {
+					throw err;
+				} else if (this._destroyed) {
+					throw new Error(GAME_DESTROYED_MESSAGE);
+				}
+				this._openedAmflow = true;
+				this._playId = playId;
+				if (this._game)
+					this._updateGamePlayId(this._game);
 			});
 		});
 	}
@@ -397,8 +400,11 @@ export class GameDriver {
 			return Promise.resolve();
 		return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
 			this._platform.amflow.authenticate(playToken, (err: Error, permission?: amf.Permission) => {
-				if (err || this._destroyed)
+				if (err) {
 					return reject(err);
+				} else if (this._destroyed) {
+					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				}
 				this._playToken = playToken;
 				this._permission = permission;
 				if (this._game) {
@@ -412,8 +418,11 @@ export class GameDriver {
 	_loadConfiguration(configurationUrl: string, assetBase: string, configurationBase: string): Promise<g.GameConfiguration> {
 		return new Promise((resolve: (conf: g.GameConfiguration) => void, reject: (err: any) => void) => {
 			this._loadConfigurationFunc(configurationUrl, assetBase, configurationBase, (err: any, conf?: g.GameConfiguration) => {
-				if (err || this._destroyed)
+				if (err) {
 					return reject(err);
+				} else if (this._destroyed) {
+					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				}
 				this.configurationLoadedTrigger.fire(conf);
 				resolve(conf);
 			});
@@ -425,7 +434,11 @@ export class GameDriver {
 			// AMFlowは第0スタートポイントに関して「書かれるまで待つ」という動作をするため、「なければ書き込む」ことはできない。
 			var zerothStartPoint = { frame: 0, timestamp: data.startedAt, data };
 			this._platform.amflow.putStartPoint(zerothStartPoint, (err: any) => {
-				if (err || this._destroyed) return reject(err);
+				if (err) {
+					return reject(err);
+				} else if (this._destroyed) {
+					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				}
 				resolve();
 			});
 		});
@@ -434,7 +447,11 @@ export class GameDriver {
 	_getZerothStartPointData(): Promise<StartPointData> {
 		return new Promise<StartPointData>((resolve: (data: StartPointData) => void, reject: (err: any) => void) => {
 			this._platform.amflow.getStartPoint({ frame: 0 }, (err: Error, startPoint: amf.StartPoint) => {
-				if (err || this._destroyed) return reject(err);
+				if (err) {
+					return reject(err);
+				} else if (this._destroyed) {
+					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				}
 				var data = <StartPointData>startPoint.data;
 				if (typeof data.seed !== "number")  // 型がないので一応確認
 					return reject(new Error("GameDriver#_getRandomSeed: No seed found."));
@@ -516,8 +533,11 @@ export class GameDriver {
 
 			game.snapshotTrigger.add((startPoint: amf.StartPoint) => {
 				this._platform.amflow.putStartPoint(startPoint, (err: Error) => {
-					if (err || this._destroyed)
+					if (err) {
 						this.errorTrigger.fire(err);
+					} else if (this._destroyed) {
+						this.errorTrigger.fire(new Error(GAME_DESTROYED_MESSAGE));
+					}
 				});
 			});
 
@@ -540,7 +560,7 @@ export class GameDriver {
 	// 非同期処理中にゲームがdestroy済みかどうかするための関数。
 	_assertLive(): void {
 		if (this._destroyed) {
-			throw new Error("Game has been destroyed.");
+			throw new Error(GAME_DESTROYED_MESSAGE);
 		}
 	}
 }
