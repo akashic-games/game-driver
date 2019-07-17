@@ -361,10 +361,9 @@ export class GameDriver {
 				return resolve();
 			this._platform.amflow.close((err?: any) => {
 				this._openedAmflow = false;
-				if (err) {
-					return reject(err);
-				} else if (this._destroyed) {
-					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				const error = this._getCallbackError(err);
+				if (error) {
+					return reject(error);
 				}
 				resolve();
 			});
@@ -378,19 +377,20 @@ export class GameDriver {
 		var p = this._doCloseAmflow();
 		return p.then<void>(() => {
 			this._assertLive();
-			if (playId === null) {
-				return;
-			}
-			this._platform.amflow.open(playId, (err?: any) => {
-				if (err) {
-					throw err;
-				} else if (this._destroyed) {
-					throw new Error(GAME_DESTROYED_MESSAGE);
-				}
-				this._openedAmflow = true;
-				this._playId = playId;
-				if (this._game)
-					this._updateGamePlayId(this._game);
+			return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
+				if (playId === null)
+					return resolve();
+				this._platform.amflow.open(playId, (err?: any) => {
+					const error = this._getCallbackError(err);
+					if (error) {
+						return reject(error);
+					}
+					this._openedAmflow = true;
+					this._playId = playId;
+					if (this._game)
+						this._updateGamePlayId(this._game);
+					resolve();
+				});
 			});
 		});
 	}
@@ -400,10 +400,9 @@ export class GameDriver {
 			return Promise.resolve();
 		return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
 			this._platform.amflow.authenticate(playToken, (err: Error, permission?: amf.Permission) => {
-				if (err) {
-					return reject(err);
-				} else if (this._destroyed) {
-					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				const error = this._getCallbackError(err);
+				if (error) {
+					return reject(error);
 				}
 				this._playToken = playToken;
 				this._permission = permission;
@@ -418,10 +417,9 @@ export class GameDriver {
 	_loadConfiguration(configurationUrl: string, assetBase: string, configurationBase: string): Promise<g.GameConfiguration> {
 		return new Promise((resolve: (conf: g.GameConfiguration) => void, reject: (err: any) => void) => {
 			this._loadConfigurationFunc(configurationUrl, assetBase, configurationBase, (err: any, conf?: g.GameConfiguration) => {
-				if (err) {
-					return reject(err);
-				} else if (this._destroyed) {
-					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				const error = this._getCallbackError(err);
+				if (error) {
+					return reject(error);
 				}
 				this.configurationLoadedTrigger.fire(conf);
 				resolve(conf);
@@ -434,10 +432,9 @@ export class GameDriver {
 			// AMFlowは第0スタートポイントに関して「書かれるまで待つ」という動作をするため、「なければ書き込む」ことはできない。
 			var zerothStartPoint = { frame: 0, timestamp: 0, data };
 			this._platform.amflow.putStartPoint(zerothStartPoint, (err: any) => {
-				if (err) {
-					return reject(err);
-				} else if (this._destroyed) {
-					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				const error = this._getCallbackError(err);
+				if (error) {
+					return reject(error);
 				}
 				resolve();
 			});
@@ -447,10 +444,9 @@ export class GameDriver {
 	_getZerothStartPointData(): Promise<StartPointData> {
 		return new Promise<StartPointData>((resolve: (data: StartPointData) => void, reject: (err: any) => void) => {
 			this._platform.amflow.getStartPoint({ frame: 0 }, (err: Error, startPoint: amf.StartPoint) => {
-				if (err) {
-					return reject(err);
-				} else if (this._destroyed) {
-					return reject(new Error(GAME_DESTROYED_MESSAGE));
+				const error = this._getCallbackError(err);
+				if (error) {
+					return reject(error);
 				}
 				var data = <StartPointData>startPoint.data;
 				if (typeof data.seed !== "number")  // 型がないので一応確認
@@ -532,10 +528,9 @@ export class GameDriver {
 
 			game.snapshotTrigger.handle((startPoint: amf.StartPoint) => {
 				this._platform.amflow.putStartPoint(startPoint, (err: Error) => {
-					if (err) {
-						this.errorTrigger.fire(err);
-					} else if (this._destroyed) {
-						this.errorTrigger.fire(new Error(GAME_DESTROYED_MESSAGE));
+					const error = this._getCallbackError(err);
+					if (error) {
+						this.errorTrigger.fire(error);
 					}
 				});
 			});
@@ -556,11 +551,21 @@ export class GameDriver {
 		};
 	}
 
-	// 非同期処理中にゲームがdestroy済みかどうかするための関数。
+	// 非同期処理中にゲームがdestroy済みかどうか判定するためのメソッド
 	_assertLive(): void {
 		if (this._destroyed) {
 			throw new Error(GAME_DESTROYED_MESSAGE);
 		}
+	}
+
+	// コールバック時にエラーが発生もしくはゲームがdestroy済みの場合はErrorを返す
+	_getCallbackError(err: any): Error|null {
+		if (err) {
+			return err as Error;
+		} else if (this._destroyed) {
+			return new Error(GAME_DESTROYED_MESSAGE);
+		}
+		return null;
 	}
 }
 
