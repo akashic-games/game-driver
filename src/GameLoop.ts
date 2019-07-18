@@ -451,6 +451,7 @@ export class GameLoop {
 
 		let consumedFrame = 0;
 		for (; consumedFrame < this._skipTicksAtOnce; ++consumedFrame) {
+			let nextFrameTime = this._currentTime + this._frameTime;
 			if (!this._tickBuffer.hasNextTick()) {
 				if (!this._waitingNextTick) {
 					this._startWaitingNextTick();
@@ -465,12 +466,12 @@ export class GameLoop {
 					}
 					// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
 					// (経緯上ここだけフラグ名と逆っぽい挙動になってしまっている点に注意。TODO フラグを改名する)
-					this._doLocalTick();
+					if (targetTime > nextFrameTime)
+						this._doLocalTick();
 				}
 				break;
 			}
 
-			let nextFrameTime = this._currentTime + this._frameTime;
 			let nextTickTime = this._tickBuffer.readNextTickTime();
 			if (nextTickTime == null)
 				nextTickTime = nextFrameTime;
