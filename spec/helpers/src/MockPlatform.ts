@@ -79,9 +79,5 @@ export class Platform {
 	sendToExternal(playId: string, data: any): void {
 		// do nothing
 	}
-
-	destroy(): void {
-		// do nothing
-	}
 }
 
