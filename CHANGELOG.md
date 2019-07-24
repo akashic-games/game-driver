@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased Changes
+## 0.11.21
 * ゲームがdestroyされている場合でもPromise内で処理が続行されてしまう問題への対応
 
 ## 0.11.20
