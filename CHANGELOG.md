@@ -1,7 +1,7 @@
 # CHANGELOG
 
 ## Unreleased Changes
-* ゲームdestroy時に音量をミュートにする処理を追加
+* `Platform#destroy()` を呼び出すように変更
 
 ## 0.11.20
 * `akashic-pdi` の不具合修正をpublishに反映するためリリース (v0.11.19から変更なし)
