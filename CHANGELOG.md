@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.11.22
+* `Platform#destroy()` を呼び出すように変更
+
 ## 0.11.21
 * ゲームがdestroyされている場合でもPromise内で処理が続行されてしまう問題への対応
 
