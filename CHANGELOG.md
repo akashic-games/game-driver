@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased Changes
+## 0.11.21
 * `Platform#destroy()` を呼び出すように変更
 
 ## 0.11.20
