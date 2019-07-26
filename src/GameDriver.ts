@@ -284,7 +284,11 @@ export class GameDriver {
 			this.configurationLoadedTrigger = null;
 			this.gameCreatedTrigger.destroy();
 			this.gameCreatedTrigger = null;
-			this._platform.destroy();
+			if (this._platform.destroy) {
+				this._platform.destroy();
+			} else {
+				this._platform.setRendererRequirement(undefined);
+			}
 			this._platform = null;
 			this._loadConfigurationFunc = null;
 			this._player = null;
