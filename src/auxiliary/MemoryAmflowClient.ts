@@ -73,19 +73,19 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		};
 	}
 
-	open(playId: string, callback?: (error?: Error) => void): void {
+	open(playId: string, callback?: (error: Error | null) => void): void {
 		setTimeout(() => {
 			if (playId !== this._playId)
 				return void callback(new Error("MemoryAmflowClient#open: unknown playId"));
-			callback();
+			callback(null);
 		}, 0);
 	}
 
-	close(callback?: (error?: Error) => void): void {
-		setTimeout(() => { callback(); }, 0);
+	close(callback?: (error: Error | null) => void): void {
+		setTimeout(() => { callback(null); }, 0);
 	}
 
-	authenticate(token: string, callback: (error: Error, permission: any) => void): void {
+	authenticate(token: string, callback: (error: Error | null , permission?: any) => void): void {
 		setTimeout(() => {
 			switch (token) {
 			case MemoryAmflowClient.TOKEN_ACTIVE:
@@ -173,7 +173,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		this._eventHandlers = this._eventHandlers.filter((h: (pev: pl.Event) => void) => (h !== handler));
 	}
 
-	getTickList(from: number, to: number, callback: (error: Error, tickList?: pl.TickList) => void): void {
+	getTickList(from: number, to: number, callback: (error: Error | null, tickList?: pl.TickList) => void): void {
 		if (!this._tickList) return void setTimeout(() => callback(null, null), 0);
 
 		from = Math.max(from, this._tickList[EventIndex.TickList.From]);
@@ -186,14 +186,14 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		setTimeout(() => callback(null, tickList), 0);
 	}
 
-	putStartPoint(startPoint: amf.StartPoint, callback: (error: Error) => void): void {
+	putStartPoint(startPoint: amf.StartPoint, callback: (error: Error | null) => void): void {
 		setTimeout(() => {
 			this._startPoints.push(startPoint);
 			callback(null);
 		}, 0);
 	}
 
-	getStartPoint(opts: amf.GetStartPointOptions, callback: (error: Error, startPoint?: amf.StartPoint) => void): void {
+	getStartPoint(opts: amf.GetStartPointOptions, callback: (error: Error | null, startPoint?: amf.StartPoint) => void): void {
 		setTimeout(() => {
 			if (!this._startPoints || this._startPoints.length === 0) return void callback(new Error("no startpoint"));
 			let index = 0;
@@ -220,7 +220,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		}, 0);
 	}
 
-	putStorageData(key: pl.StorageKey, value: pl.StorageValue, options: any, callback: (err: Error) => void): void {
+	putStorageData(key: pl.StorageKey, value: pl.StorageValue, options: any, callback: (err: Error | null) => void): void {
 		setTimeout(() => {
 			try {
 				this._putStorageDataSyncFunc(key, value, options);
@@ -231,7 +231,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		}, 0);
 	}
 
-	getStorageData(keys: pl.StorageReadKey[], callback: (error: Error, values?: pl.StorageData[]) => void): void {
+	getStorageData(keys: pl.StorageReadKey[], callback: (error: Error | null, values?: pl.StorageData[]) => void): void {
 		setTimeout(() => {
 			try {
 				const data = this._getStorageDataSyncFunc(keys);

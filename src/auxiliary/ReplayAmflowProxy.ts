@@ -43,13 +43,13 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 		}
 	}
 
-	open(playId: string, callback?: (error?: Error) => void): void {
+	open(playId: string, callback?: (error: Error | null) => void): void {
 		this._amflow.open(playId, callback);
 	}
-	close(callback?: (error?: Error) => void): void {
+	close(callback?: (error: Error | null) => void): void {
 		this._amflow.close(callback);
 	}
-	authenticate(token: string, callback: (error: Error, permission: any) => void): void {
+	authenticate(token: string, callback: (error: Error | null, permission?: any) => void): void {
 		this._amflow.authenticate(token, callback);
 	}
 
@@ -73,7 +73,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 		this._amflow.offEvent(handler);
 	}
 
-	getTickList(from: number, to: number, callback: (error: Error, ticks?: pl.TickList) => void): void {
+	getTickList(from: number, to: number, callback: (error: Error | null, ticks?: pl.TickList) => void): void {
 		if (!this._tickList) {
 			this._amflow.getTickList(from, to, callback);
 			return;
@@ -90,7 +90,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 				callback(null, [from, to, this._sliceTicks(givenTicksWithEvents, from, to)]);
 			}, 0);
 		} else {
-			this._amflow.getTickList(from, to, (err: Error, tickList?: pl.TickList) => {
+			this._amflow.getTickList(from, to, (err: Error | null, tickList?: pl.TickList) => {
 				if (err) return void callback(err);
 				if (!tickList) {
 					// 何も得られなかった。手持ちの重複範囲を返すだけ。
@@ -134,11 +134,11 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 		}
 	}
 
-	putStartPoint(startPoint: amf.StartPoint, callback: (error: Error) => void): void {
+	putStartPoint(startPoint: amf.StartPoint, callback: (error: Error | null) => void): void {
 		this._amflow.putStartPoint(startPoint, callback);
 	}
 
-	getStartPoint(opts: amf.GetStartPointOptions, callback: (error: Error, startPoint?: amf.StartPoint) => void): void {
+	getStartPoint(opts: amf.GetStartPointOptions, callback: (error: Error | null, startPoint?: amf.StartPoint) => void): void {
 		let index = 0;
 		if (this._startPoints.length > 0) {
 			if (opts.frame != null) {
@@ -164,7 +164,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 
 		const givenTo = this._tickList ? this._tickList[EventIndex.TickList.To] : -1;
 		if (opts.frame > givenTo) {
-			this._amflow.getStartPoint(opts, (err: Error, startPoint?: amf.StartPoint) => {
+			this._amflow.getStartPoint(opts, (err: Error | null, startPoint?: amf.StartPoint) => {
 				if (err) {
 					callback(err);
 					return;
@@ -183,10 +183,10 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 		}
 	}
 
-	putStorageData(key: pl.StorageKey, value: pl.StorageValue, options: any, callback: (err: Error) => void): void {
+	putStorageData(key: pl.StorageKey, value: pl.StorageValue, options: any, callback: (err: Error | null) => void): void {
 		this._amflow.putStorageData(key, value, options, callback);
 	}
-	getStorageData(keys: pl.StorageReadKey[], callback: (error: Error, values: pl.StorageData[]) => void): void {
+	getStorageData(keys: pl.StorageReadKey[], callback: (error: Error | null, values?: pl.StorageData[]) => void): void {
 		this._amflow.getStorageData(keys, callback);
 	}
 

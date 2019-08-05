@@ -113,7 +113,7 @@ export class GameLoop {
 	_eventConverter: EventConverter;
 	_tickBuffer: TickBuffer;
 
-	_onGotStartPoint_bound: (err: Error, startPoint?: amf.StartPoint) => void;
+	_onGotStartPoint_bound: (err: Error | null, startPoint?: amf.StartPoint) => void;
 
 	constructor(param: GameLoopParameterObejct) {
 		this.errorTrigger = new g.Trigger<any>();
@@ -722,7 +722,7 @@ export class GameLoop {
 			this._consumedLatestTick = true;
 	}
 
-	_onGotStartPoint(err: Error, startPoint?: amf.StartPoint): void {
+	_onGotStartPoint(err: Error | null, startPoint?: amf.StartPoint): void {
 		this._waitingStartPoint = false;
 		if (err) {
 			this.errorTrigger.fire(err);

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.5.0
+* @akashic/amflowのminor更新に伴うバージョンアップ
+
 ## 1.4.14
 * `Platform#destroy()` を呼び出すように変更
 

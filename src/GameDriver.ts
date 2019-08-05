@@ -215,7 +215,7 @@ export class GameDriver {
 
 	/**
 	 * PDIに対してプライマリサーフェスのリセットを要求する。
-	 * 
+	 *
 	 * @param width プライマリサーフェスの幅。
 	 * @param height プライマリサーフェスの高さ。
 	 * @param rendererCandidates Rendererのタイプ。
@@ -363,7 +363,7 @@ export class GameDriver {
 		return new Promise<void>((resolve: () => void , reject: (err: any) => void) => {
 			if (!this._openedAmflow)
 				return resolve();
-			this._platform.amflow.close((err?: any) => {
+			this._platform.amflow.close((err: any | null) => {
 				this._openedAmflow = false;
 				const error = this._getCallbackError(err);
 				if (error) {
@@ -384,7 +384,7 @@ export class GameDriver {
 			return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
 				if (playId === null)
 					return resolve();
-				this._platform.amflow.open(playId, (err?: any) => {
+				this._platform.amflow.open(playId, (err: any | null) => {
 					const error = this._getCallbackError(err);
 					if (error) {
 						return reject(error);
@@ -403,7 +403,7 @@ export class GameDriver {
 		if (playToken == null)
 			return Promise.resolve();
 		return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
-			this._platform.amflow.authenticate(playToken, (err: Error, permission?: amf.Permission) => {
+			this._platform.amflow.authenticate(playToken, (err: Error | null, permission?: amf.Permission) => {
 				const error = this._getCallbackError(err);
 				if (error) {
 					return reject(error);
@@ -435,7 +435,7 @@ export class GameDriver {
 		return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
 			// AMFlowは第0スタートポイントに関して「書かれるまで待つ」という動作をするため、「なければ書き込む」ことはできない。
 			var zerothStartPoint = { frame: 0, timestamp: data.startedAt, data };
-			this._platform.amflow.putStartPoint(zerothStartPoint, (err: any) => {
+			this._platform.amflow.putStartPoint(zerothStartPoint, (err: any | null) => {
 				const error = this._getCallbackError(err);
 				if (error) {
 					return reject(error);
@@ -532,7 +532,7 @@ export class GameDriver {
 				game._setMuted(true);
 
 			game.snapshotTrigger.add((startPoint: amf.StartPoint) => {
-				this._platform.amflow.putStartPoint(startPoint, (err: Error) => {
+				this._platform.amflow.putStartPoint(startPoint, (err: Error | null) => {
 					const error = this._getCallbackError(err);
 					if (error) {
 						this.errorTrigger.fire(error);
