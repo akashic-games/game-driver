@@ -20,7 +20,7 @@ export class JoinLeaveRequest {
 		}
 	}
 
-	_onGotStorageData(err: Error, sds: pl.StorageData[]): void {
+	_onGotStorageData(err: Error | null, sds?: pl.StorageData[]): void {
 		this.resolved = true;
 		if (err) {
 			this.joinResolver.errorTrigger.fire(err);

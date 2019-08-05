@@ -99,7 +99,7 @@ export class TickBuffer {
 	_nextTickTimeCache: number;
 
 	_addTick_bound: (tick: pl.Tick) => void;
-	_onTicks_bound: (err: Error, ticks: pl.TickList) => void;
+	_onTicks_bound: (err: Error | null, ticks?: pl.TickList) => void;
 
 	constructor(param: TickBufferParameterObject) {
 		this.currentAge = 0;
@@ -346,7 +346,7 @@ export class TickBuffer {
 		}
 	}
 
-	_onTicks(err: Error, ticks: pl.TickList): void {
+	_onTicks(err: Error | null, ticks?: pl.TickList): void {
 		if (err)
 			throw new Error();
 		if (!ticks)

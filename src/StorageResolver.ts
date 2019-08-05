@@ -50,7 +50,7 @@ export class StorageResolver {
 	_unresolvedLoaders: { [index: number]: g.StorageLoader };
 	_unresolvedStorages: { [index: number]: pl.StorageData[] };
 
-	_onStoragePut_bound: (err: Error) => void;
+	_onStoragePut_bound: (err: Error | null) => void;
 
 	constructor(param: StorageResolverParameterObject) {
 		this.errorTrigger = new g.Trigger<Error>();
@@ -145,7 +145,7 @@ export class StorageResolver {
 		this._tickGenerator.setRequestValuesForJoin(keys);
 	}
 
-	_onStoragePut(err: Error): void {
+	_onStoragePut(err: Error | null): void {
 		if (err)
 			this.errorTrigger.fire(err);
 	}

@@ -31,7 +31,7 @@ export class TickGenerator {
 	_generatingTick: boolean;
 	_waitingStorage: boolean;
 
-	_onGotStorageData_bound: (err: Error, sds: pl.StorageData[]) => void;
+	_onGotStorageData_bound: (err: Error | null, sds?: pl.StorageData[]) => void;
 
 	constructor(param: TickGeneratorParameterObject) {
 		this.tickTrigger = new g.Trigger<pl.Tick>();
@@ -138,7 +138,7 @@ export class TickGenerator {
 		this._joinResolver.setRequestValuesForJoin(keys);
 	}
 
-	_onGotStorageData(err: Error, sds: pl.StorageData[]): void {
+	_onGotStorageData(err: Error | null, sds?: pl.StorageData[]): void {
 		this._waitingStorage = false;
 		if (err) {
 			this.errorTrigger.fire(err);

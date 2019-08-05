@@ -32,15 +32,15 @@ export class MockAmflow implements AMFlow {
 		return this.eventHandlers.indexOf(h) !== -1;
 	}
 
-	open(playId: string, callback?: (error?: Error) => void): void {
-		setTimeout(() => { callback(); }, 0);
+	open(playId: string, callback?: (error: Error | null) => void): void {
+		setTimeout(() => { callback(null); }, 0);
 	}
 
-	close(callback?: (error?: Error) => void): void {
-		setTimeout(() => { callback(); }, 0);
+	close(callback?: (error: Error | null) => void): void {
+		setTimeout(() => { callback(null); }, 0);
 	}
 
-	authenticate(token: string, callback: (error: Error, permission: any) => void): void {
+	authenticate(token: string, callback: (error: Error | null, permission?: any) => void): void {
 		setTimeout(() => {
 			callback(null, {
 				writeTick: true,
@@ -75,7 +75,7 @@ export class MockAmflow implements AMFlow {
 		this.eventHandlers = this.eventHandlers.filter((h) => { return h !== handler; });
 	}
 
-	getTickList(from: number, to: number, callback: (error: Error, tickList: pl.TickList) => void): void {
+	getTickList(from: number, to: number, callback: (error: Error | null, tickList?: pl.TickList) => void): void {
 		var req: GetTicksRequest;
 		var wrap = (error: Error, tickArray: pl.Tick[]) => {
 			this.requestsGetTicks = this.requestsGetTicks.filter((r: GetTicksRequest) => { return r !== req; });
@@ -94,15 +94,15 @@ export class MockAmflow implements AMFlow {
 		this.requestsGetTicks.push(req);
 	}
 
-	putStartPoint(startPoint: StartPoint, callback: (error: Error) => void): void {
+	putStartPoint(startPoint: StartPoint, callback: (error: Error | null) => void): void {
 		// do nothing
 	}
-	getStartPoint(opts: { frame?: number; }, callback: (error: Error, startPoint: StartPoint) => void): void {
+	getStartPoint(opts: { frame?: number; }, callback: (error: Error | null, startPoint?: StartPoint) => void): void {
 		setTimeout(() => { callback(null, { frame: 0, timestamp: 0, data: { seed: 0 } }); }, 0);
 	}
 
 	// StorageReadKeyはregionKeyしか見ない + StorageValueは一つしか持たない簡易実装なので注意
-	putStorageData(key: pl.StorageKey, value: pl.StorageValue, options: any, callback: (err: Error) => void): void {
+	putStorageData(key: pl.StorageKey, value: pl.StorageValue, options: any, callback: (err: Error | null) => void): void {
 		var wrap = (err?: any) => {
 			this.requestsPutStorageData = this.requestsPutStorageData.filter((r: any) => { return r !== wrap; });
 			this.storage[key.regionKey] = value;
@@ -110,7 +110,7 @@ export class MockAmflow implements AMFlow {
 		};
 		this.requestsPutStorageData.push(wrap);
 	}
-	getStorageData(keys: pl.StorageReadKey[], callback: (error: Error, values?: pl.StorageData[]) => void): void {
+	getStorageData(keys: pl.StorageReadKey[], callback: (error: Error | null, values?: pl.StorageData[]) => void): void {
 		var wrap = (err?: any) => {
 			this.requestsGetStorageData = this.requestsGetStorageData.filter((r: any) => { return r !== wrap; });
 			var data = keys.map((k: pl.StorageReadKey) => {
