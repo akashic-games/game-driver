@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.6.0
+* @akashic/akashic-engineのminor更新に伴うバージョンアップ
+
 ## 1.5.0
 * @akashic/amflowのminor更新に伴うバージョンアップ
 
