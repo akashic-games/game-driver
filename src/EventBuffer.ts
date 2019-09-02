@@ -77,7 +77,6 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	_filters: EventFilterEntry[];
 	_unfilteredLocalEvents: pl.Event[];
 	_unfilteredEvents: pl.Event[];
-	_unfilteredJoinLeaves: pl.Event[];
 
 	_pointEventResolver: PointEventResolver;
 	_onEvent_bound: (pev: pl.Event) => void;
@@ -113,14 +112,13 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._isDiscarder = false;
 		this._defaultEventPriority = 0;
 
-		this._buffer = null;
-		this._joinLeaveBuffer = null;
-		this._localBuffer = null;
+		this._buffer = [];
+		this._joinLeaveBuffer = [];
+		this._localBuffer = [];
 
 		this._filters = null;
 		this._unfilteredLocalEvents = [];
 		this._unfilteredEvents = [];
-		this._unfilteredJoinLeaves = [];
 
 		this._pointEventResolver = new PointEventResolver({ game: param.game });
 		this._onEvent_bound = this.onEvent.bind(this);
@@ -175,11 +173,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			return;
 		}
 		if (this._isReceiver && !this._isDiscarder) {
-			if (pev[EventIndex.General.Code] === pl.EventCode.Join || pev[EventIndex.General.Code] === pl.EventCode.Leave) {
-				this._unfilteredJoinLeaves.push(pev);
-			} else {
-				this._unfilteredEvents.push(pev);
-			}
+			this._unfilteredEvents.push(pev);
 		}
 		if (this._isSender) {
 			if (pev[EventIndex.General.Priority] == null) {
@@ -214,26 +208,14 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		if (EventBuffer.isEventLocal(pev)) {
 			if (!this._isLocalReceiver || this._isDiscarder)
 				return;
-			if (this._localBuffer) {
-				this._localBuffer.push(pev);
-			} else {
-				this._localBuffer = [pev];
-			}
+			this._localBuffer.push(pev);
 			return;
 		}
 		if (this._isReceiver && !this._isDiscarder) {
 			if (pev[EventIndex.General.Code] === pl.EventCode.Join || pev[EventIndex.General.Code] === pl.EventCode.Leave) {
-				if (this._joinLeaveBuffer) {
-					this._joinLeaveBuffer.push(pev);
-				} else {
-					this._joinLeaveBuffer = [pev];
-				}
+				this._joinLeaveBuffer.push(pev);
 			} else {
-				if (this._buffer) {
-					this._buffer.push(pev);
-				} else {
-					this._buffer = [pev];
-				}
+				this._buffer.push(pev);
 			}
 		}
 		if (this._isSender) {
@@ -246,19 +228,25 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 
 	readEvents(): pl.Event[] {
 		let ret = this._buffer;
-		this._buffer = null;
+		if (ret.length === 0)
+			return null;
+		this._buffer = [];
 		return ret;
 	}
 
 	readJoinLeaves(): pl.Event[] {
 		let ret = this._joinLeaveBuffer;
-		this._joinLeaveBuffer = null;
+		if (ret.length === 0)
+			return null;
+		this._joinLeaveBuffer = [];
 		return ret;
 	}
 
 	readLocalEvents(): pl.Event[] {
 		let ret = this._localBuffer;
-		this._localBuffer = null;
+		if (ret.length === 0)
+			return null;
+		this._localBuffer = [];
 		return ret;
 	}
 
@@ -282,75 +270,33 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	}
 
 	processEvents(isLocal?: boolean): void {
-		let lpevs = this._unfilteredLocalEvents;
-		let pevs = this._unfilteredEvents;
-		let joins = this._unfilteredJoinLeaves;
-
-		if (!this._filters) {
-			if (lpevs.length > 0) {
-				this._unfilteredLocalEvents = [];
-				this._localBuffer = this._localBuffer ? this._localBuffer.concat(lpevs) : lpevs;
-			}
-			if (!isLocal && pevs.length > 0) {
-				this._unfilteredEvents = [];
-				this._buffer = this._buffer ? this._buffer.concat(pevs) : pevs;
-			}
-			if (!isLocal && joins.length > 0) {
-				this._unfilteredJoinLeaves = [];
-				this._joinLeaveBuffer = this._joinLeaveBuffer ? this._joinLeaveBuffer.concat(joins) : joins;
-			}
-			return;
-		}
-
-		if (lpevs.length === 0 && pevs.length === 0 && joins.length === 0) {
-			for (let i = 0; i < this._filters.length; ++i) {
-				if (!this._filters[i].handleEmpty)
-					continue;
-				const gpevs = this._filters[i].func([]);
-				if (!gpevs)
-					continue;
-				for (let j = 0; j < gpevs.length; ++j) {
-					const pev = gpevs[j];
-					if (EventBuffer.isEventLocal(pev)) {
-						lpevs.push(pev);
-					} else if (pev[EventIndex.General.Code] === pl.EventCode.Join || pev[EventIndex.General.Code] === pl.EventCode.Leave) {
-						joins.push(pev);
-					} else {
-						pevs.push(pev);
-					}
-				}
-			}
-		}
-
-		if (lpevs.length > 0) {
+		let pevs = this._unfilteredLocalEvents;
+		if (pevs.length > 0)
 			this._unfilteredLocalEvents = [];
-			for (let i = 0; i < this._filters.length; ++i) {
-				lpevs = this._filters[i].func(lpevs);
-				if (!lpevs)
-					break;
-			}
-			if (lpevs && lpevs.length > 0)
-				this._localBuffer = this._localBuffer ? this._localBuffer.concat(lpevs) : lpevs;
-		}
-		if (!isLocal && pevs.length > 0) {
+
+		const upevs = this._unfilteredEvents;
+		if (!isLocal && upevs && upevs.length > 0) {
+			pevs = pevs.concat(upevs);
 			this._unfilteredEvents = [];
-			for (let i = 0; i < this._filters.length; ++i) {
-				pevs = this._filters[i].func(pevs);
-				if (!pevs)
-					break;
-			}
-			if (pevs && pevs.length > 0)
-				this._buffer = this._buffer ? this._buffer.concat(pevs) : pevs;
 		}
-		if (!isLocal && joins.length > 0) {
-			this._unfilteredJoinLeaves = [];
-			for (let i = 0; i < this._filters.length && joins && joins.length > 0; ++i) {
-				joins = this._filters[i].func(joins);
-				if (!joins)
-					break;
+
+		if (this._filters) {
+			for (let i = 0; i < this._filters.length; ++i) {
+				const filter = this._filters[i];
+				if (pevs.length > 0 || filter.handleEmpty)
+					pevs = this._filters[i].func(pevs) || [];
 			}
-			if (joins && joins.length > 0)
-				this._joinLeaveBuffer = this._joinLeaveBuffer ? this._joinLeaveBuffer.concat(joins) : joins;
+		}
+
+		for (let j = 0; j < pevs.length; ++j) {
+			const pev = pevs[j];
+			if (EventBuffer.isEventLocal(pev)) {
+				this._localBuffer.push(pev);
+			} else if (pev[EventIndex.General.Code] === pl.EventCode.Join || pev[EventIndex.General.Code] === pl.EventCode.Leave) {
+				this._joinLeaveBuffer.push(pev);
+			} else {
+				this._buffer.push(pev);
+			}
 		}
 	}
 }
