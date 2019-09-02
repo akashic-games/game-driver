@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.6.1
+* g.Game#getCurrentTime()が正しく整数化されない問題への対応
+
 ## 1.6.0
 * @akashic/akashic-engineのminor更新に伴うバージョンアップ
 
