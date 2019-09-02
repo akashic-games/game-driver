@@ -167,7 +167,7 @@ export class Game extends g.Game {
 
 	getCurrentTime(): number {
 		// GameLoopの同名メソッドとは戻り値が異なるが、 `Game.getCurrentTime()` は `Date.now()` の代替として使用されるため、整数値を返す。
-		return this._getCurrentTimeFunc() | 0;
+		return Math.floor(this._getCurrentTimeFunc());
 	}
 
 	raiseEvent(event: g.Event): void {
