@@ -168,8 +168,9 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 
 	onEvent(pev: pl.Event): void {
 		if (EventBuffer.isEventLocal(pev)) {
-			if (this._isLocalReceiver && !this._isDiscarder)
+			if (this._isLocalReceiver && !this._isDiscarder) {
 				this._unfilteredLocalEvents.push(pev);
+			}
 			return;
 		}
 		if (this._isReceiver && !this._isDiscarder) {
