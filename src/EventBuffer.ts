@@ -270,13 +270,13 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	}
 
 	processEvents(isLocal?: boolean): void {
-		let pevs = this._unfilteredLocalEvents;
-		if (pevs.length > 0)
-			this._unfilteredLocalEvents = [];
-
+		const ulpevs = this._unfilteredLocalEvents;
 		const upevs = this._unfilteredEvents;
-		if (!isLocal && upevs && upevs.length > 0) {
-			pevs = pevs.concat(upevs);
+
+		this._unfilteredLocalEvents = [];
+		let pevs = ulpevs;
+		if (!isLocal && upevs.length > 0) {
+			pevs = (pevs.length > 0) ? pevs.concat(upevs) : upevs;
 			this._unfilteredEvents = [];
 		}
 
@@ -288,8 +288,8 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			}
 		}
 
-		for (let j = 0; j < pevs.length; ++j) {
-			const pev = pevs[j];
+		for (let i = 0; i < pevs.length; ++i) {
+			const pev = pevs[i];
 			if (EventBuffer.isEventLocal(pev)) {
 				this._localBuffer.push(pev);
 			} else if (pev[EventIndex.General.Code] === pl.EventCode.Join || pev[EventIndex.General.Code] === pl.EventCode.Leave) {
