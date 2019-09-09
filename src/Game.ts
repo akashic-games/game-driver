@@ -193,6 +193,10 @@ export class Game extends g.Game {
 		return this.isSnapshotSaver;
 	}
 
+	isActiveInstance(): boolean {
+		return this.shouldSaveSnapshot();
+	}
+
 	saveSnapshot(gameSnapshot: any, timestamp: number = this._getCurrentTimeFunc()): void {
 		if (!this.shouldSaveSnapshot())
 			return;
@@ -205,6 +209,8 @@ export class Game extends g.Game {
 			}
 		});
 	}
+
+	
 
 	_destroy(): void {
 		this.agePassedTrigger.destroy();
