@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.6.4
+ * `g.Game#random#generate()` を追加
+
 ## 1.6.3
 * dependenciesのrange指定ミス修正 (動作上の問題はなかったはずだが、将来的なトラブル回避のため)
 
