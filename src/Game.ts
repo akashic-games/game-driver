@@ -210,8 +210,6 @@ export class Game extends g.Game {
 		});
 	}
 
-	
-
 	_destroy(): void {
 		this.agePassedTrigger.destroy();
 		this.agePassedTrigger = null;
