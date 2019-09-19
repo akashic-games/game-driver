@@ -193,6 +193,11 @@ export class Game extends g.Game {
 		return this.isSnapshotSaver;
 	}
 
+	// NOTE: 現状実装が `shouldSaveSnapshot()` と等価なので、簡易対応としてこの実装を用いる。
+	isActiveInstance(): boolean {
+		return this.shouldSaveSnapshot();
+	}
+
 	saveSnapshot(gameSnapshot: any, timestamp: number = this._getCurrentTimeFunc()): void {
 		if (!this.shouldSaveSnapshot())
 			return;
