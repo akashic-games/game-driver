@@ -74,7 +74,7 @@ describe("MemoryAmflowClient", function () {
 				});
 			});
 		});
-		
+
 		it("push same tick to tickList", function (done: any) {
 			var self = new MemoryAmflowClient({
 				playId: "testuser",

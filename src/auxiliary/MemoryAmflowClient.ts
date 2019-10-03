@@ -1,4 +1,5 @@
 "use strict";
+import cloneDeep = require("lodash.clonedeep");
 import * as amf from "@akashic/amflow";
 import * as pl from "@akashic/playlog";
 import * as EventIndex from "../EventIndex";
@@ -123,23 +124,25 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendTick(tick: pl.Tick): void {
+		const tickClone = this.cloneDeep<pl.Tick>(tick);
+
 		if (!this._tickList) {
-			this._tickList = [tick[EventIndex.Tick.Age], tick[EventIndex.Tick.Age], []];
+			this._tickList = [tickClone[EventIndex.Tick.Age], tickClone[EventIndex.Tick.Age], []];
 		} else {
 			// 既に存在するTickListのfrom~to間にtickが挿入されることは無い
-			if (this._tickList[EventIndex.TickList.From] <= tick[EventIndex.Tick.Age] &&
-				tick[EventIndex.Tick.Age] <= this._tickList[EventIndex.TickList.To]
+			if (this._tickList[EventIndex.TickList.From] <= tickClone[EventIndex.Tick.Age] &&
+				tickClone[EventIndex.Tick.Age] <= this._tickList[EventIndex.TickList.To]
 			)
 				throw new Error("illegal age tick");
 
-			this._tickList[EventIndex.TickList.To] = tick[EventIndex.Tick.Age];
+			this._tickList[EventIndex.TickList.To] = tickClone[EventIndex.Tick.Age];
 		}
 
-		if (!!tick[EventIndex.Tick.Events] || !!tick[EventIndex.Tick.StorageData]) {
-			this._tickList[EventIndex.TickList.TicksWithEvents].push(tick);
+		if (!!tickClone[EventIndex.Tick.Events] || !!tickClone[EventIndex.Tick.StorageData]) {
+			this._tickList[EventIndex.TickList.TicksWithEvents].push(tickClone);
 		}
 
-		this._tickHandlers.forEach((h: (t: pl.Tick) => void) => h(tick));
+		this._tickHandlers.forEach((h: (t: pl.Tick) => void) => h(tickClone));
 	}
 
 	onTick(handler: (tick: pl.Tick) => void): void {
@@ -151,11 +154,13 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendEvent(pev: pl.Event): void {
+		const eventClone = this.cloneDeep<pl.Event>(pev);
+
 		if (this._eventHandlers.length === 0) {
-			this._events.push(pev);
+			this._events.push(eventClone);
 			return;
 		}
-		this._eventHandlers.forEach((h: (pev: pl.Event) => void) => h(pev));
+		this._eventHandlers.forEach((h: (pev: pl.Event) => void) => h(eventClone));
 	}
 
 	onEvent(handler: (pev: pl.Event) => void): void {
@@ -262,5 +267,9 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			});
 			this._startPoints = this._startPoints.filter((sp) => sp.frame < age);
 		}
+	}
+
+	private cloneDeep<T>(target: T): T {
+		return cloneDeep(target);
 	}
 }
