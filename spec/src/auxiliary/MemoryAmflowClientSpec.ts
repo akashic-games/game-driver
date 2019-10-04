@@ -320,6 +320,7 @@ describe("MemoryAmflowClient", function () {
 			});
 		});
 	});
+
 	describe("#sendEvent", function() {
 		it("can save clone of sent event", function () {
 			const self = new MemoryAmflowClient({
@@ -332,6 +333,53 @@ describe("MemoryAmflowClient", function () {
 			// sendしたeventの値を変更しても_eventsの中身が変わらないことを確認
 			joinEvent[3] = "0000";
 			expect(self._events).toEqual([[ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null]]);
+		});
+	});
+
+	describe("#_cloneDeep", function() {
+		const self = new MemoryAmflowClient({
+			playId: "testuser"
+		});
+		it("can copy primitive-value", function () {
+			expect(self._cloneDeep(1)).toBe(1);
+			expect(self._cloneDeep("hoge")).toBe("hoge");
+			expect(self._cloneDeep(true)).toBe(true);
+			expect(self._cloneDeep(null)).toBe(null);
+			expect(self._cloneDeep(undefined)).toBe(undefined);
+		});
+		it("can copy json-data", function () {
+			const array = [1 , "hoge", true, null, undefined, [2, "fuga", false, null, undefined]];
+			const arrayClone = self._cloneDeep(array);
+			expect(arrayClone).toEqual(array);
+			expect(arrayClone).not.toBe(array);
+
+			const json = {
+				"key1": "value",
+				2 : 2,
+				"key3": true,
+				"key4": [2, "fuga", false, null, {"sub1": "aa", "sub2": true}],
+				"key5": {
+					"key5-1": "value",
+					"key5-2": {
+						1: "fugafuga",
+						"key5-2-2": [2, "value5-2", undefined]
+					}
+				}
+			};
+			const jsonClone = self._cloneDeep(json);
+			expect(jsonClone).toEqual(json);
+			expect(jsonClone).not.toBe(json);
+		});
+		it("can copy event and tick", function () {
+			const joinEvent: pl.JoinEvent = [pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null];
+			const joinEventClone = self._cloneDeep(joinEvent);
+			expect(joinEventClone).toEqual(joinEvent);
+			expect(joinEventClone).not.toBe(joinEvent);
+
+			const joinEventTick: pl.Tick = [0, [joinEvent]];
+			const joinEventTickClone = self._cloneDeep(joinEventTick);
+			expect(joinEventTickClone).toEqual(joinEventTick);
+			expect(joinEventTickClone).not.toBe(joinEventTick);
 		});
 	});
 });

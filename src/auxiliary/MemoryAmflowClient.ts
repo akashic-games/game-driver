@@ -1,5 +1,4 @@
 "use strict";
-import cloneDeep = require("lodash.clonedeep");
 import * as amf from "@akashic/amflow";
 import * as pl from "@akashic/playlog";
 import * as EventIndex from "../EventIndex";
@@ -124,7 +123,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendTick(tick: pl.Tick): void {
-		tick = this.cloneDeep<pl.Tick>(tick);
+		tick = this._cloneDeep(tick);
 
 		if (!this._tickList) {
 			this._tickList = [tick[EventIndex.Tick.Age], tick[EventIndex.Tick.Age], []];
@@ -154,7 +153,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendEvent(pev: pl.Event): void {
-		pev = this.cloneDeep<pl.Event>(pev);
+		pev = this._cloneDeep(pev);
 
 		if (this._eventHandlers.length === 0) {
 			this._events.push(pev);
@@ -269,7 +268,16 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		}
 	}
 
-	private cloneDeep<T>(target: T): T {
-		return cloneDeep(target);
+	_cloneDeep(v: any): any {
+		if (typeof v === "number" || typeof v === "string" || typeof v === "boolean" || v === null) {
+			return v;
+		} else if (v && typeof v === "object") {
+			if (v instanceof Array) {
+				return v.map(this._cloneDeep.bind(this));
+			} else {
+				return Object.keys(v).reduce((acc: any, k) => (acc[k] = this._cloneDeep(v[k]), acc), {});
+			}
+		}
+		return v;
 	}
 }
