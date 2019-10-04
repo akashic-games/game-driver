@@ -124,25 +124,25 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendTick(tick: pl.Tick): void {
-		const tickClone = this.cloneDeep<pl.Tick>(tick);
+		tick = this.cloneDeep<pl.Tick>(tick);
 
 		if (!this._tickList) {
-			this._tickList = [tickClone[EventIndex.Tick.Age], tickClone[EventIndex.Tick.Age], []];
+			this._tickList = [tick[EventIndex.Tick.Age], tick[EventIndex.Tick.Age], []];
 		} else {
 			// 既に存在するTickListのfrom~to間にtickが挿入されることは無い
-			if (this._tickList[EventIndex.TickList.From] <= tickClone[EventIndex.Tick.Age] &&
-				tickClone[EventIndex.Tick.Age] <= this._tickList[EventIndex.TickList.To]
+			if (this._tickList[EventIndex.TickList.From] <= tick[EventIndex.Tick.Age] &&
+				tick[EventIndex.Tick.Age] <= this._tickList[EventIndex.TickList.To]
 			)
 				throw new Error("illegal age tick");
 
-			this._tickList[EventIndex.TickList.To] = tickClone[EventIndex.Tick.Age];
+			this._tickList[EventIndex.TickList.To] = tick[EventIndex.Tick.Age];
 		}
 
-		if (!!tickClone[EventIndex.Tick.Events] || !!tickClone[EventIndex.Tick.StorageData]) {
-			this._tickList[EventIndex.TickList.TicksWithEvents].push(tickClone);
+		if (!!tick[EventIndex.Tick.Events] || !!tick[EventIndex.Tick.StorageData]) {
+			this._tickList[EventIndex.TickList.TicksWithEvents].push(tick);
 		}
 
-		this._tickHandlers.forEach((h: (t: pl.Tick) => void) => h(tickClone));
+		this._tickHandlers.forEach((h: (t: pl.Tick) => void) => h(tick));
 	}
 
 	onTick(handler: (tick: pl.Tick) => void): void {
@@ -154,13 +154,13 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendEvent(pev: pl.Event): void {
-		const eventClone = this.cloneDeep<pl.Event>(pev);
+		pev = this.cloneDeep<pl.Event>(pev);
 
 		if (this._eventHandlers.length === 0) {
-			this._events.push(eventClone);
+			this._events.push(pev);
 			return;
 		}
-		this._eventHandlers.forEach((h: (pev: pl.Event) => void) => h(eventClone));
+		this._eventHandlers.forEach((h: (pev: pl.Event) => void) => h(pev));
 	}
 
 	onEvent(handler: (pev: pl.Event) => void): void {

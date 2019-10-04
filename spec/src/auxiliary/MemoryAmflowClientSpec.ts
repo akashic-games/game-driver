@@ -93,6 +93,20 @@ describe("MemoryAmflowClient", function () {
 				done.fail();
 			});
 		});
+
+		it("can save clone of sent tick", function () {
+			const self = new MemoryAmflowClient({
+				playId: "testuser"
+			});
+			const age = 5;
+			const targetTick: pl.Tick = [age, [joinEvent]];
+			self.sendTick(targetTick);
+			expect(self._tickList).toEqual([age, age, [[age, [joinEvent]]]]);
+
+			// sendしたtickの値を変更しても_tickListの中身が変わらないことを確認
+			targetTick[0] = 3;
+			expect(self._tickList).toEqual([age, age, [[age, [joinEvent]]]]);
+		});
 	});
 
 	describe("#dropAfter", function () {
@@ -304,6 +318,20 @@ describe("MemoryAmflowClient", function () {
 				expect(startPoint).toEqual(sp18);
 				done();
 			});
+		});
+	});
+	describe("#sendEvent", function() {
+		it("can save clone of sent event", function () {
+			const self = new MemoryAmflowClient({
+				playId: "testuser"
+			});
+			const joinEvent: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null];
+			self.sendEvent(joinEvent);
+			expect(self._events).toEqual([[ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null]]);
+
+			// sendしたeventの値を変更しても_eventsの中身が変わらないことを確認
+			joinEvent[3] = "0000";
+			expect(self._events).toEqual([[ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null]]);
 		});
 	});
 });
