@@ -1,9 +1,7 @@
 import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
-import * as pdi from "@akashic/akashic-pdi";
-import * as EventIndex from "../../../lib/EventIndex";
 import EventPriority from "../../../lib/EventPriority";
-import { MemoryAmflowClient } from "../../../lib/auxiliary/MemoryAmflowClient";
+import { MemoryAmflowClient, _cloneDeep } from "../../../lib/auxiliary/MemoryAmflowClient";
 
 describe("MemoryAmflowClient", function () {
 
@@ -94,7 +92,7 @@ describe("MemoryAmflowClient", function () {
 			});
 		});
 
-		it("can save clone of sent tick", function () {
+		it("clones given ticks", function () {
 			const self = new MemoryAmflowClient({
 				playId: "testuser"
 			});
@@ -322,7 +320,7 @@ describe("MemoryAmflowClient", function () {
 	});
 
 	describe("#sendEvent", function() {
-		it("can save clone of sent event", function () {
+		it("clones given events", function () {
 			const self = new MemoryAmflowClient({
 				playId: "testuser"
 			});
@@ -337,19 +335,16 @@ describe("MemoryAmflowClient", function () {
 	});
 
 	describe("#_cloneDeep", function() {
-		const self = new MemoryAmflowClient({
-			playId: "testuser"
-		});
 		it("can copy primitive-value", function () {
-			expect(self._cloneDeep(1)).toBe(1);
-			expect(self._cloneDeep("hoge")).toBe("hoge");
-			expect(self._cloneDeep(true)).toBe(true);
-			expect(self._cloneDeep(null)).toBe(null);
-			expect(self._cloneDeep(undefined)).toBe(undefined);
+			expect(_cloneDeep(1)).toBe(1);
+			expect(_cloneDeep("hoge")).toBe("hoge");
+			expect(_cloneDeep(true)).toBe(true);
+			expect(_cloneDeep(null)).toBe(null);
+			expect(_cloneDeep(undefined)).toBe(undefined);
 		});
 		it("can copy json-data", function () {
 			const array = [1 , "hoge", true, null, undefined, [2, "fuga", false, null, undefined]];
-			const arrayClone = self._cloneDeep(array);
+			const arrayClone = _cloneDeep(array);
 			expect(arrayClone).toEqual(array);
 			expect(arrayClone).not.toBe(array);
 
@@ -366,18 +361,18 @@ describe("MemoryAmflowClient", function () {
 					}
 				}
 			};
-			const jsonClone = self._cloneDeep(json);
+			const jsonClone = _cloneDeep(json);
 			expect(jsonClone).toEqual(json);
 			expect(jsonClone).not.toBe(json);
 		});
 		it("can copy event and tick", function () {
 			const joinEvent: pl.JoinEvent = [pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null];
-			const joinEventClone = self._cloneDeep(joinEvent);
+			const joinEventClone = _cloneDeep(joinEvent);
 			expect(joinEventClone).toEqual(joinEvent);
 			expect(joinEventClone).not.toBe(joinEvent);
 
 			const joinEventTick: pl.Tick = [0, [joinEvent]];
-			const joinEventTickClone = self._cloneDeep(joinEventTick);
+			const joinEventTickClone = _cloneDeep(joinEventTick);
 			expect(joinEventTickClone).toEqual(joinEventTick);
 			expect(joinEventTickClone).not.toBe(joinEventTick);
 		});

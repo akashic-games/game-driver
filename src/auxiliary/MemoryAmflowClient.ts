@@ -123,7 +123,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendTick(tick: pl.Tick): void {
-		tick = this._cloneDeep(tick);
+		tick = _cloneDeep(tick);
 
 		if (!this._tickList) {
 			this._tickList = [tick[EventIndex.Tick.Age], tick[EventIndex.Tick.Age], []];
@@ -153,7 +153,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendEvent(pev: pl.Event): void {
-		pev = this._cloneDeep(pev);
+		pev = _cloneDeep(pev);
 
 		if (this._eventHandlers.length === 0) {
 			this._events.push(pev);
@@ -267,17 +267,15 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			this._startPoints = this._startPoints.filter((sp) => sp.frame < age);
 		}
 	}
+}
 
-	_cloneDeep(v: any): any {
-		if (typeof v === "number" || typeof v === "string" || typeof v === "boolean" || v === null) {
-			return v;
-		} else if (v && typeof v === "object") {
-			if (v instanceof Array) {
-				return v.map(this._cloneDeep.bind(this));
-			} else {
-				return Object.keys(v).reduce((acc: any, k) => (acc[k] = this._cloneDeep(v[k]), acc), {});
-			}
+export function _cloneDeep(v: any): any {
+	if (v && typeof v === "object") {
+		if (Array.isArray(v)) {
+			return v.map(_cloneDeep);
+		} else {
+			return Object.keys(v).reduce((acc: any, k) => (acc[k] = _cloneDeep(v[k]), acc), {});
 		}
-		return v;
 	}
+	return v;
 }
