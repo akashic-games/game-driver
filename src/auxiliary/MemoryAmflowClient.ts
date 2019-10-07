@@ -123,7 +123,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendTick(tick: pl.Tick): void {
-		tick = _cloneDeep(tick);
+		tick = _cloneDeep(tick); // _cloneDeepで値をコピーしているだけで元の値の破壊的変更は行っていない
 
 		if (!this._tickList) {
 			this._tickList = [tick[EventIndex.Tick.Age], tick[EventIndex.Tick.Age], []];
@@ -153,7 +153,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendEvent(pev: pl.Event): void {
-		pev = _cloneDeep(pev);
+		pev = _cloneDeep(pev); // _cloneDeepで値をコピーしているだけで元の値の破壊的変更は行っていない
 
 		if (this._eventHandlers.length === 0) {
 			this._events.push(pev);
