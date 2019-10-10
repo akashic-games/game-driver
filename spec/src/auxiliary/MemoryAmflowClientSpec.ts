@@ -1,9 +1,7 @@
 import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
-import * as pdi from "@akashic/akashic-pdi";
-import * as EventIndex from "../../../lib/EventIndex";
 import EventPriority from "../../../lib/EventPriority";
-import { MemoryAmflowClient } from "../../../lib/auxiliary/MemoryAmflowClient";
+import { MemoryAmflowClient, _cloneDeep } from "../../../lib/auxiliary/MemoryAmflowClient";
 
 describe("MemoryAmflowClient", function () {
 
@@ -74,7 +72,7 @@ describe("MemoryAmflowClient", function () {
 				});
 			});
 		});
-		
+
 		it("push same tick to tickList", function (done: any) {
 			var self = new MemoryAmflowClient({
 				playId: "testuser",
@@ -92,6 +90,20 @@ describe("MemoryAmflowClient", function () {
 				}
 				done.fail();
 			});
+		});
+
+		it("clones given ticks", function () {
+			const self = new MemoryAmflowClient({
+				playId: "testuser"
+			});
+			const age = 5;
+			const targetTick: pl.Tick = [age, [joinEvent]];
+			self.sendTick(targetTick);
+			expect(self._tickList).toEqual([age, age, [[age, [joinEvent]]]]);
+
+			// sendしたtickの値を変更しても_tickListの中身が変わらないことを確認
+			targetTick[0] = 3;
+			expect(self._tickList).toEqual([age, age, [[age, [joinEvent]]]]);
 		});
 	});
 
@@ -304,6 +316,65 @@ describe("MemoryAmflowClient", function () {
 				expect(startPoint).toEqual(sp18);
 				done();
 			});
+		});
+	});
+
+	describe("#sendEvent", function() {
+		it("clones given events", function () {
+			const self = new MemoryAmflowClient({
+				playId: "testuser"
+			});
+			const joinEvent: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null];
+			self.sendEvent(joinEvent);
+			expect(self._events).toEqual([[ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null]]);
+
+			// sendしたeventの値を変更しても_eventsの中身が変わらないことを確認
+			joinEvent[3] = "0000";
+			expect(self._events).toEqual([[ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null]]);
+		});
+	});
+
+	describe("#_cloneDeep", function() {
+		it("can copy primitive-value", function () {
+			expect(_cloneDeep(1)).toBe(1);
+			expect(_cloneDeep("hoge")).toBe("hoge");
+			expect(_cloneDeep(true)).toBe(true);
+			expect(_cloneDeep(null)).toBe(null);
+			expect(_cloneDeep(undefined)).toBe(undefined);
+		});
+		it("can copy json-data", function () {
+			const array = [1 , "hoge", true, null, undefined, [2, "fuga", false, null, undefined]];
+			const arrayClone = _cloneDeep(array);
+			expect(arrayClone).toEqual(array);
+			expect(arrayClone).not.toBe(array);
+
+			const json = {
+				"key1": "value",
+				2 : 2,
+				"key3": true,
+				"key4": [2, "fuga", false, null, {"sub1": "aa", "sub2": true}],
+				"key5": {
+					"key5-1": "value",
+					"key5-2": {
+						1: "fugafuga",
+						"key5-2-2": [2, "value5-2", undefined]
+					}
+				}
+			};
+			const jsonClone = _cloneDeep(json);
+			expect(jsonClone).toEqual(json);
+			expect(jsonClone).not.toBe(json);
+		});
+		it("can copy event and tick", function () {
+			const joinEvent: pl.JoinEvent = [pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null];
+			const joinEventClone = _cloneDeep(joinEvent);
+			expect(joinEventClone).toEqual(joinEvent);
+			expect(joinEventClone).not.toBe(joinEvent);
+
+			const joinEventTick: pl.Tick = [0, [joinEvent]];
+			const joinEventTickClone = _cloneDeep(joinEventTick);
+			expect(joinEventTickClone).toEqual(joinEventTick);
+			expect(joinEventTickClone).not.toBe(joinEventTick);
 		});
 	});
 });

@@ -123,6 +123,8 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendTick(tick: pl.Tick): void {
+		tick = _cloneDeep(tick); // 元の値が後から変更されてもいいようにコピーしておく
+
 		if (!this._tickList) {
 			this._tickList = [tick[EventIndex.Tick.Age], tick[EventIndex.Tick.Age], []];
 		} else {
@@ -151,6 +153,8 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	sendEvent(pev: pl.Event): void {
+		pev = _cloneDeep(pev); // 元の値が後から変更されてもいいようにコピーしておく
+
 		if (this._eventHandlers.length === 0) {
 			this._events.push(pev);
 			return;
@@ -263,4 +267,15 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			this._startPoints = this._startPoints.filter((sp) => sp.frame < age);
 		}
 	}
+}
+
+export function _cloneDeep(v: any): any {
+	if (v && typeof v === "object") {
+		if (Array.isArray(v)) {
+			return v.map(_cloneDeep);
+		} else {
+			return Object.keys(v).reduce((acc: any, k) => (acc[k] = _cloneDeep(v[k]), acc), {});
+		}
+	}
+	return v;
 }

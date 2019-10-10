@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.6.5
+* `MemoryAmflowClient#sendTick` と `MemoryAmflowClient#sendEvent` で送信するプレイログ情報を clone して保持するように修正
+
 ## 1.6.4
 * `g.Game#random#generate()` を追加
 
