@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.12.1
+* `MemoryAmflowClient#sendTick` と `MemoryAmflowClient#sendEvent` で送信するプレイログ情報を clone して保持するように修正
+
 ## 0.12.0
 * @akashic/amflowのminor更新に伴うバージョンアップ
 
