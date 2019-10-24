@@ -43,9 +43,9 @@ export class Game extends g.Game {
 	/**
 	 * Gameの続行が断念されたことを通知するTrigger。
 	 *
-	 * 現在のバージョンでは、これをfireする方法は `Game#terminateGame()` の呼び出し、または
+	 * 現在のバージョンでは、これをfireする方法は `Game#abortGame()` の呼び出し、または
 	 * それを引き起こすリトライ不能のアセットエラーだけである。
-	 * ただしこの `terminateGame()` の仕様は今後変動しうる。
+	 * ただしこの `abortGame()` の仕様は今後変動しうる。
 	 */
 	abortTrigger: g.Trigger<void>;
 
@@ -204,7 +204,7 @@ export class Game extends g.Game {
 		// do nothing.
 	}
 
-	_terminateGame(): void {
+	_abortGame(): void {
 		this.abortTrigger.fire();
 	}
 }
