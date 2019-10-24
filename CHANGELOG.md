@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## UnreleasedChanges
+* `Game#_terminateGame()` を `Game#_abortGame()` にリネーム
+
 ## 1.6.5
 * `MemoryAmflowClient#sendTick` と `MemoryAmflowClient#sendEvent` で送信するプレイログ情報を clone して保持するように修正
 
