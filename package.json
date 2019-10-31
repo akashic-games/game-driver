@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
@@ -61,7 +61,7 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~1.12.9",
+    "@akashic/akashic-engine": "~1.13.0",
     "es6-promise": "^3.1.2"
   }
 }

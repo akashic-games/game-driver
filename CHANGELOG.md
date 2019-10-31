@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## UnreleasedChanges
+## 0.13.0
 * `Game#_terminateGame()` を `Game#_abortGame()` にリネーム
 
 ## 0.12.1
