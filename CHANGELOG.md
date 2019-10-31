@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## UnreleasedChanges
+## 1.7.0
 * `Game#_terminateGame()` を `Game#_abortGame()` にリネーム
 
 ## 1.6.5
