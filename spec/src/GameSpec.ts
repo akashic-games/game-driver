@@ -46,7 +46,7 @@ describe("Game", function() {
 		expect(game.skippingChangedTrigger).toBe(null);
 	});
 
-	it("notifies on _terminateGame()", function () {
+	it("notifies on _abortGame()", function () {
 		var rf = new mockrf.ResourceFactory();
 		var game = new Game({
 			configuration: dummyConfiguration,
@@ -60,7 +60,7 @@ describe("Game", function() {
 			firedCount++;
 		});
 		expect(firedCount).toBe(0);
-		game._terminateGame();
+		game._abortGame();
 		expect(firedCount).toBe(1);
 	});
 

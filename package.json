@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
@@ -36,7 +36,7 @@
     "@akashic:registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@akashic/akashic-pdi": "~1.11.0",
+    "@akashic/akashic-pdi": "~1.12.0",
     "@akashic/amflow": "~0.3.1",
     "@akashic/playlog": "~1.3.2",
     "@types/jasmine-node": "1.14.33",
@@ -61,7 +61,7 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~1.12.9",
+    "@akashic/akashic-engine": "~1.14.0",
     "es6-promise": "^3.1.2"
   }
 }
