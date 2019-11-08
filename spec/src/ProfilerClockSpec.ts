@@ -8,7 +8,7 @@ describe("ProfilerClock", () => {
 		const pf = new mockpf.Platform({});
 		const target = {
 			count: 0,
-			inc: () => {
+			inc: function() {
 				++this.count;
 			}
 		};

@@ -454,10 +454,10 @@ export class GameLoop {
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
 
-			let pevs = this._eventBuffer.readLocalEvents();
-			if (pevs) {
-				for (let j = 0, len = pevs.length; j < len; ++j) {
-					game.events.push(this._eventConverter.toGameEvent(pevs[j]));
+			let plEvents = this._eventBuffer.readLocalEvents();
+			if (plEvents) {
+				for (let j = 0, len = plEvents.length; j < len; ++j) {
+					game.events.push(this._eventConverter.toGameEvent(plEvents[j]));
 				}
 			}
 			if (typeof tick === "number") {
@@ -598,10 +598,10 @@ export class GameLoop {
 			let consumedAge = -1;
 
 			if (tick != null) {
-				let pevs = this._eventBuffer.readLocalEvents();
-				if (pevs) {
-					for (let i = 0, len = pevs.length; i < len; ++i) {
-						game.events.push(this._eventConverter.toGameEvent(pevs[i]));
+				let plEvents = this._eventBuffer.readLocalEvents();
+				if (plEvents) {
+					for (let k = 0, len = plEvents.length; k < len; ++k) {
+						game.events.push(this._eventConverter.toGameEvent(plEvents[k]));
 					}
 				}
 				if (typeof tick === "number") {
