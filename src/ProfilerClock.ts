@@ -11,7 +11,7 @@ export interface ProfileClockParameterObject extends ClockParameterObject {
 
 /**
  * プロファイラーを有するクロック。
- * 
+ *
  * note: _onLooperCall()のみをオーバーライドし、 `this._profiler.~~` を追加しただけとなっています。
  */
 export class ProfilerClock extends Clock {
