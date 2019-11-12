@@ -358,14 +358,14 @@ export class TickBuffer {
 				this.gotStorageTrigger.fire({ age: tick[EventIndex.Tick.Age], storageData: tick[EventIndex.Tick.StorageData] });
 		}
 
-		const range = { start: start, end: end, ticks: ticks };
+		const tickRange = { start: start, end: end, ticks: ticks };
 		const delLen = Math.max(0, i - insertPoint);
-		this._tickRanges.splice(insertPoint, delLen, range);
+		this._tickRanges.splice(insertPoint, delLen, tickRange);
 
 		if (start <= this._nearestAbsentAge && this._nearestAbsentAge < end) {
 			this._nearestAbsentAge = this._findNearestAbscentAge(this._nearestAbsentAge);
 		}
-		return range;
+		return tickRange;
 	}
 
 	_updateAmflowReceiveState(): void {
