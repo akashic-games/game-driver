@@ -563,12 +563,13 @@ export class GameLoop {
 		let sceneChanged = false;
 		const game = this._game;
 
-		if (!this._skipping && frameArg.deltaTime > this._skipThresholdTime)
+		if (!this._skipping && frameArg.deltaTime > this._skipThresholdTime) {
 			this._startSkipping();
+			if (this._waitingNextTick)
+				this._stopSkipping();
+		}
 
 		if (this._waitingNextTick) {
-			if (this._skipping)
-				this._stopSkipping();
 			if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal)
 				this._doLocalTick();
 			return;
