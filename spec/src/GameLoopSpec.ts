@@ -299,7 +299,7 @@ describe("GameLoop", function () {
 			}, 1);
 		});
 
-		amflow.sendTick([20]); // 新しいtickを送信
+		amflow.sendTick([11]); // 新しいtickを送信
 
 		// 最新の状態まで追いつく
 		await new Promise((resolve, reject) => {
@@ -308,7 +308,7 @@ describe("GameLoop", function () {
 				skipCalled = true;
 			});
 			const timer = setInterval(() => {
-				if (game.age > 20) {
+				if (game.age > 11) {
 					expect(skipCalled).toBe(true); // skippingChangedTrigger が呼ばれていることを確認
 					clearInterval(timer);
 					resolve();
@@ -318,7 +318,7 @@ describe("GameLoop", function () {
 			}, 1);
 		});
 
-		amflow.sendTick([30]); // 新しいtickを送信
+		amflow.sendTick([12]); // 新しいtickを送信
 
 		// 最新の状態まで追いつく
 		await new Promise((resolve, reject) => {
@@ -327,7 +327,7 @@ describe("GameLoop", function () {
 				skipCalled = true;
 			});
 			const timer = setInterval(() => {
-				if (game.age > 30) {
+				if (game.age > 12) {
 					expect(skipCalled).toBe(false); // skippingChangedTrigger が呼ばれていないことを確認
 					clearInterval(timer);
 					resolve();
