@@ -563,8 +563,11 @@ export class GameLoop {
 		let sceneChanged = false;
 		const game = this._game;
 
+		// NOTE: ブラウザが長時間非アクティブ状態 (裏タブに遷移していたなど) であったとき、長時間ゲームループが呼ばれないケースがある。
+		// もしその期間がスキップの閾値を超えていたら、即座にスキップに入る。
 		if (!this._skipping && frameArg.deltaTime > this._skipThresholdTime) {
 			this._startSkipping();
+			// ただしティック待ちが無ければすぐにスキップを抜ける。
 			if (this._waitingNextTick)
 				this._stopSkipping();
 		}
