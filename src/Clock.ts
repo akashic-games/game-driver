@@ -7,6 +7,11 @@ import * as g from "@akashic/akashic-engine";
  */
 export interface ClockFrameTriggerParameterObject {
 	/**
+	 * 前回からの呼び出し時間 (ms)
+	 */
+	deltaTime: number;
+
+	/**
 	 * frameTriggerのfireを強制的に中断するか。
 	 * frameTriggerは経過時間に応じて複数回連続で呼び出される。
 	 * この値を真にすると、条件に関わらず連続呼び出しを止めることができる。
@@ -192,6 +197,8 @@ export class Clock {
 	}
 
 	_onLooperCall(deltaTime: number): number {
+		const rawDeltaTime = deltaTime;
+
 		if (deltaTime <= 0) {
 			// 時間が止まっているか巻き戻っている。初回呼び出しか、あるいは何かがおかしい。時間経過0と見なす。
 			return this._waitTime - this._totalDeltaTime;
@@ -213,10 +220,14 @@ export class Clock {
 		                   : (totalDeltaTime > this._waitTimeMax) ? this._realMaxFramePerOnce
 		                                                          : (totalDeltaTime / this._waitTime) | 0;
 		var fc = frameCount;
-		var arg = { interrupt: false };
+		var arg: ClockFrameTriggerParameterObject = {
+			deltaTime: rawDeltaTime,
+			interrupt: false
+		};
 		while (fc > 0 && this.running && !arg.interrupt) {
 			--fc;
 			this.frameTrigger.fire(arg);
+			arg.deltaTime = 0; // 同ループによる2度目以降の呼び出しは差分を0とみなす。
 		}
 		totalDeltaTime -= ((frameCount - fc) * this._waitTime);
 		this.rawFrameTrigger.fire();

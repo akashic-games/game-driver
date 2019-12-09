@@ -83,6 +83,7 @@ export class GameLoop {
 	_delayIgnoreThreshold: number;
 	_skipTicksAtOnce: number;
 	_skipThreshold: number;
+	_skipThresholdTime: number; // スキップ閾値の時間のキャッシュ
 	_jumpTryThreshold: number;
 	_jumpIgnoreThreshold: number;
 	_pollingTickThreshold: number;
@@ -136,6 +137,7 @@ export class GameLoop {
 		this._delayIgnoreThreshold = conf.delayIgnoreThreshold || constants.DEFAULT_DELAY_IGNORE_THRESHOLD;
 		this._skipTicksAtOnce = conf.skipTicksAtOnce || constants.DEFAULT_SKIP_TICKS_AT_ONCE;
 		this._skipThreshold = conf.skipThreshold || constants.DEFAULT_SKIP_THRESHOLD;
+		this._skipThresholdTime = this._skipThreshold * this._frameTime;
 		// this._skipAwareGame はないことに注意 (Game#getIsSkipAware()) を使う
 		this._jumpTryThreshold = conf.jumpTryThreshold || constants.DEFAULT_JUMP_TRY_THRESHOLD;
 		this._jumpIgnoreThreshold = conf.jumpIgnoreThreshold || constants.DEFAULT_JUMP_IGNORE_THRESHOLD;
@@ -260,8 +262,10 @@ export class GameLoop {
 			this._delayIgnoreThreshold = conf.delayIgnoreThreshold;
 		if (conf.skipTicksAtOnce != null)
 			this._skipTicksAtOnce = conf.skipTicksAtOnce;
-		if (conf.skipThreshold != null)
+		if (conf.skipThreshold != null) {
 			this._skipThreshold = conf.skipThreshold;
+			this._skipThresholdTime = this._skipThreshold * this._frameTime;
+		}
 		if (conf.skipAwareGame != null)
 			this._game.setIsSkipAware(conf.skipAwareGame);
 		if (conf.jumpTryThreshold != null)
@@ -559,7 +563,12 @@ export class GameLoop {
 		let sceneChanged = false;
 		const game = this._game;
 
+		if (!this._skipping && frameArg.deltaTime > this._skipThresholdTime)
+			this._startSkipping();
+
 		if (this._waitingNextTick) {
+			if (this._skipping)
+				this._stopSkipping();
 			if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal)
 				this._doLocalTick();
 			return;
