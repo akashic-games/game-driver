@@ -1,5 +1,5 @@
 "use strict";
-import { Clock, ClockParameterObject } from "./Clock";
+import { Clock, ClockParameterObject, ClockFrameTriggerParameterObject } from "./Clock";
 import { Profiler, ProfilerValueType } from "./Profiler";
 
 export interface ProfileClockParameterObject extends ClockParameterObject {
@@ -23,6 +23,8 @@ export class ProfilerClock extends Clock {
 	}
 
 	_onLooperCall(deltaTime: number): number {
+		const rawDeltaTime = deltaTime;
+
 		if (deltaTime <= 0) {
 			// 時間が止まっているか巻き戻っている。初回呼び出しか、あるいは何かがおかしい。時間経過0と見なす。
 			return this._waitTime - this._totalDeltaTime;
@@ -48,13 +50,17 @@ export class ProfilerClock extends Clock {
 		                                                          : (totalDeltaTime / this._waitTime) | 0;
 
 		var fc = frameCount;
-		var arg = { interrupt: false };
+		var arg: ClockFrameTriggerParameterObject = {
+			deltaTime: rawDeltaTime,
+			interrupt: false
+		};
 		this._profiler.setValue(ProfilerValueType.SkippedFrameCount, fc - 1);
 		while (fc > 0 && this.running && !arg.interrupt) {
 			--fc;
 			this._profiler.time(ProfilerValueType.FrameTime);
 			this.frameTrigger.fire(arg);
 			this._profiler.timeEnd(ProfilerValueType.FrameTime);
+			arg.deltaTime = 0; // 同ループによる2度目以降の呼び出しは差分を0とみなす。
 		}
 
 		totalDeltaTime -= ((frameCount - fc) * this._waitTime);

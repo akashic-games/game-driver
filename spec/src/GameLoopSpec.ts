@@ -251,6 +251,93 @@ describe("GameLoop", function () {
 		});
 	});
 
+	it("can detect skip based on deltaTime of the looper arguments", async () => {
+		const amflow = new MemoryAmflowClient({
+			playId: "dummyPlayId",
+			tickList: [0, 9, []],
+			startPoints: [{
+				frame: 0,
+				timestamp: 0,
+				data: {
+					seed: 42,
+					startedAt: 10000
+				}
+			}]
+		});
+		const platform = new mockpf.Platform({});
+		const game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
+			amflow,
+			platform,
+			game,
+			eventBuffer,
+			executionMode: ExecutionMode.Passive,
+			configuration: {
+				jumpTryThreshold: 2,
+				loopMode: LoopMode.Realtime
+			},
+			startedAt: 140
+		});
+		self.start();
+
+		amflow.sendTick([10]); // Realtimeで非Manualなのでtickをpushされないと何も動かない
+
+		const looper = self._clock._looper as mockpf.Looper;
+		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(0) });
+		game._loadAndStart({ args: undefined });
+
+		// 最新の状態まで追いつく
+		await new Promise((resolve, reject) => {
+			const timer = setInterval(() => {
+				if (game.age > 10) {
+					clearInterval(timer);
+					resolve();
+					return;
+				}
+				looper.fun(self._frameTime);
+			}, 1);
+		});
+
+		amflow.sendTick([11]); // 新しいtickを送信
+
+		// 最新の状態まで追いつく
+		await new Promise((resolve, reject) => {
+			let skipCalled = false;
+			game.skippingChangedTrigger.add(() => {
+				skipCalled = true;
+			});
+			const timer = setInterval(() => {
+				if (game.age > 11) {
+					expect(skipCalled).toBe(true); // skippingChangedTrigger が呼ばれていることを確認
+					clearInterval(timer);
+					resolve();
+					return;
+				}
+				looper.fun(self._skipThresholdTime + 1);
+			}, 1);
+		});
+
+		amflow.sendTick([12]); // 新しいtickを送信
+
+		// 最新の状態まで追いつく
+		await new Promise((resolve, reject) => {
+			let skipCalled = false;
+			game.skippingChangedTrigger.add(() => {
+				skipCalled = true;
+			});
+			const timer = setInterval(() => {
+				if (game.age > 12) {
+					expect(skipCalled).toBe(false); // skippingChangedTrigger が呼ばれていないことを確認
+					clearInterval(timer);
+					resolve();
+					return;
+				}
+				looper.fun(self._skipThresholdTime - 1);
+			}, 1);
+		});
+	});
+
 	it("can start/stop", function (done: any) {
 		var amflow = new MockAmflow();
 		var platform = new mockpf.Platform({});
