@@ -10,6 +10,7 @@ describe("Game", function() {
 		width: 320,
 		height: 240,
 		fps: 30,
+		main: "./script/mainScene.js",
 		assets: {
 			mainScene: {
 				path: "/script/mainScene.js",
@@ -150,7 +151,7 @@ describe("Game", function() {
 			frame: 0,
 			timestamp: 42,
 			data: {
-				randGenSer: game.random[0].serialize(),
+				randGenSer: game.random.serialize(),
 				gameSnapshot: snapshot
 			}
 		});

@@ -2,6 +2,7 @@
 	"width": 320,
 	"height": 320,
 	"fps": 30,
+	"main": "./script/mainScene.js",
 	"assets": {
 		"mainScene": {
 			"type": "script",

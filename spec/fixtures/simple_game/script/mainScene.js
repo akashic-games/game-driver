@@ -27,5 +27,5 @@ module.exports = function() {
 		scene.append(r2);
 		r2.modified();
 	});
-	return scene;
+	game.pushScene(scene);
 }

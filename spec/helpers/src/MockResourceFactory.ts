@@ -324,7 +324,7 @@ class ScriptAsset extends g.ScriptAsset {
 		}
 	}
 
-	execute(env: g.ScriptAssetExecuteEnvironment): any {
+	execute(env: g.ScriptAssetRuntimeValue): any {
 		var prefix = "(function(exports, require, module, __filename, __dirname) {";
 		var suffix = "})(g.module.exports, g.module.require, g.module, g.filename, g.dirname);";
 		var f = new Function("g", prefix + this._content + suffix);
