@@ -10,11 +10,11 @@ describe("Game", function() {
 		width: 320,
 		height: 240,
 		fps: 30,
-		main: "./script/mainScene.js",
+		main: "./script/main.js",
 		assets: {
-			mainScene: {
-				path: "/script/mainScene.js",
-				virtualPath: "script/mainScene.js",
+			main: {
+				path: "/script/main.js",
+				virtualPath: "script/main.js",
 				type: "script",
 				global: true
 			}
