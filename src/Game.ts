@@ -6,7 +6,7 @@ import { StorageFunc } from "./StorageFunc";
 
 export interface GameParameterObject {
 	configuration: g.GameConfiguration;
-	resourceFactory: g.ResourceFactory;
+	resourceFactory: g.ResourceFactoryLike;
 	assetBase: string;
 	player: g.Player;
 	isSnapshotSaver?: boolean;
@@ -205,7 +205,7 @@ export class Game extends g.Game {
 			frame: this.age,
 			timestamp,
 			data: {
-				randGenSer: this.random[0].serialize(),
+				randGenSer: this.random.serialize(),
 				gameSnapshot: gameSnapshot
 			}
 		});
