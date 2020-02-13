@@ -244,7 +244,7 @@ export class GameDriver {
 		game.width = width;
 		game.height = height;
 		game.resized.fire({ width, height });
-		game.modified = true;
+		game.modified();
 	}
 
 	doInitialize(param: GameDriverInitializeParameterObject): Promise<void> {

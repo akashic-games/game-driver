@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.0-beta.1
+* `g.Game#modified` の関数化に伴い、`g.Game#modified()` に修正。
+
 ## 1.7.0
 * `Game#_terminateGame()` を `Game#_abortGame()` にリネーム
 
