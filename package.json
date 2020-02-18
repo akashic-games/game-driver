@@ -49,7 +49,7 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~3.0.0-beta.2",
+    "@akashic/akashic-engine": "~3.0.0-beta.7",
     "es6-promise": "^4.2.8"
   }
 }
