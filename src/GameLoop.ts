@@ -814,7 +814,7 @@ export class GameLoop {
 
 	_renderOnRawFrame(): void {
 		const game = this._game;
-		if (game.modified && game.scenes.length > 0) {
+		if (game._modified && game.scenes.length > 0) {
 			game.render();
 		}
 	}
