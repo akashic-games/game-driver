@@ -8,7 +8,6 @@ import * as constants from "../../lib/constants";
 import LoopMode from "../../lib/LoopMode";
 import LoopRenderMode from "../../lib/LoopRenderMode";
 import ExecutionMode from "../../lib/ExecutionMode";
-import EventPriority from "../../lib/EventPriority";
 import { EventBuffer } from "../../lib/EventBuffer";
 import { TickBuffer } from "../../lib/TickBuffer";
 import { GameLoop } from "../../lib/GameLoop";
@@ -18,7 +17,7 @@ describe("GameLoop", function () {
 	function makeTimestampEvent(timestamp: number): pl.TimestampEvent {
 		return [
 			pl.EventCode.Timestamp,  // Code
-			EventPriority.System,    // Priority
+			g.EventPriority.System,  // Priority
 			"dummyPlayerId",         // PlayerId
 			timestamp                // Timestamp
 		];

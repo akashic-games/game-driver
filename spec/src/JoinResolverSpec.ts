@@ -1,8 +1,7 @@
 import * as pl from "@akashic/playlog";
+import { EventIndex, EventPriority } from "@akashic/akashic-engine";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
 import { ErrorCollector } from "../helpers/lib/ErrorCollector";
-import * as EventIndex from "../../lib/EventIndex";
-import EventPriority from "../../lib/EventPriority";
 import { JoinResolver } from "../../lib/JoinResolver";
 
 describe("JoinResolver", function() {

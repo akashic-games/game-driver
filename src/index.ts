@@ -1,8 +1,6 @@
 "use strict";
 
 export * from "./constants";
-import * as EventIndex from "./EventIndex";
-export { EventIndex };
 
 import { EventBufferMode } from "./EventBuffer";
 export { EventBufferMode };
@@ -13,8 +11,6 @@ import LoopRenderMode from "./LoopRenderMode";
 export { LoopRenderMode };
 import ExecutionMode from "./ExecutionMode";
 export { ExecutionMode };
-import EventPriority from "./EventPriority";
-export { EventPriority };
 import LoopConfiguration from "./LoopConfiguration";
 export { LoopConfiguration };
 
