@@ -1,7 +1,5 @@
 import * as pl from "@akashic/playlog";
-import * as pdi from "@akashic/akashic-pdi";
-import EventPriority from "../../lib/EventPriority";
-import * as EventIndex from "../../lib/EventIndex";
+import { EventIndex, EventPriority, PlatformPointEvent, PlatformPointType } from "@akashic/akashic-engine";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
 import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 import { EventBuffer } from "../../lib/EventBuffer";
@@ -429,8 +427,8 @@ describe("EventBuffer", function () {
 		self.setMode({ isReceiver: true });
 
 		game.loadAndDo(() => {
-			var pd: pdi.PointEvent = {
-				type: pdi.PointType.Down,
+			var pd: PlatformPointEvent = {
+				type: PlatformPointType.Down,
 				identifier: 2,
 				offset: { x: 140, y: 140 }
 			};
@@ -448,8 +446,8 @@ describe("EventBuffer", function () {
 			expect(self._localBuffer[0][EventIndex.PointDown.EntityId] < 0).toBe(true);
 			expect(self._localBuffer[0][EventIndex.PointDown.Local]).toBe(true);
 
-			var pm: pdi.PointEvent = {
-				type: pdi.PointType.Move,
+			var pm: PlatformPointEvent = {
+				type: PlatformPointType.Move,
 				identifier: 2,
 				offset: { x: 120, y: 120 }
 			};
@@ -469,8 +467,8 @@ describe("EventBuffer", function () {
 			expect(self._localBuffer[1][EventIndex.PointMove.EntityId] < 0).toBe(true);
 			expect(self._localBuffer[1][EventIndex.PointMove.Local]).toBe(true);
 
-			var pu: pdi.PointEvent = {
-				type: pdi.PointType.Up,
+			var pu: PlatformPointEvent = {
+				type: PlatformPointType.Up,
 				identifier: 2,
 				offset: { x: 10, y: 15 }
 			};

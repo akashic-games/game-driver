@@ -8,15 +8,15 @@ import LoopMode from "./LoopMode";
 import LoopRenderMode from "./LoopRenderMode";
 import LoopConfiguration from "./LoopConfiguration";
 import ExecutionMode from "./ExecutionMode";
-import * as EventIndex from "./EventIndex";
 import { Game } from "./Game";
 import { EventBuffer } from "./EventBuffer";
 import { Clock, ClockFrameTriggerParameterObject } from "./Clock";
 import { ProfilerClock } from "./ProfilerClock";
-import { EventConverter } from "./EventConverter";
 import { TickBuffer } from "./TickBuffer";
 import { TickController } from "./TickController";
 import { Profiler } from "./Profiler";
+
+const EventIndex = g.EventIndex;
 
 export interface GameLoopParameterObejct {
 	amflow: amf.AMFlow;
@@ -111,7 +111,7 @@ export class GameLoop {
 
 	_clock: Clock;
 	_tickController: TickController;
-	_eventConverter: EventConverter;
+	_eventConverter: g.EventConverter;
 	_tickBuffer: TickBuffer;
 
 	_onGotStartPoint_bound: (err: Error | null, startPoint?: amf.StartPoint) => void;
@@ -193,7 +193,10 @@ export class GameLoop {
 			errorHandler: this.errorTrigger.fire,
 			errorHandlerOwner: this.errorTrigger
 		});
-		this._eventConverter = new EventConverter({ game: param.game });
+		this._eventConverter = new g.EventConverter({
+			game: param.game,
+			playerId: param.game.player.id
+		});
 		this._tickBuffer = this._tickController.getBuffer();
 
 		this._onGotStartPoint_bound = this._onGotStartPoint.bind(this);

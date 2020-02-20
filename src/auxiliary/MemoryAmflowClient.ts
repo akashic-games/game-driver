@@ -1,7 +1,7 @@
 "use strict";
 import * as amf from "@akashic/amflow";
 import * as pl from "@akashic/playlog";
-import * as EventIndex from "../EventIndex";
+import { EventIndex } from "@akashic/akashic-engine";
 
 export interface MemoryAmflowClientParameterObject {
 	playId: string;

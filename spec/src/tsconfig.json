@@ -20,8 +20,6 @@
     "./ProfilerClockSpec.ts",
     "./TickBufferSpec.ts",
     "./GameSpec.ts",
-    "./PointEventResolverSpec.ts",
-    "./EventConverterSpec.ts",
     "./EventBufferSpec.ts",
     "./JoinResolverSpec.ts",
     "./TickGeneratorSpec.ts",

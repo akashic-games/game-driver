@@ -2,7 +2,8 @@
 import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import * as EventIndex from "./EventIndex";
+
+const EventIndex = g.EventIndex;
 
 export class JoinLeaveRequest {
 	joinResolver: JoinResolver;

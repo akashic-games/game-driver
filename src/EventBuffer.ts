@@ -3,9 +3,9 @@ import * as pl from "@akashic/playlog";
 import { AMFlow } from "@akashic/amflow";
 import * as pdi from "@akashic/akashic-pdi";
 import * as g from "@akashic/akashic-engine";
-import * as EventIndex from "./EventIndex";
-import { PointEventResolver } from "./PointEventResolver";
 import { Game } from "./Game";
+
+const EventIndex = g.EventIndex;
 
 export interface EventBufferMode {
 	/**
@@ -78,7 +78,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	_unfilteredLocalEvents: pl.Event[];
 	_unfilteredEvents: pl.Event[];
 
-	_pointEventResolver: PointEventResolver;
+	_pointEventResolver: g.PointEventResolver;
 	_onEvent_bound: (pev: pl.Event) => void;
 
 	static isEventLocal(pev: pl.Event): boolean {
@@ -120,7 +120,10 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._unfilteredLocalEvents = [];
 		this._unfilteredEvents = [];
 
-		this._pointEventResolver = new PointEventResolver({ game: param.game });
+		this._pointEventResolver = new g.PointEventResolver({
+			sourceResolver: param.game,
+			playerId: param.game.player.id
+		});
 		this._onEvent_bound = this.onEvent.bind(this);
 	}
 
@@ -184,16 +187,16 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		}
 	}
 
-	onPointEvent(e: pdi.PointEvent): void {
+	onPointEvent(e: g.PlatformPointEvent): void {
 		let pev: pl.Event;
 		switch (e.type) {
-		case pdi.PointType.Down:
+		case g.PlatformPointType.Down:
 			pev = this._pointEventResolver.pointDown(e);
 			break;
-		case pdi.PointType.Move:
+		case g.PlatformPointType.Move:
 			pev = this._pointEventResolver.pointMove(e);
 			break;
-		case pdi.PointType.Up:
+		case g.PlatformPointType.Up:
 			pev = this._pointEventResolver.pointUp(e);
 			break;
 		}
