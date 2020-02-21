@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.8.0
+* @akashic/amflowと@akashic/playlogのmajor更新に伴うバージョンアップ
+
 ## 1.7.0
 * `Game#_terminateGame()` を `Game#_abortGame()` にリネーム
 
