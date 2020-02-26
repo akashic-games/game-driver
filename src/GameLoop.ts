@@ -512,6 +512,7 @@ export class GameLoop {
 			this._currentTime = nextFrameTime;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
+			this._events.length = 0;
 
 			const plEvents = this._eventBuffer.readLocalEvents();
 			if (plEvents != null) {
@@ -528,7 +529,6 @@ export class GameLoop {
 				}
 				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 			}
-			this._events.length = 0;
 			this._omittedTickDuration = 0;
 
 			if (game._notifyPassedAgeTable[consumedAge]) {
@@ -666,6 +666,7 @@ export class GameLoop {
 			this._currentTime = nextFrameTime;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
+			this._events.length = 0;
 
 			if (tick != null) {
 				const plEvents = this._eventBuffer.readLocalEvents();
@@ -705,7 +706,6 @@ export class GameLoop {
 				break;  // シーンが変わったらローカルシーンに入っているかもしれないので一度抜ける
 			}
 		}
-		this._events.length = 0;
 
 		if (this._skipping && (targetAge - this._tickBuffer.currentAge < 1))
 			this._stopSkipping();
