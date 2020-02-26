@@ -4,13 +4,9 @@ import * as amf from "@akashic/amflow";
 import StartPointData from "./StartPointData";
 import { StorageFunc } from "./StorageFunc";
 
-export interface GameParameterObject {
-	configuration: g.GameConfiguration;
-	resourceFactory: g.ResourceFactoryLike;
-	assetBase: string;
+export interface GameParameterObject extends g.GameParameterObject {
 	player: g.Player;
 	isSnapshotSaver?: boolean;
-	operationPluginViewInfo?: g.OperationPluginViewInfo;
 	gameArgs?: any;
 	globalGameArgs?: any;
 }
@@ -73,7 +69,7 @@ export class Game extends g.Game {
 	_globalGameArgs: any;
 
 	constructor(param: GameParameterObject) {
-		super(param.configuration, param.resourceFactory, param.assetBase, param.player.id, param.operationPluginViewInfo);
+		super(param);
 		this.agePassedTrigger = new g.Trigger<number>();
 		this.targetTimeReachedTrigger = new g.Trigger<number>();
 		this.skippingChangedTrigger = new g.Trigger<boolean>();
@@ -241,12 +237,10 @@ export class Game extends g.Game {
 		this._eventFilterFuncs.removeFilter();
 		if (data.seed != null) {
 			// 例外ケース: 第0スタートポイントでスナップショットは持っていないので特別対応
-			let randGen = new g.XorshiftRandomGenerator(data.seed);
-			this._reset({ age: snapshot.frame, randGen: randGen });
+			this._reset({ age: snapshot.frame, randSeed: data.seed });
 			this._loadAndStart({ args: this._gameArgs, globalArgs: this._globalGameArgs });
 		} else {
-			let randGen = new g.XorshiftRandomGenerator(0, data.randGenSer);
-			this._reset({ age: snapshot.frame, randGen: randGen });
+			this._reset({ age: snapshot.frame, randSeed: 0 }); // TODO: randGenSer を渡せるようにする
 			this._loadAndStart({ snapshot: data.gameSnapshot });
 		}
 	}

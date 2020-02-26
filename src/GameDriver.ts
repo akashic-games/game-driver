@@ -495,6 +495,7 @@ export class GameDriver {
 			};
 			pf.setRendererRequirement(rendererRequirement);
 			var game = new Game({
+				engineModule: g,
 				configuration: conf,
 				player: player,
 				resourceFactory: pf.getResourceFactory(),
@@ -526,7 +527,7 @@ export class GameDriver {
 
 			gameLoop.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 			game.setCurrentTimeFunc(gameLoop.getCurrentTime.bind(gameLoop));
-			game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(seed) });
+			game._reset({ age: 0, randSeed: seed });
 			this._updateGamePlayId(game);
 			if (this._hidden)
 				game._setMuted(true);

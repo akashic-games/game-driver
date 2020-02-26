@@ -120,10 +120,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._unfilteredLocalEvents = [];
 		this._unfilteredEvents = [];
 
-		this._pointEventResolver = new g.PointEventResolver({
-			sourceResolver: param.game,
-			playerId: param.game.player.id
-		});
+		this._pointEventResolver = param.game._pointEventResolver;
 		this._onEvent_bound = this.onEvent.bind(this);
 	}
 

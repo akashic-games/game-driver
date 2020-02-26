@@ -24,6 +24,7 @@ describe("Game", function() {
 	it("can be instantiated", function () {
 		var rf = new mockrf.ResourceFactory();
 		var game = new Game({
+			engineModule: g,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
@@ -37,6 +38,7 @@ describe("Game", function() {
 	it("can be destroyed", function () {
 		var rf = new mockrf.ResourceFactory();
 		var game = new Game({
+			engineModule: g,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
@@ -50,6 +52,7 @@ describe("Game", function() {
 	it("notifies on _abortGame()", function () {
 		var rf = new mockrf.ResourceFactory();
 		var game = new Game({
+			engineModule: g,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
@@ -68,6 +71,7 @@ describe("Game", function() {
 	it("can fire the trigger on raiseEvent()", function () {
 		var rf = new mockrf.ResourceFactory();
 		var game = new Game({
+			engineModule: g,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
@@ -117,13 +121,14 @@ describe("Game", function() {
 	it("notifies snapshot", function () {
 		var rf = new mockrf.ResourceFactory();
 		var game = new Game({
+			engineModule: g,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
 			player: { id: "dummyPlayerId" },
 			isSnapshotSaver: true
 		});
-		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(0) });
+		game._reset({ age: 0, randSeed: 0 });
 
 		var called = 0;
 		game.setCurrentTimeFunc(() => {
