@@ -515,7 +515,7 @@ export class GameLoop {
 			this._events.length = 0;
 
 			const plEvents = this._eventBuffer.readLocalEvents();
-			if (plEvents != null) {
+			if (plEvents) {
 				this._events.push(...plEvents);
 			}
 			if (typeof tick === "number") {
