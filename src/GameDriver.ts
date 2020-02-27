@@ -497,6 +497,7 @@ export class GameDriver {
 			var game = new Game({
 				engineModule: g,
 				configuration: conf,
+				selfId: player.id,
 				player: player,
 				resourceFactory: pf.getResourceFactory(),
 				assetBase: param.assetBase,
