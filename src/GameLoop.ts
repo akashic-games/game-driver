@@ -195,7 +195,7 @@ export class GameLoop {
 			errorHandler: this.errorTrigger.fire,
 			errorHandlerOwner: this.errorTrigger
 		});
-		this._eventConverter = param.game._eventConverter;
+		this._eventConverter = param.game._eventConverter; // TODO: EventConverter への依存を無くす
 		this._tickBuffer = this._tickController.getBuffer();
 
 		this._onGotStartPoint_bound = this._onGotStartPoint.bind(this);
