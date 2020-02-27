@@ -29,7 +29,7 @@ interface StartPointData {
 	fps?: number;
 
 	/**
-	 * 乱数生成期のシリアリゼーション。
+	 * 乱数生成器のシリアリゼーション。
 	 * 第0以外のスタートポイントにのみ存在する。
 	 */
 	randGenSer?: any;

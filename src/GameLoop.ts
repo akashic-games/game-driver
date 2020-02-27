@@ -113,6 +113,7 @@ export class GameLoop {
 	_tickController: TickController;
 	_eventConverter: g.EventConverter;
 	_tickBuffer: TickBuffer;
+	_events: pl.Event[];
 
 	_onGotStartPoint_bound: (err: Error | null, startPoint?: amf.StartPoint) => void;
 
@@ -164,6 +165,7 @@ export class GameLoop {
 		this._consumedLatestTick = false;
 		this._skipping = false;
 		this._lastPollingTickTime = 0;
+		this._events = [];
 
 		// todo: 本来は、パフォーマンス測定機構を含まないリリースモードによるビルド方式も提供すべき。
 		if (!param.profiler) {
@@ -193,10 +195,7 @@ export class GameLoop {
 			errorHandler: this.errorTrigger.fire,
 			errorHandlerOwner: this.errorTrigger
 		});
-		this._eventConverter = new g.EventConverter({
-			game: param.game,
-			playerId: param.game.player.id
-		});
+		this._eventConverter = param.game._eventConverter; // TODO: EventConverter への依存を無くす
 		this._tickBuffer = this._tickController.getBuffer();
 
 		this._onGotStartPoint_bound = this._onGotStartPoint.bind(this);
@@ -388,11 +387,7 @@ export class GameLoop {
 		const game = this._game;
 		const pevs = this._eventBuffer.readLocalEvents();
 		this._currentTime += this._frameTime;
-		if (pevs) {
-			for (let i = 0, len = pevs.length; i < len; ++i)
-				game.events.push(this._eventConverter.toGameEvent(pevs[i]));
-		}
-		const sceneChanged = game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime));
+		const sceneChanged = game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime), pevs);
 		this._omittedTickDuration = 0;
 		if (sceneChanged)
 			this._handleSceneChange();
@@ -517,25 +512,22 @@ export class GameLoop {
 			this._currentTime = nextFrameTime;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
+			this._events.length = 0;
 
-			let plEvents = this._eventBuffer.readLocalEvents();
+			const plEvents = this._eventBuffer.readLocalEvents();
 			if (plEvents) {
-				for (let j = 0, len = plEvents.length; j < len; ++j) {
-					game.events.push(this._eventConverter.toGameEvent(plEvents[j]));
-				}
+				this._events.push(...plEvents);
 			}
 			if (typeof tick === "number") {
 				consumedAge = tick;
-				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime));
+				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 			} else {
 				consumedAge = tick[EventIndex.Tick.Age];
-				let pevs: pl.Event[] = tick[EventIndex.Tick.Events];
+				const pevs: pl.Event[] = tick[EventIndex.Tick.Events];
 				if (pevs) {
-					for (let j = 0, len = pevs.length; j < len; ++j) {
-						game.events.push(this._eventConverter.toGameEvent(pevs[j]));
-					}
+					this._events.push(...pevs);
 				}
-				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime));
+				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 			}
 			this._omittedTickDuration = 0;
 
@@ -674,26 +666,23 @@ export class GameLoop {
 			this._currentTime = nextFrameTime;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
+			this._events.length = 0;
 
 			if (tick != null) {
-				let plEvents = this._eventBuffer.readLocalEvents();
+				const plEvents = this._eventBuffer.readLocalEvents();
 				if (plEvents) {
-					for (let i = 0, len = plEvents.length; i < len; ++i) {
-						game.events.push(this._eventConverter.toGameEvent(plEvents[i]));
-					}
+					this._events.push(...plEvents);
 				}
 				if (typeof tick === "number") {
 					consumedAge = tick;
-					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime));
+					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 				} else {
 					consumedAge = tick[EventIndex.Tick.Age];
-					let pevs: pl.Event[] = tick[EventIndex.Tick.Events];
+					const pevs: pl.Event[] = tick[EventIndex.Tick.Events];
 					if (pevs) {
-						for (let j = 0, len = pevs.length; j < len; ++j) {
-							game.events.push(this._eventConverter.toGameEvent(pevs[j]));
-						}
+						this._events.push(...pevs);
 					}
-					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime));
+					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 				}
 				this._omittedTickDuration = 0;
 			} else {

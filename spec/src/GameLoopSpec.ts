@@ -231,7 +231,7 @@ describe("GameLoop", function () {
 		}, 1);
 
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(0) });
+		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });
 
 		// コンテンツ向けの `skippingChanged` (`skippingChangedTrigger` でない) は `_reset()` で初期化された後に設定する必要がある
@@ -283,7 +283,7 @@ describe("GameLoop", function () {
 		amflow.sendTick([10]); // Realtimeで非Manualなのでtickをpushされないと何も動かない
 
 		const looper = self._clock._looper as mockpf.Looper;
-		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(0) });
+		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });
 
 		// 最新の状態まで追いつく
@@ -395,7 +395,7 @@ describe("GameLoop", function () {
 		}, 1);
 
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(0) });
+		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });
 
 		// コンテンツ向けの `skippingChanged` (`skippingChangedTrigger` でない) は `_reset()` で初期化された後に設定する必要がある
@@ -540,7 +540,7 @@ describe("GameLoop", function () {
 
 		expect(self._frameTime).toBe(1000 / 30);   // 30 は fps. LocalTickGame の game.json 参照。
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(0) });
+		game._reset({ age: 0, randSeed: 0 });
 		game.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
@@ -658,7 +658,7 @@ describe("GameLoop", function () {
 
 		expect(self._frameTime).toBe(1000 / 30);   // 30 は fps. LocalTickGame の game.json 参照。
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(0) });
+		game._reset({ age: 0, randSeed: 0 });
 		game.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
@@ -750,7 +750,7 @@ describe("GameLoop", function () {
 		}, 1);
 
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(42) });
+		game._reset({ age: 0, randSeed: 42 });
 		game.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
@@ -815,7 +815,7 @@ describe("GameLoop", function () {
 
 		game.setEventFilterFuncs({ addFilter: (filter: g.EventFilter) => null, removeFilter: (filter?: g.EventFilter) => null });
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-		game._reset({ age: 0, randGen: new g.XorshiftRandomGenerator(0) });
+		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });
 	});
 });

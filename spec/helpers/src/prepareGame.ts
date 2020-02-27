@@ -33,9 +33,11 @@ export function prepareGame(param: PrepareGameParameterObject): MockGame {
 	configuration = PdiUtil._resolveConfigurationBasePath(configuration, assetBase);
 
 	var game = new MockGame({
+		engineModule: g,
 		configuration: configuration,
 		resourceFactory: new mockrf.ResourceFactory(),
 		assetBase: assetBase,
+		selfId: param.playerId,
 		player: param.player ? param.player : { id: param.playerId }
 	});
 	return game;
