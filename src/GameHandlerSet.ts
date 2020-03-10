@@ -42,6 +42,7 @@ export class GameHandlerSet implements g.GameHandlerSet {
 		this._eventFilterFuncs = funcs;
 	}
 
+	// TODO: g.GameHandlerSet に追加する
 	removeAllEventFilters(): void {
 		if (this._eventFilterFuncs)
 			this._eventFilterFuncs.removeFilter();
@@ -69,11 +70,13 @@ export class GameHandlerSet implements g.GameHandlerSet {
 	}
 
 	addEventFilter(filter: g.EventFilter, handleEmpty?: boolean): void {
-		this._eventFilterFuncs.addFilter(filter, handleEmpty);
+		if (this._eventFilterFuncs)
+			this._eventFilterFuncs.addFilter(filter, handleEmpty);
 	}
 
 	removeEventFilter(filter: g.EventFilter): void {
-		this._eventFilterFuncs.removeFilter(filter);
+		if (this._eventFilterFuncs)
+			this._eventFilterFuncs.removeFilter(filter);
 	}
 
 	shouldSaveSnapshot(): boolean {
