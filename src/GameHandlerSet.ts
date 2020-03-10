@@ -64,8 +64,6 @@ export class GameHandlerSet implements g.GameHandlerSet {
 	}
 
 	raiseTick(events?: pl.Event[]): void {
-		if (this._tickGenerationMode !== g.TickGenerationMode.Manual)
-			throw g.ExceptionFactory.createAssertionError("Game#raiseTick(): tickGenerationMode for the current scene is not Manual.");
 		this.raiseTickTrigger.fire(events);
 	}
 

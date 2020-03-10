@@ -143,6 +143,8 @@ export class Game extends g.Game {
 
 	// TODO: akashic-engine 側に処理を移す
 	raiseTick(events?: g.Event[]): void {
+		if (!this.scene() || this.scene().tickGenerationMode !== g.TickGenerationMode.Manual)
+			throw g.ExceptionFactory.createAssertionError("Game#raiseTick(): tickGenerationMode for the current scene is not Manual.");
 		if (events != null && events.length) {
 			const plEvents: pl.Event[] = [];
 			for (let i = 0; i < events.length; i++) {
