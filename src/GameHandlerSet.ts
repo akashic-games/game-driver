@@ -43,7 +43,8 @@ export class GameHandlerSet implements g.GameHandlerSet {
 	}
 
 	removeAllEventFilters(): void {
-		this._eventFilterFuncs.removeFilter();
+		if (this._eventFilterFuncs)
+			this._eventFilterFuncs.removeFilter();
 	}
 
 	changeSceneMode(mode: g.SceneMode): void {
