@@ -42,7 +42,7 @@ export class GameHandlerSet implements g.GameHandlerSet {
 		this._eventFilterFuncs = funcs;
 	}
 
-	removeAllEventFilterFuncs(): void {
+	removeAllEventFilters(): void {
 		this._eventFilterFuncs.removeFilter();
 	}
 
