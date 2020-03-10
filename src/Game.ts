@@ -199,7 +199,7 @@ export class Game extends g.Game {
 
 	_restartWithSnapshot(snapshot: any): void {
 		let data = <StartPointData>snapshot.data;
-		this.handlerSet.removeAllEventFilters();
+		this.handlerSet.removeAllEventFilters(); // TODO: g.Game#_reset() から呼ぶようにする
 		if (data.seed != null) {
 			// 例外ケース: 第0スタートポイントでスナップショットは持っていないので特別対応
 			this._reset({ age: snapshot.frame, randSeed: data.seed });
