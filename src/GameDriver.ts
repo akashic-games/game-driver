@@ -8,6 +8,7 @@ import LoopConfiguration from "./LoopConfiguration";
 import DriverConfiguration from "./DriverConfiguration";
 import StartPointData from "./StartPointData";
 import { Game } from "./Game";
+import { GameHandlerSet } from "./GameHandlerSet";
 import { EventBuffer } from "./EventBuffer";
 import { GameLoop } from "./GameLoop";
 import { PdiUtil } from "./PdiUtil";
@@ -411,7 +412,7 @@ export class GameDriver {
 				this._playToken = playToken;
 				this._permission = permission;
 				if (this._game) {
-					this._game.isSnapshotSaver = this._permission.writeTick;
+					this._game.handlerSet.isSnapshotSaver = this._permission.writeTick;
 				}
 				resolve();
 			});
@@ -494,14 +495,17 @@ export class GameDriver {
 				rendererCandidates: (<any>conf).renderers   // TODO: akashic-engineのGameConfigurationにrenderersの定義を加える
 			};
 			pf.setRendererRequirement(rendererRequirement);
-			var game = new Game({
+			const handlerSet = new GameHandlerSet({
+				isSnapshotSaver: this._permission.writeTick
+			});
+			const game = new Game({
 				engineModule: g,
+				handlerSet,
 				configuration: conf,
 				selfId: player.id,
 				player: player,
 				resourceFactory: pf.getResourceFactory(),
 				assetBase: param.assetBase,
-				isSnapshotSaver: this._permission.writeTick,
 				operationPluginViewInfo: (pf.getOperationPluginViewInfo ? pf.getOperationPluginViewInfo() : null),
 				gameArgs: args,
 				globalGameArgs: globalArgs
@@ -509,7 +513,7 @@ export class GameDriver {
 			var eventBuffer = new EventBuffer({ game: game, amflow: pf.amflow });
 			eventBuffer.setMode(driverConf.eventBufferMode);
 			pf.setPlatformEventHandler(eventBuffer);
-			game.setEventFilterFuncs({
+			handlerSet.setEventFilterFuncs({
 				addFilter: eventBuffer.addFilter.bind(eventBuffer),
 				removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 			});
@@ -527,14 +531,14 @@ export class GameDriver {
 			});
 
 			gameLoop.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-			game.setCurrentTimeFunc(gameLoop.getCurrentTime.bind(gameLoop));
+			handlerSet.setCurrentTimeFunc(gameLoop.getCurrentTime.bind(gameLoop));
 			game._reset({ age: 0, randSeed: seed });
 			this._updateGamePlayId(game);
 			if (this._hidden)
 				game._setMuted(true);
 
-			game.snapshotTrigger.add((startPoint: amf.StartPoint) => {
-				this._platform.amflow.putStartPoint(startPoint, (err: Error | null) => {
+			handlerSet.snapshotTrigger.add(startPoint => {
+				this._platform.amflow.putStartPoint(startPoint, err => {
 					const error = this._getCallbackError(err);
 					if (error) {
 						this.errorTrigger.fire(error);

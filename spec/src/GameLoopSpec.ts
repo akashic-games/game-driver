@@ -541,7 +541,7 @@ describe("GameLoop", function () {
 		expect(self._frameTime).toBe(1000 / 30);   // 30 は fps. LocalTickGame の game.json 参照。
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 0 });
-		game.setEventFilterFuncs({
+		game.handlerSet.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 		});
@@ -659,7 +659,7 @@ describe("GameLoop", function () {
 		expect(self._frameTime).toBe(1000 / 30);   // 30 は fps. LocalTickGame の game.json 参照。
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 0 });
-		game.setEventFilterFuncs({
+		game.handlerSet.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 		});
@@ -751,7 +751,7 @@ describe("GameLoop", function () {
 
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 42 });
-		game.setEventFilterFuncs({
+		game.handlerSet.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 		});
@@ -813,7 +813,7 @@ describe("GameLoop", function () {
 			looper.fun(self._frameTime);
 		}, 1);
 
-		game.setEventFilterFuncs({ addFilter: (filter: g.EventFilter) => null, removeFilter: (filter?: g.EventFilter) => null });
+		game.handlerSet.setEventFilterFuncs({ addFilter: (filter: g.EventFilter) => null, removeFilter: (filter?: g.EventFilter) => null });
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });

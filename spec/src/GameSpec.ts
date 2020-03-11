@@ -1,8 +1,9 @@
 import * as g from "@akashic/akashic-engine";
-import * as amf from "@akashic/amflow";
+import * as pl from "@akashic/playlog";
 import * as mockrf from "../helpers/lib/MockResourceFactory";
 import { Game } from "../../lib/Game";
 import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
+import { GameHandlerSet } from "../../lib/GameHandlerSet";
 
 describe("Game", function() {
 
@@ -21,10 +22,12 @@ describe("Game", function() {
 		}
 	};
 
-	it("can be instantiated", function () {
-		var rf = new mockrf.ResourceFactory();
-		var game = new Game({
+	it("can be instantiated", () => {
+		const rf = new mockrf.ResourceFactory();
+		const handlerSet = new GameHandlerSet({ isSnapshotSaver: false });
+		const game = new Game({
 			engineModule: g,
+			handlerSet,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
@@ -35,10 +38,12 @@ describe("Game", function() {
 		expect(game.skippingChangedTrigger).not.toBe(undefined);
 	});
 
-	it("can be destroyed", function () {
-		var rf = new mockrf.ResourceFactory();
-		var game = new Game({
+	it("can be destroyed", () => {
+		const rf = new mockrf.ResourceFactory();
+		const handlerSet = new GameHandlerSet({ isSnapshotSaver: false });
+		const game = new Game({
 			engineModule: g,
+			handlerSet,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
@@ -49,18 +54,20 @@ describe("Game", function() {
 		expect(game.skippingChangedTrigger).toBe(null);
 	});
 
-	it("notifies on _abortGame()", function () {
-		var rf = new mockrf.ResourceFactory();
-		var game = new Game({
+	it("notifies on _abortGame()", () => {
+		const rf = new mockrf.ResourceFactory();
+		const handlerSet = new GameHandlerSet({ isSnapshotSaver: false });
+		const game = new Game({
 			engineModule: g,
+			handlerSet,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
 			player: { id: "dummyPlayerId" }
 		});
 
-		var firedCount = 0;
-		game.abortTrigger.add(function () {
+		let firedCount = 0;
+		game.abortTrigger.add(() => {
 			firedCount++;
 		});
 		expect(firedCount).toBe(0);
@@ -68,28 +75,31 @@ describe("Game", function() {
 		expect(firedCount).toBe(1);
 	});
 
-	it("can fire the trigger on raiseEvent()", function () {
-		var rf = new mockrf.ResourceFactory();
-		var game = new Game({
+	it("can fire the trigger on raiseEvent()", () => {
+		const rf = new mockrf.ResourceFactory();
+		const handlerSet = new GameHandlerSet({ isSnapshotSaver: false });
+		const game = new Game({
 			engineModule: g,
+			handlerSet,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
-			player: { id: "dummyPlayerId" }
+			player: { id: "dummyPlayerId" },
+			selfId: "dummyPlayerId"
 		});
 
-		var raisedEvents: g.Event[] = [];
-		game.raiseEventTrigger.add(function (e: g.Event) {
+		const raisedEvents: pl.Event[] = [];
+		handlerSet.raiseEventTrigger.add(e => {
 			raisedEvents.push(e);
 		});
 
 		game.raiseEvent(new g.MessageEvent("data", { id: "foo" }, true));
 		game.raiseEvent(new g.PointDownEvent(0, null, { x: 0, y: 10 }, { id: "foo" }));
 
-		// raiseEvent は player 情報を強制で上書きする仕様だが、上書きは自身ではなくplaylog.Eventへの変換時に行う。
+		// playlog.Eventへの変換時に player 情報が強制で上書きされる。
 		expect(raisedEvents).toEqual([
-			new g.MessageEvent("data", { id: "foo" }, true),
-			new g.PointDownEvent(0, null, { x: 0, y: 10 }, { id: "foo" })
+			[32, undefined, "dummyPlayerId", "data", true],
+			[33, undefined, "dummyPlayerId", 0, 0, 10, null, false]
 		]);
 	});
 
@@ -118,27 +128,28 @@ describe("Game", function() {
 		});
 	});
 
-	it("notifies snapshot", function () {
-		var rf = new mockrf.ResourceFactory();
-		var game = new Game({
+	it("notifies snapshot", () => {
+		const rf = new mockrf.ResourceFactory();
+		const handlerSet = new GameHandlerSet({ isSnapshotSaver: true });
+		const game = new Game({
 			engineModule: g,
+			handlerSet,
 			configuration: dummyConfiguration,
 			resourceFactory: rf,
 			assetBase: ".",
-			player: { id: "dummyPlayerId" },
-			isSnapshotSaver: true
+			player: { id: "dummyPlayerId" }
 		});
 		game._reset({ age: 0, randSeed: 0 });
 
-		var called = 0;
-		game.setCurrentTimeFunc(() => {
+		let called = 0;
+		handlerSet.setCurrentTimeFunc(() => {
 			++called;
 			return 42;
 		});
 
-		var fired = 0;
-		var startPoint = null;
-		game.snapshotTrigger.add((sp: amf.StartPoint) => {
+		let fired = 0;
+		let startPoint = null;
+		handlerSet.snapshotTrigger.add(sp => {
 			++fired;
 			startPoint = sp;
 		});
@@ -148,7 +159,7 @@ describe("Game", function() {
 		expect(fired).toBe(0);
 		expect(startPoint).toBe(null);
 
-		var snapshot = { dummy: "dummy" };
+		const snapshot = { dummy: "dummy" };
 		game.saveSnapshot(snapshot);
 		expect(called).toBe(1);
 		expect(fired).toBe(1);

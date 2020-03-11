@@ -111,7 +111,6 @@ export class GameLoop {
 
 	_clock: Clock;
 	_tickController: TickController;
-	_eventConverter: g.EventConverter;
 	_tickBuffer: TickBuffer;
 	_events: pl.Event[];
 
@@ -195,7 +194,6 @@ export class GameLoop {
 			errorHandler: this.errorTrigger.fire,
 			errorHandlerOwner: this.errorTrigger
 		});
-		this._eventConverter = param.game._eventConverter; // TODO: EventConverter への依存を無くす
 		this._tickBuffer = this._tickController.getBuffer();
 
 		this._onGotStartPoint_bound = this._onGotStartPoint.bind(this);
@@ -203,8 +201,8 @@ export class GameLoop {
 		this._setLoopRenderMode(loopRenderMode);
 		this._game.setIsSkipAware(conf.skipAwareGame != null ? conf.skipAwareGame : true);
 		this._game.setStorageFunc(this._tickController.storageFunc());
-		this._game.raiseEventTrigger.add(this._onGameRaiseEvent, this);
-		this._game.raiseTickTrigger.add(this._onGameRaiseTick, this);
+		this._game.handlerSet.raiseEventTrigger.add(this._onGameRaiseEvent, this);
+		this._game.handlerSet.raiseTickTrigger.add(this._onGameRaiseTick, this);
 		this._game._started.add(this._onGameStarted, this);
 		this._game._operationPluginOperated.add(this._onGameOperationPluginOperated, this);
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
@@ -342,7 +340,7 @@ export class GameLoop {
 	}
 
 	_handleSceneChange(): void {
-		const scene = this._game.scene();
+		const scene = this._game.scene(); // TODO: GameHandlerSet から情報を取得する
 		const localMode = scene ? scene.local : g.LocalTickMode.FullLocal;  // シーンがない場合はローカルシーン同様に振る舞う(ティックは消化しない)
 		const tickMode = scene ? scene.tickGenerationMode : g.TickGenerationMode.ByClock;
 		if (this._sceneLocalMode !== localMode || this._sceneTickMode !== tickMode) {
@@ -811,24 +809,23 @@ export class GameLoop {
 		}
 	}
 
-	_onGameRaiseEvent(e: g.Event): void {
-		const pev = this._eventConverter.toPlaylogEvent(e);
-		this._eventBuffer.onEvent(pev);
+	_onGameRaiseEvent(event: pl.Event): void {
+		this._eventBuffer.onEvent(event);
 	}
 
-	_onGameRaiseTick(es?: g.Event[]): void {
+	_onGameRaiseTick(es?: pl.Event[]): void {
 		if (this._executionMode !== ExecutionMode.Active)
 			return;
 		// TODO: イベントフィルタの中で呼ばれるとおかしくなる(フィルタ中のイベントがtickに乗らない)。
 		if (es) {
 			for (let i = 0; i < es.length; ++i)
-				this._eventBuffer.addEventDirect(this._eventConverter.toPlaylogEvent(es[i]));
+				this._eventBuffer.addEventDirect(es[i]);
 		}
 		this._tickController.forceGenerateTick();
 	}
 
 	_onGameOperationPluginOperated(op: g.InternalOperationPluginOperation): void {
-		const pev = this._eventConverter.makePlaylogOperationEvent(op);
+		const pev = this._game._eventConverter.makePlaylogOperationEvent(op); // TODO: playlog.Event への変換処理を akashic-engine に委任する
 		this._eventBuffer.onEvent(pev);
 	}
 
