@@ -42,7 +42,6 @@ export class GameHandlerSet implements g.GameHandlerSet {
 		this._eventFilterFuncs = funcs;
 	}
 
-	// TODO: g.GameHandlerSet に追加する
 	removeAllEventFilters(): void {
 		if (this._eventFilterFuncs)
 			this._eventFilterFuncs.removeFilter();
