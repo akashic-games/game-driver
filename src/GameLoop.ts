@@ -763,8 +763,6 @@ export class GameLoop {
 		this._consumedLatestTick = false; // 同上。
 		this._lastRequestedStartPointAge = -1;  // 現在ageを変えた時はリセットしておく(場合によっては不要だが、安全のため)。
 		this._lastRequestedStartPointTime = -1;  // 同上。
-		this._sceneLocalMode = null; // 同上。
-		this._sceneTickMode = null; // 同上。
 		this._omittedTickDuration = 0;
 		this._game._restartWithSnapshot(startPoint);
 	}
