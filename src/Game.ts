@@ -1,13 +1,11 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import * as pl from "@akashic/playlog";
 import StartPointData from "./StartPointData";
 import { StorageFunc } from "./StorageFunc";
 import { GameHandlerSet } from "./GameHandlerSet";
 
 export interface GameParameterObject extends g.GameParameterObject {
 	player: g.Player;
-	handlerSet: GameHandlerSet; // TODO: g.GameParameterObject で定義するように
 	gameArgs?: any;
 	globalGameArgs?: any;
 }
@@ -66,7 +64,6 @@ export class Game extends g.Game {
 		this.skippingChangedTrigger = new g.Trigger<boolean>();
 		this.abortTrigger = new g.Trigger<void>();
 		this.player = param.player;
-		this.handlerSet = param.handlerSet;
 		this._notifyPassedAgeTable = {};
 		this._notifiesTargetTimeReached = false;
 		this._isSkipAware = false;
@@ -131,57 +128,6 @@ export class Game extends g.Game {
 		this._isSkipAware = aware;
 	}
 
-	// TODO: akashic-engine 側に処理を移す
-	getCurrentTime(): number {
-		return this.handlerSet.getCurrentTime();
-	}
-
-	// TODO: akashic-engine 側に処理を移す
-	raiseEvent(event: g.Event): void {
-		this.handlerSet.raiseEvent(this._eventConverter.toPlaylogEvent(event));
-	}
-
-	// TODO: akashic-engine 側に処理を移す
-	raiseTick(events?: g.Event[]): void {
-		if (!this.scene() || this.scene().tickGenerationMode !== g.TickGenerationMode.Manual)
-			throw g.ExceptionFactory.createAssertionError("Game#raiseTick(): tickGenerationMode for the current scene is not Manual.");
-		if (events != null && events.length) {
-			const plEvents: pl.Event[] = [];
-			for (let i = 0; i < events.length; i++) {
-				plEvents.push(this._eventConverter.toPlaylogEvent(events[i]));
-			}
-			this.handlerSet.raiseTick(plEvents);
-			return;
-		}
-		this.handlerSet.raiseTick();
-	}
-
-	// TODO: akashic-engine 側に処理を移す
-	addEventFilter(filter: g.EventFilter, handleEmpty?: boolean): void {
-		this.handlerSet.addEventFilter(filter, handleEmpty);
-	}
-
-	// TODO: akashic-engine 側に処理を移す
-	removeEventFilter(filter: g.EventFilter): void {
-		this.handlerSet.removeEventFilter(filter);
-	}
-
-	// TODO: akashic-engine 側に処理を移す
-	shouldSaveSnapshot(): boolean {
-		return this.handlerSet.isSnapshotSaver;
-	}
-
-	// NOTE: 現状実装が `shouldSaveSnapshot()` と等価なので、簡易対応としてこの実装を用いる。
-	// TODO: akashic-engine 側に処理を移す
-	isActiveInstance(): boolean {
-		return this.shouldSaveSnapshot();
-	}
-
-	// TODO: akashic-engine 側に処理を移す
-	saveSnapshot(gameSnapshot: any, timestamp: number = this.handlerSet.getCurrentTime()): void {
-		this.handlerSet.saveSnapshot(this.age, gameSnapshot, this.random.serialize(), timestamp);
-	}
-
 	_destroy(): void {
 		this.agePassedTrigger.destroy();
 		this.agePassedTrigger = null;
@@ -200,20 +146,15 @@ export class Game extends g.Game {
 	}
 
 	_restartWithSnapshot(snapshot: any): void {
-		let data = <StartPointData>snapshot.data;
-		this.handlerSet.removeAllEventFilters(); // TODO: g.Game#_reset() から呼ぶようにする
+		const data: StartPointData = snapshot.data;
 		if (data.seed != null) {
 			// 例外ケース: 第0スタートポイントでスナップショットは持っていないので特別対応
 			this._reset({ age: snapshot.frame, randSeed: data.seed });
 			this._loadAndStart({ args: this._gameArgs, globalArgs: this._globalGameArgs });
 		} else {
-			this._reset({ age: snapshot.frame, randSeed: 0 }); // TODO: randGenSer を渡せるようにする
+			this._reset({ age: snapshot.frame, randGenSer: data.randGenSer });
 			this._loadAndStart({ snapshot: data.gameSnapshot });
 		}
-	}
-
-	_leaveGame(): void {
-		// do nothing.
 	}
 
 	_abortGame(): void {

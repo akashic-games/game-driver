@@ -203,14 +203,12 @@ export class GameLoop {
 		this._game.setStorageFunc(this._tickController.storageFunc());
 		this._game.handlerSet.raiseEventTrigger.add(this._onGameRaiseEvent, this);
 		this._game.handlerSet.raiseTickTrigger.add(this._onGameRaiseTick, this);
+		this._game.handlerSet.changeSceneModeTrigger.add(this._handleSceneChange, this);
 		this._game._started.add(this._onGameStarted, this);
-		this._game._operationPluginOperated.add(this._onGameOperationPluginOperated, this);
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
 		this._tickBuffer.gotNoTickTrigger.add(this._onGotNoTick, this);
 		this._tickBuffer.start();
 		this._updateGamePlaybackRate();
-
-		this._handleSceneChange();
 	}
 
 	start(): void {
@@ -339,10 +337,9 @@ export class GameLoop {
 		this._game._setAudioPlaybackRate(realPlaybackRate);
 	}
 
-	_handleSceneChange(): void {
-		const scene = this._game.scene(); // TODO: GameHandlerSet から情報を取得する
-		const localMode = scene ? scene.local : g.LocalTickMode.FullLocal;  // シーンがない場合はローカルシーン同様に振る舞う(ティックは消化しない)
-		const tickMode = scene ? scene.tickGenerationMode : g.TickGenerationMode.ByClock;
+	_handleSceneChange(mode: g.SceneMode): void {
+		const localMode = mode.local;
+		const tickMode = mode.tickGenerationMode;
 		if (this._sceneLocalMode !== localMode || this._sceneTickMode !== tickMode) {
 			this._sceneLocalMode = localMode;
 			this._sceneTickMode = tickMode;
@@ -385,10 +382,8 @@ export class GameLoop {
 		const game = this._game;
 		const pevs = this._eventBuffer.readLocalEvents();
 		this._currentTime += this._frameTime;
-		const sceneChanged = game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime), pevs);
+		game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime), pevs);
 		this._omittedTickDuration = 0;
-		if (sceneChanged)
-			this._handleSceneChange();
 	}
 
 	/**
@@ -539,7 +534,6 @@ export class GameLoop {
 			}
 
 			if (sceneChanged) {
-				this._handleSceneChange();
 				break;  // シーンが変わったらローカルシーンに入っているかもしれないので一度抜ける
 			}
 		}
@@ -700,7 +694,6 @@ export class GameLoop {
 			}
 
 			if (sceneChanged) {
-				this._handleSceneChange();
 				break;  // シーンが変わったらローカルシーンに入っているかもしれないので一度抜ける
 			}
 		}
@@ -772,7 +765,6 @@ export class GameLoop {
 		this._lastRequestedStartPointTime = -1;  // 同上。
 		this._omittedTickDuration = 0;
 		this._game._restartWithSnapshot(startPoint);
-		this._handleSceneChange();
 	}
 
 	_onGameStarted(): void {
@@ -804,7 +796,8 @@ export class GameLoop {
 
 	_renderOnRawFrame(): void {
 		const game = this._game;
-		if (game._modified && game.scenes.length > 0) {
+		// TODO: akashic-engine 側にロジックをもたせる
+		if (game._modified) {
 			game.render();
 		}
 	}
@@ -822,11 +815,6 @@ export class GameLoop {
 				this._eventBuffer.addEventDirect(es[i]);
 		}
 		this._tickController.forceGenerateTick();
-	}
-
-	_onGameOperationPluginOperated(op: g.InternalOperationPluginOperation): void {
-		const pev = this._game._eventConverter.makePlaylogOperationEvent(op); // TODO: playlog.Event への変換処理を akashic-engine に委任する
-		this._eventBuffer.onEvent(pev);
 	}
 
 	_onPollingTick(): void {

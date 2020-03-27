@@ -120,7 +120,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._unfilteredLocalEvents = [];
 		this._unfilteredEvents = [];
 
-		this._pointEventResolver = param.game._pointEventResolver;
+		this._pointEventResolver = param.game._pointEventResolver; // TODO: ポイントイベントのインタフェース検討
 		this._onEvent_bound = this.onEvent.bind(this);
 	}
 
@@ -184,6 +184,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		}
 	}
 
+	// TODO: akashic-engine 側に処理を委譲する
 	onPointEvent(e: g.PlatformPointEvent): void {
 		let pev: pl.Event;
 		switch (e.type) {

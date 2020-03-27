@@ -190,7 +190,6 @@ describe("GameLoop", function () {
 		});
 
 		expect(self.running).toBe(false);
-		expect(self._clock.frameTrigger.contains(self._onLocalFrame, self)).toBe(true);
 		self.start();
 		expect(self.running).toBe(true);
 		expect(self._clock.running).toBe(true);
@@ -357,7 +356,6 @@ describe("GameLoop", function () {
 		});
 
 		expect(self.running).toBe(false);
-		expect(self._clock.frameTrigger.contains(self._onLocalFrame, self)).toBe(true);
 		self.start();
 		expect(self.running).toBe(true);
 		expect(self._clock.running).toBe(true);
