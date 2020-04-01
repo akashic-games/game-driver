@@ -795,11 +795,7 @@ export class GameLoop {
 	}
 
 	_renderOnRawFrame(): void {
-		const game = this._game;
-		// TODO: akashic-engine 側にロジックをもたせる
-		if (game._modified) {
-			game.render();
-		}
+		this._game.render();
 	}
 
 	_onGameRaiseEvent(event: pl.Event): void {
