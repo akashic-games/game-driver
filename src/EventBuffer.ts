@@ -78,7 +78,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	_unfilteredLocalEvents: pl.Event[];
 	_unfilteredEvents: pl.Event[];
 
-	_pointEventResolver: g.PointEventResolver;
+	_resolvePointEvent_bound: (e: g.PlatformPointEvent) => pl.Event | null;
 	_onEvent_bound: (pev: pl.Event) => void;
 
 	static isEventLocal(pev: pl.Event): boolean {
@@ -120,7 +120,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._unfilteredLocalEvents = [];
 		this._unfilteredEvents = [];
 
-		this._pointEventResolver = param.game._pointEventResolver; // TODO: ポイントイベントのインタフェース検討
+		this._resolvePointEvent_bound = param.game.resolvePointEvent.bind(param.game);
 		this._onEvent_bound = this.onEvent.bind(this);
 	}
 
@@ -184,23 +184,9 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		}
 	}
 
-	// TODO: akashic-engine 側に処理を委譲する
 	onPointEvent(e: g.PlatformPointEvent): void {
-		let pev: pl.Event;
-		switch (e.type) {
-		case g.PlatformPointType.Down:
-			pev = this._pointEventResolver.pointDown(e);
-			break;
-		case g.PlatformPointType.Move:
-			pev = this._pointEventResolver.pointMove(e);
-			break;
-		case g.PlatformPointType.Up:
-			pev = this._pointEventResolver.pointUp(e);
-			break;
-		}
-		if (!pev)
-			return;
-		this.onEvent(pev);
+		const pev = this._resolvePointEvent_bound(e);
+		if (pev) this.onEvent(pev);
 	}
 
 	/**
