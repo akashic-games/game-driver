@@ -85,7 +85,7 @@ export class Renderer extends g.Renderer {
 		});
 	}
 
-	setCompositeOperation(operation: g.CompositeOperation): void {
+	setCompositeOperation(operation: g.CompositeOperationString): void {
 		this.methodCallHistoryWithParams.push({
 			methodName: "setCompositeOperation",
 			params: {
@@ -406,9 +406,9 @@ export class ResourceFactory extends g.ResourceFactory {
 		throw new Error("not implemented: mock resourceFactory createVideoAsset()");
 	}
 
-	createGlyphFactory(fontFamily: g.FontFamily | string | (g.FontFamily | string)[], fontSize: number,
+	createGlyphFactory(fontFamily: string | string[], fontSize: number,
 	                   baselineHeight?: number, fontColor?: string, strokeWidth?: number,
-	                   strokeColor?: string, strokeOnly?: boolean, fontWeight?: g.FontWeight): g.GlyphFactory {
+	                   strokeColor?: string, strokeOnly?: boolean, fontWeight?: g.FontWeightString): g.GlyphFactory {
 		throw new Error("not implemented: mock resourceFactory createGlyphFactory()");
 	}
 }

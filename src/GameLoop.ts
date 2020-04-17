@@ -97,8 +97,8 @@ export class GameLoop {
 	_eventBuffer: EventBuffer;
 	_executionMode: ExecutionMode;
 
-	_sceneTickMode: g.TickGenerationMode;
-	_sceneLocalMode: g.LocalTickMode;
+	_sceneTickMode: g.TickGenerationModeString;
+	_sceneLocalMode: g.LocalTickModeString;
 
 	_targetAge: number;
 	_waitingStartPoint: boolean;
@@ -346,14 +346,14 @@ export class GameLoop {
 			this._clock.frameTrigger.remove(this._onFrame, this);
 			this._clock.frameTrigger.remove(this._onLocalFrame, this);
 			switch (localMode) {
-			case g.LocalTickMode.FullLocal:
+			case "full-local":
 				// ローカルシーン: TickGenerationMode に関係なくローカルティックのみ
 				this._tickController.stopTick();
 				this._clock.frameTrigger.add(this._onLocalFrame, this);
 				break;
-			case g.LocalTickMode.NonLocal:
-			case g.LocalTickMode.InterpolateLocal:
-				if (tickMode === g.TickGenerationMode.ByClock) {
+			case "non-local":
+			case "interpolate-local":
+				if (tickMode === "by-clock") {
 					this._tickController.startTick();
 				} else {
 					// Manual の場合: storageDataが乗る可能性がある最初のTickだけ生成させ、あとは生成を止める。(Manualの仕様どおりの挙動)
@@ -453,7 +453,7 @@ export class GameLoop {
 					if (!this._consumedLatestTick)
 						this._tickBuffer.requestTicks();
 				}
-				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === "interpolate-local") {
 					if (this._consumedLatestTick) {
 						// 最新のティックが存在しない場合は現在時刻を目標時刻に合わせる。
 						// (_doLocalTick() により現在時刻が this._frameTime 進むのでその直前まで進める)
@@ -494,7 +494,7 @@ export class GameLoop {
 						nextFrameTime = nextTickTime;
 						this._omittedTickDuration += nextTickTime - this._currentTime;
 					} else {
-						if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+						if (this._sceneLocalMode === "interpolate-local") {
 							this._doLocalTick();
 						}
 						continue;
@@ -560,7 +560,7 @@ export class GameLoop {
 		}
 
 		if (this._waitingNextTick) {
-			if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal)
+			if (this._sceneLocalMode === "interpolate-local")
 				this._doLocalTick();
 			return;
 		}
@@ -617,7 +617,7 @@ export class GameLoop {
 				this._startWaitingNextTick();
 			}
 
-			if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+			if (this._sceneLocalMode === "interpolate-local") {
 				// ティック待ちの間、ローカルティックを(補間して)消費: 上の暫定対処のrequestTicks()より後に行うべきである点に注意。
 				// ローカルティックを消費すると、ゲームスクリプトがraiseTick()する(_waitingNextTickが立つのはおかしい)可能性がある。
 				this._doLocalTick();
@@ -647,7 +647,7 @@ export class GameLoop {
 					nextFrameTime = Math.ceil(nextTickTime / this._frameTime) * this._frameTime;
 					this._omittedTickDuration += nextFrameTime - this._currentTime;
 				} else {
-					if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+					if (this._sceneLocalMode === "interpolate-local") {
 						this._doLocalTick();
 						continue;
 					}
@@ -774,7 +774,7 @@ export class GameLoop {
 	}
 
 	_onEventsProcessed(): void {
-		this._eventBuffer.processEvents(this._sceneLocalMode === g.LocalTickMode.FullLocal);
+		this._eventBuffer.processEvents(this._sceneLocalMode === "full-local");
 	}
 
 	_setLoopRenderMode(mode: LoopRenderMode): void {

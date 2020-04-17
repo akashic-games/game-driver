@@ -24,12 +24,12 @@ export class MockGame extends Game {
 		this.autoTickForSceneChange = true;
 		this._reset();
 		this._sceneChanged.handle((scene: g.Scene) => {
-			if (!scene.local) {
-				if (scene._loadingState === g.SceneLoadState.LoadedFired) {
+			if (scene.local === "non-local") {
+				if (scene._loadingState === "loaded-fired") {
 					setTimeout(func, 0);
 					this.autoTickForSceneChange = false;
 				} else {
-					scene.loaded.handle(() => {
+					scene.onLoad.handle(() => {
 						setTimeout(func, 0);
 						this.autoTickForSceneChange = false;
 					});

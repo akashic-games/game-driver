@@ -1,13 +1,13 @@
 function main(param) {
 	const scene = new g.Scene({
 		game: g.game,
-		tickGenerationMode: g.TickGenerationMode.Manual,  // このコンテンツはraiseTick()をしないのでActiveでは動かない
-		local: g.LocalTickMode.InterpolateLocal
+		tickGenerationMode: "manual",  // このコンテンツはraiseTick()をしないのでActiveでは動かない
+		local: "interpolate-local"
 	});
 
-	scene.loaded.handle(function() {
+	scene.onLoad.add(function() {
 		g.game.vars.count = 0;
-		scene.update.handle(function () {
+		scene.onUpdate.add(function () {
 			if (g.game.vars.onUpdate) {
 				g.game.vars.onUpdate();
 			}
