@@ -40,15 +40,8 @@ export class MockGame extends Game {
 		this._loadAndStart();
 	}
 
-	_fireSceneReady(scene: g.Scene): void {
-		super._fireSceneReady(scene);
-		if (this.autoTickForSceneChange) {
-			setTimeout(() => { this.tick(false); }, 0);
-		}
-	}
-
-	_fireSceneLoaded(scene: g.Scene): void {
-		super._fireSceneLoaded(scene);
+	_pushPostTickTask(fun: () => void, owner: any): void {
+		super._pushPostTickTask(fun, owner);
 		if (this.autoTickForSceneChange) {
 			setTimeout(() => { this.tick(false); }, 0);
 		}
