@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.0.0-beta.7
+* @akashic/akashic-engine@v3.0.0-beta.18 に追従
+
+## 2.0.0-beta.2 - 6
+* @akashic/akashic-engine@v3.0.0-beta.0 - 17 に追従
+
 ## 2.0.0-beta.1
 * `g.Game#modified` の関数化に伴い、`g.Game#modified()` に修正。
 

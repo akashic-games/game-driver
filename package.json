@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "2.0.0-beta.6",
+  "version": "2.0.0-beta.7",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
@@ -49,7 +49,7 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~3.0.0-beta.16",
+    "@akashic/akashic-engine": "~3.0.0-beta.18",
     "es6-promise": "^4.2.8"
   }
 }
