@@ -24,12 +24,12 @@ export class MockGame extends Game {
 		this.autoTickForSceneChange = true;
 		this._reset();
 		this._sceneChanged.handle((scene: g.Scene) => {
-			if (!scene.local) {
-				if (scene._loadingState === g.SceneLoadState.LoadedFired) {
+			if (scene.local === "non-local") {
+				if (scene._loadingState === "loaded-fired") {
 					setTimeout(func, 0);
 					this.autoTickForSceneChange = false;
 				} else {
-					scene.loaded.handle(() => {
+					scene.onLoad.handle(() => {
 						setTimeout(func, 0);
 						this.autoTickForSceneChange = false;
 					});
@@ -40,15 +40,8 @@ export class MockGame extends Game {
 		this._loadAndStart();
 	}
 
-	_fireSceneReady(scene: g.Scene): void {
-		super._fireSceneReady(scene);
-		if (this.autoTickForSceneChange) {
-			setTimeout(() => { this.tick(false); }, 0);
-		}
-	}
-
-	_fireSceneLoaded(scene: g.Scene): void {
-		super._fireSceneLoaded(scene);
+	_pushPostTickTask(fun: () => void, owner: any): void {
+		super._pushPostTickTask(fun, owner);
 		if (this.autoTickForSceneChange) {
 			setTimeout(() => { this.tick(false); }, 0);
 		}

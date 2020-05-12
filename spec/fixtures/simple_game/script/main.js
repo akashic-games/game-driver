@@ -1,7 +1,7 @@
 var game = g.game;
 module.exports = function() {
 	var scene = new g.Scene({ game: game });
-	scene.loaded.handle(function() {
+	scene.onLoad.add(function() {
 		var r1 = new g.FilledRect({
 			scene: scene,
 			cssColor: "#ff0000",

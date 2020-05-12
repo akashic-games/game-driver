@@ -19,8 +19,8 @@ export class GameHandlerSet implements g.GameHandlerSet {
 	isSnapshotSaver: boolean;
 	_getCurrentTimeFunc: () => number;
 	_eventFilterFuncs: GameEventFilterFuncs;
-	_local: g.LocalTickMode;
-	_tickGenerationMode: g.TickGenerationMode;
+	_local: g.LocalTickModeString;
+	_tickGenerationMode: g.TickGenerationModeString;
 
 	constructor(param: GameHandlerSetParameterObject) {
 		this.isSnapshotSaver = !!param.isSnapshotSaver;
