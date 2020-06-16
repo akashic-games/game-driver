@@ -372,7 +372,7 @@ describe("EventBuffer", function () {
 		self.setMode({ isSender: true, defaultEventPriority: 1 });
 
 		// ローカルイベント
-		// Message: Code, Priority, PlayerId, Message, Local
+		// Message: Code, EventFlags, PlayerId, Message, Local
 		var msge: pl.MessageEvent = [ pl.EventCode.Message, 0, "dummyPid", "Message", true];
 		self.onEvent(msge);
 		self.processEvents();
@@ -382,7 +382,7 @@ describe("EventBuffer", function () {
 		expect(self._joinLeaveBuffer).toEqual([]);
 
 		// 非ローカルイベント
-		// Message: Code, Priority, PlayerId, Message, Local
+		// Message: Code, EventFlags, PlayerId, Message, Local
 		var msge2: pl.MessageEvent = [ pl.EventCode.Message, null, "dummyPid", "Message"];
 		self.onEvent(msge2);
 		self.onEvent(msge2);
@@ -391,10 +391,10 @@ describe("EventBuffer", function () {
 		expect(self._localBuffer).toEqual([msge]);
 		expect(self._buffer).toEqual([]);
 		expect(self._joinLeaveBuffer).toEqual([]);
-		expect(msge2[EventIndex.Message.Priority]).toBe(1);  // 優先度省略 (null) が onEvent() で上書きされた
+		expect(msge2[EventIndex.Message.EventFlags]).toBe(1);  // 優先度省略 (null) が onEvent() で上書きされた
 
 		// Joinイベント
-		// Join: Code, Priority, PlayerId, PlayerName, StorageData, Local
+		// Join: Code, EventFlags, PlayerId, PlayerName, StorageData, Local
 		var je: pl.JoinEvent = [ pl.EventCode.Join, 0, "dummyPid", "dummy-name", null];
 		self.onEvent(je);
 		self.processEvents();
@@ -404,7 +404,7 @@ describe("EventBuffer", function () {
 		expect(self._joinLeaveBuffer).toEqual([]);
 
 		// AMFlow経由 - receiver ではないので何も起きない
-		// PointDown: Code, Priority, PlayerId, PointerId, X, Y, EntityId, Local
+		// PointDown: Code, EventFlags, PlayerId, PointerId, X, Y, EntityId, Local
 		var pde: pl.PointDownEvent = [ pl.EventCode.PointDown, 0, "dummyPid", 1, 100, 10, null];
 		amflow.sendEvent(pde);
 		self.processEvents();
@@ -440,7 +440,7 @@ describe("EventBuffer", function () {
 			expect(self._buffer).toEqual([]);
 			expect(self._joinLeaveBuffer).toEqual([]);
 			expect(self._localBuffer[0][EventIndex.General.Code]).toBe(pl.EventCode.PointDown);
-			expect(self._localBuffer[0][EventIndex.PointDown.Priority]).toBe(EventPriority.Joined);
+			expect(self._localBuffer[0][EventIndex.PointDown.EventFlags]).toBe(EventPriority.Joined);
 			expect(self._localBuffer[0][EventIndex.PointDown.PlayerId]).toBe("dummyPlayerId");
 			expect(self._localBuffer[0][EventIndex.PointDown.PointerId]).toBe(2);
 			expect(self._localBuffer[0][EventIndex.PointDown.X]).toBe(10);
@@ -457,7 +457,7 @@ describe("EventBuffer", function () {
 			self.processEvents();
 			expect(self._localBuffer.length).toEqual(2);
 			expect(self._localBuffer[1][EventIndex.General.Code]).toBe(pl.EventCode.PointMove);
-			expect(self._localBuffer[1][EventIndex.PointMove.Priority]).toBe(EventPriority.Joined);
+			expect(self._localBuffer[1][EventIndex.PointMove.EventFlags]).toBe(EventPriority.Joined);
 			expect(self._localBuffer[1][EventIndex.PointMove.PlayerId]).toBe("dummyPlayerId");
 			expect(self._localBuffer[1][EventIndex.PointMove.PointerId]).toBe(2);
 			expect(self._localBuffer[1][EventIndex.PointMove.X]).toBe(10);
@@ -478,7 +478,7 @@ describe("EventBuffer", function () {
 			self.processEvents();
 			expect(self._localBuffer.length).toEqual(3);
 			expect(self._localBuffer[2][EventIndex.General.Code]).toBe(pl.EventCode.PointUp);
-			expect(self._localBuffer[2][EventIndex.PointMove.Priority]).toBe(EventPriority.Joined);
+			expect(self._localBuffer[2][EventIndex.PointMove.EventFlags]).toBe(EventPriority.Joined);
 			expect(self._localBuffer[2][EventIndex.PointMove.PlayerId]).toBe("dummyPlayerId");
 			expect(self._localBuffer[2][EventIndex.PointMove.PointerId]).toBe(2);
 			expect(self._localBuffer[2][EventIndex.PointMove.X]).toBe(10);
