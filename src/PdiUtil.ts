@@ -69,7 +69,7 @@ export module PdiUtil {
 		function resolvePath(base: string, path: string): string {
 			var ret = g.PathUtil.resolvePath(base, path);
 			if (ret.indexOf(base) !== 0)
-				throw g.ExceptionFactory.createAssertionError("PdiUtil._resolveConfigurationBasePath: invalid path: " + path);
+				throw new Error("PdiUtil._resolveConfigurationBasePath: invalid path: " + path);
 			return ret;
 		}
 		var assets = configuration.assets;
@@ -85,7 +85,7 @@ export module PdiUtil {
 		if (configuration.globalScripts) {
 			configuration.globalScripts.forEach((path: string) => {
 				if (assets.hasOwnProperty(path))
-					throw g.ExceptionFactory.createAssertionError("PdiUtil._resolveConfigurationBasePath: asset ID already exists: " + path);
+					throw new Error("PdiUtil._resolveConfigurationBasePath: asset ID already exists: " + path);
 				assets[path] = {
 					type: /\.json$/i.test(path) ? "text" : "script",
 					virtualPath: path,

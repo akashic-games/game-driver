@@ -58,11 +58,11 @@ export class Platform {
 		// do nothing
 	}
 
-	getPrimarySurface(): g.Surface {
+	getPrimarySurface(): pdi.Surface {
 		return null;
 	}
 
-	getResourceFactory(): g.ResourceFactory {
+	getResourceFactory(): pdi.ResourceFactory {
 		return null;
 	}
 
