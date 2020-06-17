@@ -105,6 +105,62 @@ describe("MemoryAmflowClient", function () {
 			targetTick[0] = 3;
 			expect(self._tickList).toEqual([age, age, [[age, [joinEvent]]]]);
 		});
+
+		it("drops transient events from tickList", function (done: any) {
+			var self = new MemoryAmflowClient({
+				playId: "testuser"
+			});
+			self.sendTick([
+				1,
+				[
+					[0, 0b1000, "dummy-1-1"], // transient event
+					[1, 0b0010, "dummy-1-2"],
+					[2, 0b1111, "dummy-1-3"] // transient event
+				]
+			]);
+			self.sendTick([2]);
+			self.sendTick([
+				3,
+				[
+					[0, 0b1000, "dummy-2-1"], // transient event
+					[1, 0b1010, "dummy-2-2"], // transient event
+					[2, 0b1111, "dummy-2-3"] // transient event
+				]
+			]);
+			expect(self._tickList).toEqual([
+				1,
+				3,
+				[
+					[1, [[1, 0b0010, "dummy-1-2"]]],
+					[3, []]
+				]
+			]);
+			self.getTickList(0, 10, (err, tickList) => {
+				expect(err).toBeNull();
+				expect(tickList).toEqual([
+					1,
+					3,
+					[
+						[1, [[1, 0b0010, "dummy-1-2"]]],
+						[3, []]
+					]
+				]);
+				self.sendTick([8, [joinEvent]]);
+				self.getTickList(0, 10, (err, tickList) => {
+					expect(err).toBeNull();
+					expect(tickList).toEqual([
+						1,
+						8,
+						[
+							[1, [[1, 0b0010, "dummy-1-2"]]],
+							[3, []],
+							[8, [joinEvent]]
+						]
+					]);
+					done();
+				});
+			});
+		});
 	});
 
 	describe("#dropAfter", function () {
