@@ -23,13 +23,13 @@ export const enum TickList {
 
 export const enum General {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2
 }
 
 export const enum Join {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2,
 	PlayerName = 3,
 	StorageData = 4,
@@ -38,14 +38,14 @@ export const enum Join {
 
 export const enum Leave {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2,
 	Local = 3
 }
 
 export const enum Timestamp {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2,
 	Timestamp = 3,
 	Local = 4
@@ -53,7 +53,7 @@ export const enum Timestamp {
 
 export const enum Message {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2,
 	Message = 3,
 	Local = 4
@@ -61,7 +61,7 @@ export const enum Message {
 
 export const enum PointDown {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2,
 	PointerId = 3,
 	X = 4,
@@ -72,7 +72,7 @@ export const enum PointDown {
 
 export const enum PointMove {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2,
 	PointerId = 3,
 	X = 4,
@@ -87,7 +87,7 @@ export const enum PointMove {
 
 export const enum PointUp {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2,
 	PointerId = 3,
 	X = 4,
@@ -102,7 +102,7 @@ export const enum PointUp {
 
 export const enum Operation {
 	Code = 0,
-	Priority = 1,
+	EventFlags = 1,
 	PlayerId = 2,
 	OperationCode = 3,
 	OperationData = 4,

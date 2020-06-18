@@ -3,6 +3,7 @@ import { Promise } from "es6-promise";
 import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
 import * as pdi from "@akashic/akashic-pdi";
+import * as pl from "@akashic/playlog";
 import ExecutionMode from "./ExecutionMode";
 import LoopConfiguration from "./LoopConfiguration";
 import DriverConfiguration from "./DriverConfiguration";
@@ -345,7 +346,7 @@ export class GameDriver {
 			this._assertLive();
 			if (dconf.eventBufferMode != null) {
 				if (dconf.eventBufferMode.defaultEventPriority == null) {
-					dconf.eventBufferMode.defaultEventPriority = this._permission.maxEventPriority;
+					dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & this._permission.maxEventPriority;
 				}
 				if (this._eventBuffer) {
 					this._eventBuffer.setMode(dconf.eventBufferMode);
