@@ -1,5 +1,5 @@
 import * as amf from "@akashic/amflow";
-import * as pdi from "@akashic/akashic-pdi";
+import * as pdi from "@akashic/pdi-types";
 import * as g from "@akashic/akashic-engine";
 
 export class Looper implements pdi.Looper {
@@ -58,11 +58,11 @@ export class Platform {
 		// do nothing
 	}
 
-	getPrimarySurface(): g.Surface {
+	getPrimarySurface(): pdi.Surface {
 		return null;
 	}
 
-	getResourceFactory(): g.ResourceFactory {
+	getResourceFactory(): pdi.ResourceFactory {
 		return null;
 	}
 

@@ -2,7 +2,7 @@
 import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import * as pdi from "@akashic/akashic-pdi";
+import * as pdi from "@akashic/pdi-types";
 import * as constants from "./constants";
 import LoopMode from "./LoopMode";
 import LoopRenderMode from "./LoopRenderMode";

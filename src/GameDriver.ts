@@ -2,7 +2,7 @@
 import { Promise } from "es6-promise";
 import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import * as pdi from "@akashic/akashic-pdi";
+import * as pdi from "@akashic/pdi-types";
 import ExecutionMode from "./ExecutionMode";
 import LoopConfiguration from "./LoopConfiguration";
 import DriverConfiguration from "./DriverConfiguration";

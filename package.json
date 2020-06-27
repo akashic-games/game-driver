@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "2.0.0-beta.7",
+  "version": "2.0.0-beta.8",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
@@ -35,9 +35,10 @@
     "tag": "next"
   },
   "devDependencies": {
-    "@akashic/akashic-pdi": "~3.0.0-beta.1",
-    "@akashic/amflow": "~1.0.0",
-    "@akashic/playlog": "~2.0.0",
+    "@akashic/amflow": "~2.0.0",
+    "@akashic/pdi-common-impl": "0.0.2",
+    "@akashic/pdi-types": "~1.0.0",
+    "@akashic/playlog": "~3.0.0",
     "@akashic/remark-preset-lint": "~0.1.1",
     "@types/jest": "24.0.22",
     "@types/node": "12.12.6",
@@ -49,7 +50,7 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~3.0.0-beta.18",
+    "@akashic/akashic-engine": "~3.0.0-beta.26",
     "es6-promise": "^4.2.8"
   }
 }
