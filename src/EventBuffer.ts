@@ -1,7 +1,7 @@
 "use strict";
 import * as pl from "@akashic/playlog";
 import { AMFlow } from "@akashic/amflow";
-import * as pdi from "@akashic/akashic-pdi";
+import * as pdi from "@akashic/pdi-types";
 import * as g from "@akashic/akashic-engine";
 import { Game } from "./Game";
 

@@ -1,5 +1,5 @@
 import * as pl from "@akashic/playlog";
-import { PlatformPointEvent, PlatformPointType } from "@akashic/akashic-pdi";
+import { PlatformPointEvent, PlatformPointType } from "@akashic/pdi-types";
 import { EventIndex, EventPriority } from "@akashic/akashic-engine";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
 import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";

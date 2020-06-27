@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as pdi from "@akashic/akashic-pdi";
+import * as pdi from "@akashic/pdi-types";
 import * as pci from "@akashic/pdi-common-impl";
 
 export interface MethodCallParam {

@@ -1,7 +1,7 @@
 "use strict";
 import { Promise } from "es6-promise";
 import * as g from "@akashic/akashic-engine";
-import * as pdi from "@akashic/akashic-pdi";
+import * as pdi from "@akashic/pdi-types";
 import { GameConfiguration, GameConfigurationDefinitionDeclaration } from "./GameConfiguration";
 
 export module PdiUtil {
