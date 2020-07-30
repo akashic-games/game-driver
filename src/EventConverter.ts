@@ -32,8 +32,7 @@ export class EventConverter {
 
 		var eventCode = pev[EventIndex.General.Code];
 		// TODO: transient event 対応
-		var prio = pev[EventIndex.General.EventFlags] != null ? pl.EventFlagsMask.Priority & pev[EventIndex.General.EventFlags]
-		                                                      : pev[EventIndex.General.EventFlags];
+		var prio = pev[EventIndex.General.EventFlags];
 		var playerId = pev[EventIndex.General.PlayerId];
 		var player = this._playerTable[playerId] || { id: playerId };
 		switch (eventCode) {
@@ -142,7 +141,7 @@ export class EventConverter {
 	toPlaylogEvent(e: g.Event, preservePlayer?: boolean): pl.Event {
 		var targetId: number;
 		var playerId: string;
-		var priority = e.priority != null ? pl.EventFlagsMask.Priority & e.priority : e.priority;
+		var priority = e.priority; // NOTE: このレイヤーでは priority (eventFlags) の中身を精査しないこととする
 		switch (e.type) {
 		case g.EventType.Join:
 		case g.EventType.Leave:
