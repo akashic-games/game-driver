@@ -84,6 +84,10 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 			typeof endOrCallback !== "number" ||
 			typeof callback !== "function"
 		) {
+			if (typeof endOrCallback === "function") {
+				endOrCallback(new Error("not implemented"));
+				return;
+			}
 			throw new Error("not implemented");
 		}
 		const from = optsOrBegin;
