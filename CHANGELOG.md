@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.0-beta.9
+* @akashic/amflowのmajor更新と@akashic/playlogのminor更新に伴うバージョンアップ
+
 ## 2.0.0-beta.8
 * @akashic/akashic-engine@v3.0.0-beta.26 に追従
 * @akashic/pdi-types を使うように
