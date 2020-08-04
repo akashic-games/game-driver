@@ -181,11 +181,24 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		this._eventHandlers = this._eventHandlers.filter((h: (pev: pl.Event) => void) => (h !== handler));
 	}
 
-	getTickList(from: number, to: number, callback: (error: Error | null, tickList?: pl.TickList) => void): void {
+	getTickList(
+		optsOrBegin: number | amf.GetTickListOptions,
+		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
+		callback?: (error: Error | null, tickList?: pl.TickList) => void
+	): void {
 		if (!this._tickList) return void setTimeout(() => callback(null, null), 0);
 
-		from = Math.max(from, this._tickList[EventIndex.TickList.From]);
-		to = Math.min(to, this._tickList[EventIndex.TickList.To]);
+		// TODO: @akashic/amflow@3.0.0 追従
+		if (
+			typeof optsOrBegin !== "number" ||
+			typeof endOrCallback !== "number" ||
+			typeof callback !== "function"
+		) {
+			throw new Error("not implemented");
+		}
+
+		const from = Math.max(optsOrBegin, this._tickList[EventIndex.TickList.From]);
+		const to = Math.min(endOrCallback, this._tickList[EventIndex.TickList.To]);
 		const ticks = this._tickList[EventIndex.TickList.TicksWithEvents].filter((tick) => {
 			const age = tick[EventIndex.Tick.Age];
 			return from <= age && age <= to;
