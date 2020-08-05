@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.10.0
+* @akashic/amflowのmajor更新と@akashic/playlogのminor更新に伴うバージョンアップ
+
 ## 1.9.1
 * playlog の eventFlags の値をマスクしないように修正
 
