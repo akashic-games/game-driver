@@ -1,5 +1,5 @@
 import * as pl from "@akashic/playlog";
-import { AMFlow, StartPoint } from "@akashic/amflow";
+import { AMFlow, StartPoint, GetTickListOptions } from "@akashic/amflow";
 
 export interface GetTicksRequest {
 	from: number;
@@ -75,7 +75,25 @@ export class MockAmflow implements AMFlow {
 		this.eventHandlers = this.eventHandlers.filter((h) => { return h !== handler; });
 	}
 
-	getTickList(from: number, to: number, callback: (error: Error | null, tickList?: pl.TickList) => void): void {
+	getTickList(
+		optsOrBegin: number | GetTickListOptions,
+		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
+		callback?: (error: Error | null, tickList?: pl.TickList) => void
+	): void {
+		// TODO: @akashic/amflow@3.0.0 追従
+		if (
+			typeof optsOrBegin !== "number" ||
+			typeof endOrCallback !== "number" ||
+			typeof callback !== "function"
+		) {
+			if (typeof endOrCallback === "function") {
+				endOrCallback(new Error("not implemented"));
+				return;
+			}
+			throw new Error("not implemented");
+		}
+		const from = optsOrBegin;
+		const to = endOrCallback;
 		var req: GetTicksRequest;
 		var wrap = (error: Error, tickArray: pl.Tick[]) => {
 			this.requestsGetTicks = this.requestsGetTicks.filter((r: GetTicksRequest) => { return r !== req; });

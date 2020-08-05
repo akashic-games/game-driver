@@ -73,12 +73,25 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 		this._amflow.offEvent(handler);
 	}
 
-	getTickList(from: number, to: number, callback: (error: Error | null, ticks?: pl.TickList) => void): void {
-		if (!this._tickList) {
-			this._amflow.getTickList(from, to, callback);
-			return;
+	getTickList(
+		optsOrBegin: number | amf.GetTickListOptions,
+		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
+		callback?: (error: Error | null, tickList?: pl.TickList) => void
+	): void {
+		// TODO: @akashic/amflow@3.0.0 追従
+		if (
+			typeof optsOrBegin !== "number" ||
+			typeof endOrCallback !== "number" ||
+			typeof callback !== "function"
+		) {
+			if (typeof endOrCallback === "function") {
+				endOrCallback(new Error("not implemented"));
+				return;
+			}
+			throw new Error("not implemented");
 		}
-
+		const from = optsOrBegin;
+		const to = endOrCallback;
 		const givenFrom = this._tickList[EventIndex.TickList.From];
 		const givenTo = this._tickList[EventIndex.TickList.To];
 		const givenTicksWithEvents = this._tickList[EventIndex.TickList.TicksWithEvents];
@@ -90,6 +103,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 				callback(null, [from, to, this._sliceTicks(givenTicksWithEvents, from, to)]);
 			}, 0);
 		} else {
+			// TODO: 後方互換性のため旧インタフェースを一時的に利用する
 			this._amflow.getTickList(from, to, (err: Error | null, tickList?: pl.TickList) => {
 				if (err) return void callback(err);
 				if (!tickList) {
