@@ -87,6 +87,8 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			return pev[g.EventIndex.Leave.Local];
 		case pl.EventCode.Timestamp:
 			return pev[g.EventIndex.Timestamp.Local];
+		case pl.EventCode.PlayerInfo:
+			return pev[g.EventIndex.PlayerInfo.Local];
 		case pl.EventCode.Message:
 			return pev[g.EventIndex.Message.Local];
 		case pl.EventCode.PointDown:
