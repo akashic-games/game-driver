@@ -505,6 +505,18 @@ describe("EventBuffer", function () {
 		le.push(true);
 		expect(!!EventBuffer.isEventLocal(le)).toBe(true);
 
+		// Timestamp: Code, Priority, PlayerId, Timestamp, Local
+		var tse: pl.TimestampEvent = [ pl.EventCode.Timestamp, 0, "dummyPid", 12345];
+		expect(!!EventBuffer.isEventLocal(tse)).toBe(false);
+		tse.push(true);
+		expect(!!EventBuffer.isEventLocal(tse)).toBe(true);
+
+		// PlayerInfo: Code, Priority, PlayerId, PlayerName, UserData, Local
+		var pie: pl.PlayerInfoEvent = [ pl.EventCode.PlayerInfo, 0, "dummyPid", "dummyPlayerName", {}];
+		expect(!!EventBuffer.isEventLocal(pie)).toBe(false);
+		pie.push(true);
+		expect(!!EventBuffer.isEventLocal(pie)).toBe(true);
+
 		// Message: Code, Priority, PlayerId, Message, Local
 		var msge: pl.MessageEvent = [ pl.EventCode.Message, 0, "dummyPid", "Message"];
 		expect(!!EventBuffer.isEventLocal(msge)).toBe(false);
