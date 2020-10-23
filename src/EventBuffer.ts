@@ -120,7 +120,11 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._filters = null;
 		this._filterController = {
 			processNext: (pev: pl.Event): void => {
-				this._unfilteredEvents.push(pev);
+				if (EventBuffer.isEventLocal(pev)) {
+					this._unfilteredLocalEvents.push(pev);
+				} else {
+					this._unfilteredEvents.push(pev);
+				}
 			}
 		};
 		this._unfilteredLocalEvents = [];

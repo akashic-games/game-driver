@@ -384,25 +384,30 @@ describe("EventBuffer", function () {
 		self.setMode({ isReceiver: true });
 		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data1" }]);
 		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: true, data: "data2" }]);
-		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: true, data: "data3" }]);
-		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data4" }]);
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data3" }]);
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: true, data: "data4" }, true]);
 
 		self.processEvents();
 		expect(self.readEvents()).toEqual([
 			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data1" }],
-			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data4" }]
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data3" }]
 		]);
 		expect(self._unfilteredEvents).toEqual([
-			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data2" }],
-			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data3" }]
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data2" }]
+		]);
+		expect(self._unfilteredLocalEvents).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data4" }, true]
 		]);
 
 		self.processEvents();
 		expect(self.readEvents()).toEqual([
-			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data2" }],
-			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data3" }]
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data2" }]
+		]);
+		expect(self.readLocalEvents()).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data4" }, true]
 		]);
 		expect(self._unfilteredEvents).toEqual([]);
+		expect(self._unfilteredLocalEvents).toEqual([]);
 	});
 
 	it("can handle events - sender", function () {
