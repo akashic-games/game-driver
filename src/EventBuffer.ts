@@ -119,6 +119,10 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 
 		this._filters = null;
 		this._filterController = {
+			// この関数は `this.processEvents()` が呼び出すイベントフィルタから同期的にしか呼び出されることはない。(また呼び出されてはならない)
+			// `this.processEvents()` は `this._unfilteredEvents` などを空にして、同期的にイベントフィルタを呼ぶ。
+			// 従ってこの関数が呼ばれる時、 `this._unfilteredEvents` などに後続の (次フレーム以降に処理される) イベントが積まれている可能性はない。
+			// よって単純に push() しても、後続のイベントとの順序が崩れる可能性はない。
 			processNext: (pev: pl.Event): void => {
 				if (EventBuffer.isEventLocal(pev)) {
 					this._unfilteredLocalEvents.push(pev);
