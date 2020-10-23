@@ -73,6 +73,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	_localBuffer: pl.Event[];
 
 	_filters: EventFilterEntry[];
+	_filterController: g.EventFilterController;
 	_unfilteredLocalEvents: pl.Event[];
 	_unfilteredEvents: pl.Event[];
 
@@ -117,6 +118,11 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._localBuffer = [];
 
 		this._filters = null;
+		this._filterController = {
+			processNext: (pev: pl.Event): void => {
+				this._unfilteredEvents.push(pev);
+			}
+		};
 		this._unfilteredLocalEvents = [];
 		this._unfilteredEvents = [];
 
@@ -272,7 +278,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			for (let i = 0; i < this._filters.length; ++i) {
 				const filter = this._filters[i];
 				if (pevs.length > 0 || filter.handleEmpty)
-					pevs = this._filters[i].func(pevs) || [];
+					pevs = this._filters[i].func(pevs, this._filterController) || [];
 			}
 		}
 
