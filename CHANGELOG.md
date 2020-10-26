@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.0-beta.10
+* @akashic/akashic-engine@3.0.0-beta.35 に追従
+
 ## 2.0.0-beta.9
 * @akashic/amflowのmajor更新と@akashic/playlogのminor更新に伴うバージョンアップ
 

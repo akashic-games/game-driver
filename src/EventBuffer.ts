@@ -73,6 +73,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	_localBuffer: pl.Event[];
 
 	_filters: EventFilterEntry[];
+	_filterController: g.EventFilterController;
 	_unfilteredLocalEvents: pl.Event[];
 	_unfilteredEvents: pl.Event[];
 
@@ -117,6 +118,19 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._localBuffer = [];
 
 		this._filters = null;
+		this._filterController = {
+			// この関数は `this.processEvents()` が呼び出すイベントフィルタから同期的にしか呼び出されることはない。(また呼び出されてはならない)
+			// `this.processEvents()` は `this._unfilteredEvents` などを空にして、同期的にイベントフィルタを呼ぶ。
+			// 従ってこの関数が呼ばれる時、 `this._unfilteredEvents` などに後続の (次フレーム以降に処理される) イベントが積まれている可能性はない。
+			// よって単純に push() しても、後続のイベントとの順序が崩れる可能性はない。
+			processNext: (pev: pl.Event): void => {
+				if (EventBuffer.isEventLocal(pev)) {
+					this._unfilteredLocalEvents.push(pev);
+				} else {
+					this._unfilteredEvents.push(pev);
+				}
+			}
+		};
 		this._unfilteredLocalEvents = [];
 		this._unfilteredEvents = [];
 
@@ -272,7 +286,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			for (let i = 0; i < this._filters.length; ++i) {
 				const filter = this._filters[i];
 				if (pevs.length > 0 || filter.handleEmpty)
-					pevs = this._filters[i].func(pevs) || [];
+					pevs = this._filters[i].func(pevs, this._filterController) || [];
 			}
 		}
 

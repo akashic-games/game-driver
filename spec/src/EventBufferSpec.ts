@@ -1,6 +1,6 @@
 import * as pl from "@akashic/playlog";
 import { PlatformPointEvent, PlatformPointType } from "@akashic/pdi-types";
-import { EventIndex, EventPriority } from "@akashic/akashic-engine";
+import { EventFilterController, EventIndex, EventPriority } from "@akashic/akashic-engine";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
 import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 import { EventBuffer } from "../../lib/EventBuffer";
@@ -358,6 +358,56 @@ describe("EventBuffer", function () {
 		expect(self.readLocalEvents()).toEqual(null);
 		expect(self.readEvents()).toEqual([ope]);
 		expect(self.readJoinLeaves()).toEqual(null);
+	});
+
+	it("can process filtered events in next frame", () => {
+		const amflow = new MockAmflow();
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const self = new EventBuffer({ amflow, game });
+
+		self.addFilter((pevs: pl.Event[], {processNext}: EventFilterController) => {
+			const filtered: pl.Event[] = [];
+			for (let i = 0; i < pevs.length; i++) {
+				const pev = pevs[i];
+				if (pev[EventIndex.General.Code] === pl.EventCode.Message) {
+					if (pev[pl.MessageEventIndex.Data].next) {
+						pev[pl.MessageEventIndex.Data].next = false;
+						processNext(pev);
+						continue;
+					}
+				}
+				filtered.push(pev);
+			}
+			return filtered;
+		});
+
+		self.setMode({ isReceiver: true });
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data1" }]);
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: true, data: "data2" }]);
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data3" }]);
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: true, data: "data4" }, true]);
+
+		self.processEvents();
+		expect(self.readEvents()).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data1" }],
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data3" }]
+		]);
+		expect(self._unfilteredEvents).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data2" }]
+		]);
+		expect(self._unfilteredLocalEvents).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data4" }, true]
+		]);
+
+		self.processEvents();
+		expect(self.readEvents()).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data2" }]
+		]);
+		expect(self.readLocalEvents()).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data4" }, true]
+		]);
+		expect(self._unfilteredEvents).toEqual([]);
+		expect(self._unfilteredLocalEvents).toEqual([]);
 	});
 
 	it("can handle events - sender", function () {
