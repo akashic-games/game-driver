@@ -191,8 +191,8 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			this._unfilteredEvents.push(pev);
 		}
 		if (this._isSender) {
-			if (pev[g.EventIndex.General.Priority] == null) {
-				pev[g.EventIndex.General.Priority] = this._defaultEventPriority;
+			if (pev[g.EventIndex.General.EventFlags] == null) {
+				pev[g.EventIndex.General.EventFlags] = this._defaultEventPriority & pl.EventFlagsMask.Priority;
 			}
 			this._amflow.sendEvent(pev);
 		}
@@ -221,8 +221,8 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			}
 		}
 		if (this._isSender) {
-			if (pev[g.EventIndex.General.Priority] == null) {
-				pev[g.EventIndex.General.Priority] = this._defaultEventPriority;
+			if (pev[g.EventIndex.General.EventFlags] == null) {
+				pev[g.EventIndex.General.EventFlags] = this._defaultEventPriority & pl.EventFlagsMask.Priority;
 			}
 			this._amflow.sendEvent(pev);
 		}
