@@ -1,10 +1,11 @@
-script:
-  - npm install
-  - npm test
+os:
+  - windows
+  - linux
+dist: bionic
 language: node_js
 node_js:
   - 12
   - 14
-os:
-  - windows
-  - linux
+install: npm install
+script:
+  - npm test
