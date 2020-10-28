@@ -440,7 +440,7 @@ describe("EventBuffer", function () {
 		expect(self._localBuffer).toEqual([msge]);
 		expect(self._buffer).toEqual([]);
 		expect(self._joinLeaveBuffer).toEqual([]);
-		expect(msge2[EventIndex.Message.Priority]).toBe(1);  // 優先度省略 (null) が onEvent() で上書きされた
+		expect(msge2[EventIndex.Message.EventFlags]).toBe(1);  // 優先度省略 (null) が onEvent() で上書きされた
 
 		// Joinイベント
 		// Join: Code, Priority, PlayerId, PlayerName, StorageData, Local
@@ -489,7 +489,7 @@ describe("EventBuffer", function () {
 			expect(self._buffer).toEqual([]);
 			expect(self._joinLeaveBuffer).toEqual([]);
 			expect(self._localBuffer[0][EventIndex.General.Code]).toBe(pl.EventCode.PointDown);
-			expect(self._localBuffer[0][EventIndex.PointDown.Priority]).toBe(EventPriority.Joined);
+			expect(self._localBuffer[0][EventIndex.PointDown.EventFlags]).toBe(EventPriority.Joined);
 			expect(self._localBuffer[0][EventIndex.PointDown.PlayerId]).toBe("dummyPlayerId");
 			expect(self._localBuffer[0][EventIndex.PointDown.PointerId]).toBe(2);
 			expect(self._localBuffer[0][EventIndex.PointDown.X]).toBe(10);
@@ -506,7 +506,7 @@ describe("EventBuffer", function () {
 			self.processEvents();
 			expect(self._localBuffer.length).toEqual(2);
 			expect(self._localBuffer[1][EventIndex.General.Code]).toBe(pl.EventCode.PointMove);
-			expect(self._localBuffer[1][EventIndex.PointMove.Priority]).toBe(EventPriority.Joined);
+			expect(self._localBuffer[1][EventIndex.PointMove.EventFlags]).toBe(EventPriority.Joined);
 			expect(self._localBuffer[1][EventIndex.PointMove.PlayerId]).toBe("dummyPlayerId");
 			expect(self._localBuffer[1][EventIndex.PointMove.PointerId]).toBe(2);
 			expect(self._localBuffer[1][EventIndex.PointMove.X]).toBe(10);
@@ -527,7 +527,7 @@ describe("EventBuffer", function () {
 			self.processEvents();
 			expect(self._localBuffer.length).toEqual(3);
 			expect(self._localBuffer[2][EventIndex.General.Code]).toBe(pl.EventCode.PointUp);
-			expect(self._localBuffer[2][EventIndex.PointMove.Priority]).toBe(EventPriority.Joined);
+			expect(self._localBuffer[2][EventIndex.PointMove.EventFlags]).toBe(EventPriority.Joined);
 			expect(self._localBuffer[2][EventIndex.PointMove.PlayerId]).toBe("dummyPlayerId");
 			expect(self._localBuffer[2][EventIndex.PointMove.PointerId]).toBe(2);
 			expect(self._localBuffer[2][EventIndex.PointMove.X]).toBe(10);
