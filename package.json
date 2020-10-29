@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "2.0.0-beta.11",
+  "version": "2.0.0-beta.12",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
@@ -9,7 +9,7 @@
     "ver": "tsc --version",
     "clean": "rm -rf lib/ && rm -rf spec/lib/ spec/helpers/lib/",
     "build": "tsc -p ./src/ && npm run browserify",
-    "browserify": "shx mkdir -p build && browserify -r ./lib/index.js:@akashic/game-driver -x ./node_modules/@akashic/akashic-engine/index.js -o build/game-driver.js && npm run browserify:ae",
+    "browserify": "shx mkdir -p build && browserify -r ./lib/index.js:@akashic/game-driver -x @akashic/akashic-engine -o build/game-driver.js && npm run browserify:ae",
     "browserify:ae": "browserify -r ./node_modules/@akashic/akashic-engine/index.js:@akashic/akashic-engine -o build/akashic-engine.js",
     "lint": "npm run lint:ts && npm run lint:md",
     "lint:ts": "tslint src/*.ts src/auxiliary/*.ts spec/src/*.ts spec/helpers/src/*.ts",

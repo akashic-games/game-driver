@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.0-beta.12
+* `build` ディレクトリ以下のビルド成果物が壊れていたバグの修正
+
 ## 2.0.0-beta.11
 * @akashic/akashic-engine@3.0.0-beta.36 に追従
 
