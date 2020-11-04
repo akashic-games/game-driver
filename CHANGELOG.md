@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.10.1
+* `build` ディレクトリ以下のビルド成果物が壊れていたバグの修正
+
 ## 1.10.0
 * @akashic/amflowのmajor更新と@akashic/playlogのminor更新に伴うバージョンアップ
 
