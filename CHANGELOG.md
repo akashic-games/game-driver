@@ -25,6 +25,21 @@
 ## 2.0.0-beta.1
 * `g.Game#modified` の関数化に伴い、`g.Game#modified()` に修正。
 
+## 1.10.1
+* `build` ディレクトリ以下のビルド成果物が壊れていたバグの修正
+
+## 1.10.0
+* @akashic/amflowのmajor更新と@akashic/playlogのminor更新に伴うバージョンアップ
+
+## 1.9.1
+* playlog の eventFlags の値をマスクしないように修正
+
+## 1.9.0
+* @akashic/amflowと@akashic/playlogのmajor更新に伴うバージョンアップ
+
+## 1.8.0
+* @akashic/amflowと@akashic/playlogのmajor更新に伴うバージョンアップ
+
 ## 1.7.0
 * `Game#_terminateGame()` を `Game#_abortGame()` にリネーム
 

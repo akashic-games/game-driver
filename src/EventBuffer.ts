@@ -166,7 +166,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			this._isDiscarder = param.isDiscarder;
 		}
 		if (param.defaultEventPriority != null) {
-			this._defaultEventPriority = param.defaultEventPriority;
+			this._defaultEventPriority = pl.EventFlagsMask.Priority & param.defaultEventPriority;
 		}
 	}
 
