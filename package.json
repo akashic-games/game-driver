@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "2.0.0-beta.12",
+  "version": "2.0.0",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
@@ -31,8 +31,7 @@
     "url": "https://github.com/akashic-games/game-driver.git"
   },
   "publishConfig": {
-    "@akashic:registry": "https://registry.npmjs.org/",
-    "tag": "next"
+    "@akashic:registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
     "@akashic/amflow": "~3.0.0",
@@ -50,7 +49,7 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~3.0.0-beta.36",
+    "@akashic/akashic-engine": "~3.0.0",
     "es6-promise": "^4.2.8"
   }
 }
