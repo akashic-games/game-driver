@@ -1,7 +1,6 @@
 import * as pl from "@akashic/playlog";
-import * as pdi from "@akashic/akashic-pdi";
-import EventPriority from "../../lib/EventPriority";
-import * as EventIndex from "../../lib/EventIndex";
+import { PlatformPointEvent, PlatformPointType } from "@akashic/pdi-types";
+import { EventFilterController, EventIndex, EventPriority } from "@akashic/akashic-engine";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
 import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 import { EventBuffer } from "../../lib/EventBuffer";
@@ -361,6 +360,56 @@ describe("EventBuffer", function () {
 		expect(self.readJoinLeaves()).toEqual(null);
 	});
 
+	it("can process filtered events in next frame", () => {
+		const amflow = new MockAmflow();
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const self = new EventBuffer({ amflow, game });
+
+		self.addFilter((pevs: pl.Event[], {processNext}: EventFilterController) => {
+			const filtered: pl.Event[] = [];
+			for (let i = 0; i < pevs.length; i++) {
+				const pev = pevs[i];
+				if (pev[EventIndex.General.Code] === pl.EventCode.Message) {
+					if (pev[pl.MessageEventIndex.Data].next) {
+						pev[pl.MessageEventIndex.Data].next = false;
+						processNext(pev);
+						continue;
+					}
+				}
+				filtered.push(pev);
+			}
+			return filtered;
+		});
+
+		self.setMode({ isReceiver: true });
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data1" }]);
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: true, data: "data2" }]);
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data3" }]);
+		self.onEvent([pl.EventCode.Message, 0, "dummyPid", { next: true, data: "data4" }, true]);
+
+		self.processEvents();
+		expect(self.readEvents()).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data1" }],
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data3" }]
+		]);
+		expect(self._unfilteredEvents).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data2" }]
+		]);
+		expect(self._unfilteredLocalEvents).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data4" }, true]
+		]);
+
+		self.processEvents();
+		expect(self.readEvents()).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data2" }]
+		]);
+		expect(self.readLocalEvents()).toEqual([
+			[pl.EventCode.Message, 0, "dummyPid", { next: false, data: "data4" }, true]
+		]);
+		expect(self._unfilteredEvents).toEqual([]);
+		expect(self._unfilteredLocalEvents).toEqual([]);
+	});
+
 	it("can handle events - sender", function () {
 		var amflow = new MockAmflow();
 		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
@@ -429,8 +478,8 @@ describe("EventBuffer", function () {
 		self.setMode({ isReceiver: true });
 
 		game.loadAndDo(() => {
-			var pd: pdi.PointEvent = {
-				type: pdi.PointType.Down,
+			var pd: PlatformPointEvent = {
+				type: PlatformPointType.Down,
 				identifier: 2,
 				offset: { x: 140, y: 140 }
 			};
@@ -448,8 +497,8 @@ describe("EventBuffer", function () {
 			expect(self._localBuffer[0][EventIndex.PointDown.EntityId] < 0).toBe(true);
 			expect(self._localBuffer[0][EventIndex.PointDown.Local]).toBe(true);
 
-			var pm: pdi.PointEvent = {
-				type: pdi.PointType.Move,
+			var pm: PlatformPointEvent = {
+				type: PlatformPointType.Move,
 				identifier: 2,
 				offset: { x: 120, y: 120 }
 			};
@@ -469,8 +518,8 @@ describe("EventBuffer", function () {
 			expect(self._localBuffer[1][EventIndex.PointMove.EntityId] < 0).toBe(true);
 			expect(self._localBuffer[1][EventIndex.PointMove.Local]).toBe(true);
 
-			var pu: pdi.PointEvent = {
-				type: pdi.PointType.Up,
+			var pu: PlatformPointEvent = {
+				type: PlatformPointType.Up,
 				identifier: 2,
 				offset: { x: 10, y: 15 }
 			};
@@ -505,6 +554,18 @@ describe("EventBuffer", function () {
 		expect(!!EventBuffer.isEventLocal(le)).toBe(false);
 		le.push(true);
 		expect(!!EventBuffer.isEventLocal(le)).toBe(true);
+
+		// Timestamp: Code, Priority, PlayerId, Timestamp, Local
+		var tse: pl.TimestampEvent = [ pl.EventCode.Timestamp, 0, "dummyPid", 12345];
+		expect(!!EventBuffer.isEventLocal(tse)).toBe(false);
+		tse.push(true);
+		expect(!!EventBuffer.isEventLocal(tse)).toBe(true);
+
+		// PlayerInfo: Code, Priority, PlayerId, PlayerName, UserData, Local
+		var pie: pl.PlayerInfoEvent = [ pl.EventCode.PlayerInfo, 0, "dummyPid", "dummyPlayerName", {}];
+		expect(!!EventBuffer.isEventLocal(pie)).toBe(false);
+		pie.push(true);
+		expect(!!EventBuffer.isEventLocal(pie)).toBe(true);
 
 		// Message: Code, Priority, PlayerId, Message, Local
 		var msge: pl.MessageEvent = [ pl.EventCode.Message, 0, "dummyPid", "Message"];

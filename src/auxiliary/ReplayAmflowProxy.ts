@@ -1,7 +1,7 @@
 "use strict";
 import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
-import * as EventIndex from "../EventIndex";
+import { EventIndex } from "@akashic/akashic-engine";
 
 export interface ReplayAmflowProxyParameterObject {
 	amflow: amf.AMFlow;

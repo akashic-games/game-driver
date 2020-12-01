@@ -1,6 +1,6 @@
 import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
-import EventPriority from "../../../lib/EventPriority";
+import { EventPriority } from "@akashic/akashic-engine";
 import { MemoryAmflowClient, _cloneDeep } from "../../../lib/auxiliary/MemoryAmflowClient";
 
 describe("MemoryAmflowClient", function () {

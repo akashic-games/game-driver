@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "1.10.1",
+  "version": "2.0.0",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
@@ -10,7 +10,7 @@
     "clean": "rm -rf lib/ && rm -rf spec/lib/ spec/helpers/lib/",
     "build": "tsc -p ./src/ && npm run browserify",
     "browserify": "shx mkdir -p build && browserify -r ./lib/index.js:@akashic/game-driver -x @akashic/akashic-engine -o build/game-driver.js && npm run browserify:ae",
-    "browserify:ae": "browserify -r ./node_modules/@akashic/akashic-engine/lib/main.node.js:@akashic/akashic-engine  -o build/akashic-engine.js",
+    "browserify:ae": "browserify -r ./node_modules/@akashic/akashic-engine/index.js:@akashic/akashic-engine -o build/akashic-engine.js",
     "lint": "npm run lint:ts && npm run lint:md",
     "lint:ts": "tslint src/*.ts src/auxiliary/*.ts spec/src/*.ts spec/helpers/src/*.ts",
     "lint:md": "remark ./*.md --frail --no-stdout --quiet --rc-path ./.remarkrc",
@@ -34,8 +34,9 @@
     "@akashic:registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@akashic/akashic-pdi": "~2.10.0",
     "@akashic/amflow": "~3.0.0",
+    "@akashic/pdi-common-impl": "0.0.4",
+    "@akashic/pdi-types": "~1.1.0",
     "@akashic/playlog": "~3.1.0",
     "@akashic/remark-preset-lint": "~0.1.1",
     "@types/jest": "24.0.22",
@@ -48,7 +49,7 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~2.6.3",
+    "@akashic/akashic-engine": "~3.0.0",
     "es6-promise": "^4.2.8"
   }
 }

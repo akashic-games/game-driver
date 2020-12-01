@@ -1,9 +1,7 @@
 import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
-import * as pdi from "@akashic/akashic-pdi";
+import { EventPriority } from "@akashic/akashic-engine";
 import { MockAmflow } from "../../helpers/lib/MockAmflow";
-import * as EventIndex from "../../../lib/EventIndex";
-import EventPriority from "../../../lib/EventPriority";
 import { ReplayAmflowProxy } from "../../../lib/auxiliary/ReplayAmflowProxy";
 
 describe("ReplayAmflowProxy", function () {

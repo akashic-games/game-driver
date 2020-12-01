@@ -1,10 +1,8 @@
 "use strict";
 import * as pl from "@akashic/playlog";
 import { AMFlow } from "@akashic/amflow";
-import * as pdi from "@akashic/akashic-pdi";
+import * as pdi from "@akashic/pdi-types";
 import * as g from "@akashic/akashic-engine";
-import * as EventIndex from "./EventIndex";
-import { PointEventResolver } from "./PointEventResolver";
 import { Game } from "./Game";
 
 export interface EventBufferMode {
@@ -75,32 +73,35 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	_localBuffer: pl.Event[];
 
 	_filters: EventFilterEntry[];
+	_filterController: g.EventFilterController;
 	_unfilteredLocalEvents: pl.Event[];
 	_unfilteredEvents: pl.Event[];
 
-	_pointEventResolver: PointEventResolver;
+	_resolvePointEvent_bound: (e: pdi.PlatformPointEvent) => pl.Event | null;
 	_onEvent_bound: (pev: pl.Event) => void;
 
 	static isEventLocal(pev: pl.Event): boolean {
-		switch (pev[EventIndex.General.Code]) {
+		switch (pev[g.EventIndex.General.Code]) {
 		case pl.EventCode.Join:
-			return pev[EventIndex.Join.Local];
+			return pev[g.EventIndex.Join.Local];
 		case pl.EventCode.Leave:
-			return pev[EventIndex.Leave.Local];
+			return pev[g.EventIndex.Leave.Local];
 		case pl.EventCode.Timestamp:
-			return pev[EventIndex.Timestamp.Local];
+			return pev[g.EventIndex.Timestamp.Local];
+		case pl.EventCode.PlayerInfo:
+			return pev[g.EventIndex.PlayerInfo.Local];
 		case pl.EventCode.Message:
-			return pev[EventIndex.Message.Local];
+			return pev[g.EventIndex.Message.Local];
 		case pl.EventCode.PointDown:
-			return pev[EventIndex.PointDown.Local];
+			return pev[g.EventIndex.PointDown.Local];
 		case pl.EventCode.PointMove:
-			return pev[EventIndex.PointMove.Local];
+			return pev[g.EventIndex.PointMove.Local];
 		case pl.EventCode.PointUp:
-			return pev[EventIndex.PointUp.Local];
+			return pev[g.EventIndex.PointUp.Local];
 		case pl.EventCode.Operation:
-			return pev[EventIndex.Operation.Local];
+			return pev[g.EventIndex.Operation.Local];
 		default:
-			throw g.ExceptionFactory.createAssertionError("EventBuffer.isEventLocal");
+			throw new Error("EventBuffer.isEventLocal");
 		}
 	}
 
@@ -117,10 +118,23 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._localBuffer = [];
 
 		this._filters = null;
+		this._filterController = {
+			// この関数は `this.processEvents()` が呼び出すイベントフィルタから同期的にしか呼び出されることはない。(また呼び出されてはならない)
+			// `this.processEvents()` は `this._unfilteredEvents` などを空にして、同期的にイベントフィルタを呼ぶ。
+			// 従ってこの関数が呼ばれる時、 `this._unfilteredEvents` などに後続の (次フレーム以降に処理される) イベントが積まれている可能性はない。
+			// よって単純に push() しても、後続のイベントとの順序が崩れる可能性はない。
+			processNext: (pev: pl.Event): void => {
+				if (EventBuffer.isEventLocal(pev)) {
+					this._unfilteredLocalEvents.push(pev);
+				} else {
+					this._unfilteredEvents.push(pev);
+				}
+			}
+		};
 		this._unfilteredLocalEvents = [];
 		this._unfilteredEvents = [];
 
-		this._pointEventResolver = new PointEventResolver({ game: param.game });
+		this._resolvePointEvent_bound = param.game.resolvePointEvent.bind(param.game);
 		this._onEvent_bound = this.onEvent.bind(this);
 	}
 
@@ -177,29 +191,16 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			this._unfilteredEvents.push(pev);
 		}
 		if (this._isSender) {
-			if (pev[EventIndex.General.EventFlags] == null) {
-				pev[EventIndex.General.EventFlags] = this._defaultEventPriority;
+			if (pev[g.EventIndex.General.EventFlags] == null) {
+				pev[g.EventIndex.General.EventFlags] = this._defaultEventPriority & pl.EventFlagsMask.Priority;
 			}
 			this._amflow.sendEvent(pev);
 		}
 	}
 
-	onPointEvent(e: pdi.PointEvent): void {
-		let pev: pl.Event;
-		switch (e.type) {
-		case pdi.PointType.Down:
-			pev = this._pointEventResolver.pointDown(e);
-			break;
-		case pdi.PointType.Move:
-			pev = this._pointEventResolver.pointMove(e);
-			break;
-		case pdi.PointType.Up:
-			pev = this._pointEventResolver.pointUp(e);
-			break;
-		}
-		if (!pev)
-			return;
-		this.onEvent(pev);
+	onPointEvent(e: pdi.PlatformPointEvent): void {
+		const pev = this._resolvePointEvent_bound(e);
+		if (pev) this.onEvent(pev);
 	}
 
 	/**
@@ -213,15 +214,15 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			return;
 		}
 		if (this._isReceiver && !this._isDiscarder) {
-			if (pev[EventIndex.General.Code] === pl.EventCode.Join || pev[EventIndex.General.Code] === pl.EventCode.Leave) {
+			if (pev[g.EventIndex.General.Code] === pl.EventCode.Join || pev[g.EventIndex.General.Code] === pl.EventCode.Leave) {
 				this._joinLeaveBuffer.push(pev);
 			} else {
 				this._buffer.push(pev);
 			}
 		}
 		if (this._isSender) {
-			if (pev[EventIndex.General.EventFlags] == null) {
-				pev[EventIndex.General.EventFlags] = this._defaultEventPriority;
+			if (pev[g.EventIndex.General.EventFlags] == null) {
+				pev[g.EventIndex.General.EventFlags] = this._defaultEventPriority & pl.EventFlagsMask.Priority;
 			}
 			this._amflow.sendEvent(pev);
 		}
@@ -285,7 +286,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			for (let i = 0; i < this._filters.length; ++i) {
 				const filter = this._filters[i];
 				if (pevs.length > 0 || filter.handleEmpty)
-					pevs = this._filters[i].func(pevs) || [];
+					pevs = this._filters[i].func(pevs, this._filterController) || [];
 			}
 		}
 
@@ -293,7 +294,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 			const pev = pevs[i];
 			if (EventBuffer.isEventLocal(pev)) {
 				this._localBuffer.push(pev);
-			} else if (pev[EventIndex.General.Code] === pl.EventCode.Join || pev[EventIndex.General.Code] === pl.EventCode.Leave) {
+			} else if (pev[g.EventIndex.General.Code] === pl.EventCode.Join || pev[g.EventIndex.General.Code] === pl.EventCode.Leave) {
 				this._joinLeaveBuffer.push(pev);
 			} else {
 				this._buffer.push(pev);

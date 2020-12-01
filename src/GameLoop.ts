@@ -2,21 +2,21 @@
 import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import * as pdi from "@akashic/akashic-pdi";
+import * as pdi from "@akashic/pdi-types";
 import * as constants from "./constants";
 import LoopMode from "./LoopMode";
 import LoopRenderMode from "./LoopRenderMode";
 import LoopConfiguration from "./LoopConfiguration";
 import ExecutionMode from "./ExecutionMode";
-import * as EventIndex from "./EventIndex";
 import { Game } from "./Game";
 import { EventBuffer } from "./EventBuffer";
 import { Clock, ClockFrameTriggerParameterObject } from "./Clock";
 import { ProfilerClock } from "./ProfilerClock";
-import { EventConverter } from "./EventConverter";
 import { TickBuffer } from "./TickBuffer";
 import { TickController } from "./TickController";
 import { Profiler } from "./Profiler";
+
+const EventIndex = g.EventIndex;
 
 export interface GameLoopParameterObejct {
 	amflow: amf.AMFlow;
@@ -97,8 +97,8 @@ export class GameLoop {
 	_eventBuffer: EventBuffer;
 	_executionMode: ExecutionMode;
 
-	_sceneTickMode: g.TickGenerationMode;
-	_sceneLocalMode: g.LocalTickMode;
+	_sceneTickMode: g.TickGenerationModeString;
+	_sceneLocalMode: g.LocalTickModeString;
 
 	_targetAge: number;
 	_waitingStartPoint: boolean;
@@ -111,8 +111,8 @@ export class GameLoop {
 
 	_clock: Clock;
 	_tickController: TickController;
-	_eventConverter: EventConverter;
 	_tickBuffer: TickBuffer;
+	_events: pl.Event[];
 
 	_onGotStartPoint_bound: (err: Error | null, startPoint?: amf.StartPoint) => void;
 
@@ -164,6 +164,7 @@ export class GameLoop {
 		this._consumedLatestTick = false;
 		this._skipping = false;
 		this._lastPollingTickTime = 0;
+		this._events = [];
 
 		// todo: 本来は、パフォーマンス測定機構を含まないリリースモードによるビルド方式も提供すべき。
 		if (!param.profiler) {
@@ -193,7 +194,6 @@ export class GameLoop {
 			errorHandler: this.errorTrigger.fire,
 			errorHandlerOwner: this.errorTrigger
 		});
-		this._eventConverter = new EventConverter({ game: param.game });
 		this._tickBuffer = this._tickController.getBuffer();
 
 		this._onGotStartPoint_bound = this._onGotStartPoint.bind(this);
@@ -201,16 +201,14 @@ export class GameLoop {
 		this._setLoopRenderMode(loopRenderMode);
 		this._game.setIsSkipAware(conf.skipAwareGame != null ? conf.skipAwareGame : true);
 		this._game.setStorageFunc(this._tickController.storageFunc());
-		this._game.raiseEventTrigger.add(this._onGameRaiseEvent, this);
-		this._game.raiseTickTrigger.add(this._onGameRaiseTick, this);
+		this._game.handlerSet.raiseEventTrigger.add(this._onGameRaiseEvent, this);
+		this._game.handlerSet.raiseTickTrigger.add(this._onGameRaiseTick, this);
+		this._game.handlerSet.changeSceneModeTrigger.add(this._handleSceneChange, this);
 		this._game._started.add(this._onGameStarted, this);
-		this._game._operationPluginOperated.add(this._onGameOperationPluginOperated, this);
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
 		this._tickBuffer.gotNoTickTrigger.add(this._onGotNoTick, this);
 		this._tickBuffer.start();
 		this._updateGamePlaybackRate();
-
-		this._handleSceneChange();
 	}
 
 	start(): void {
@@ -339,24 +337,23 @@ export class GameLoop {
 		this._game._setAudioPlaybackRate(realPlaybackRate);
 	}
 
-	_handleSceneChange(): void {
-		const scene = this._game.scene();
-		const localMode = scene ? scene.local : g.LocalTickMode.FullLocal;  // シーンがない場合はローカルシーン同様に振る舞う(ティックは消化しない)
-		const tickMode = scene ? scene.tickGenerationMode : g.TickGenerationMode.ByClock;
+	_handleSceneChange(mode: g.SceneMode): void {
+		const localMode = mode.local;
+		const tickMode = mode.tickGenerationMode;
 		if (this._sceneLocalMode !== localMode || this._sceneTickMode !== tickMode) {
 			this._sceneLocalMode = localMode;
 			this._sceneTickMode = tickMode;
 			this._clock.frameTrigger.remove(this._onFrame, this);
 			this._clock.frameTrigger.remove(this._onLocalFrame, this);
 			switch (localMode) {
-			case g.LocalTickMode.FullLocal:
+			case "full-local":
 				// ローカルシーン: TickGenerationMode に関係なくローカルティックのみ
 				this._tickController.stopTick();
 				this._clock.frameTrigger.add(this._onLocalFrame, this);
 				break;
-			case g.LocalTickMode.NonLocal:
-			case g.LocalTickMode.InterpolateLocal:
-				if (tickMode === g.TickGenerationMode.ByClock) {
+			case "non-local":
+			case "interpolate-local":
+				if (tickMode === "by-clock") {
 					this._tickController.startTick();
 				} else {
 					// Manual の場合: storageDataが乗る可能性がある最初のTickだけ生成させ、あとは生成を止める。(Manualの仕様どおりの挙動)
@@ -385,14 +382,8 @@ export class GameLoop {
 		const game = this._game;
 		const pevs = this._eventBuffer.readLocalEvents();
 		this._currentTime += this._frameTime;
-		if (pevs) {
-			for (let i = 0, len = pevs.length; i < len; ++i)
-				game.events.push(this._eventConverter.toGameEvent(pevs[i]));
-		}
-		const sceneChanged = game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime));
+		game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime), pevs);
 		this._omittedTickDuration = 0;
-		if (sceneChanged)
-			this._handleSceneChange();
 	}
 
 	/**
@@ -462,7 +453,7 @@ export class GameLoop {
 					if (!this._consumedLatestTick)
 						this._tickBuffer.requestTicks();
 				}
-				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === "interpolate-local") {
 					if (this._consumedLatestTick) {
 						// 最新のティックが存在しない場合は現在時刻を目標時刻に合わせる。
 						// (_doLocalTick() により現在時刻が this._frameTime 進むのでその直前まで進める)
@@ -503,7 +494,7 @@ export class GameLoop {
 						nextFrameTime = nextTickTime;
 						this._omittedTickDuration += nextTickTime - this._currentTime;
 					} else {
-						if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+						if (this._sceneLocalMode === "interpolate-local") {
 							this._doLocalTick();
 						}
 						continue;
@@ -514,25 +505,22 @@ export class GameLoop {
 			this._currentTime = nextFrameTime;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
+			this._events.length = 0;
 
-			let plEvents = this._eventBuffer.readLocalEvents();
+			const plEvents = this._eventBuffer.readLocalEvents();
 			if (plEvents) {
-				for (let j = 0, len = plEvents.length; j < len; ++j) {
-					game.events.push(this._eventConverter.toGameEvent(plEvents[j]));
-				}
+				this._events.push(...plEvents);
 			}
 			if (typeof tick === "number") {
 				consumedAge = tick;
-				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime));
+				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 			} else {
 				consumedAge = tick[EventIndex.Tick.Age];
-				let pevs: pl.Event[] = tick[EventIndex.Tick.Events];
+				const pevs: pl.Event[] = tick[EventIndex.Tick.Events];
 				if (pevs) {
-					for (let j = 0, len = pevs.length; j < len; ++j) {
-						game.events.push(this._eventConverter.toGameEvent(pevs[j]));
-					}
+					this._events.push(...pevs);
 				}
-				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime));
+				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 			}
 			this._omittedTickDuration = 0;
 
@@ -546,7 +534,6 @@ export class GameLoop {
 			}
 
 			if (sceneChanged) {
-				this._handleSceneChange();
 				break;  // シーンが変わったらローカルシーンに入っているかもしれないので一度抜ける
 			}
 		}
@@ -573,7 +560,7 @@ export class GameLoop {
 		}
 
 		if (this._waitingNextTick) {
-			if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal)
+			if (this._sceneLocalMode === "interpolate-local")
 				this._doLocalTick();
 			return;
 		}
@@ -630,7 +617,7 @@ export class GameLoop {
 				this._startWaitingNextTick();
 			}
 
-			if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+			if (this._sceneLocalMode === "interpolate-local") {
 				// ティック待ちの間、ローカルティックを(補間して)消費: 上の暫定対処のrequestTicks()より後に行うべきである点に注意。
 				// ローカルティックを消費すると、ゲームスクリプトがraiseTick()する(_waitingNextTickが立つのはおかしい)可能性がある。
 				this._doLocalTick();
@@ -660,7 +647,7 @@ export class GameLoop {
 					nextFrameTime = Math.ceil(nextTickTime / this._frameTime) * this._frameTime;
 					this._omittedTickDuration += nextFrameTime - this._currentTime;
 				} else {
-					if (this._sceneLocalMode === g.LocalTickMode.InterpolateLocal) {
+					if (this._sceneLocalMode === "interpolate-local") {
 						this._doLocalTick();
 						continue;
 					}
@@ -671,26 +658,23 @@ export class GameLoop {
 			this._currentTime = nextFrameTime;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
+			this._events.length = 0;
 
 			if (tick != null) {
-				let plEvents = this._eventBuffer.readLocalEvents();
+				const plEvents = this._eventBuffer.readLocalEvents();
 				if (plEvents) {
-					for (let i = 0, len = plEvents.length; i < len; ++i) {
-						game.events.push(this._eventConverter.toGameEvent(plEvents[i]));
-					}
+					this._events.push(...plEvents);
 				}
 				if (typeof tick === "number") {
 					consumedAge = tick;
-					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime));
+					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 				} else {
 					consumedAge = tick[EventIndex.Tick.Age];
-					let pevs: pl.Event[] = tick[EventIndex.Tick.Events];
+					const pevs: pl.Event[] = tick[EventIndex.Tick.Events];
 					if (pevs) {
-						for (let j = 0, len = pevs.length; j < len; ++j) {
-							game.events.push(this._eventConverter.toGameEvent(pevs[j]));
-						}
+						this._events.push(...pevs);
 					}
-					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime));
+					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 				}
 				this._omittedTickDuration = 0;
 			} else {
@@ -710,7 +694,6 @@ export class GameLoop {
 			}
 
 			if (sceneChanged) {
-				this._handleSceneChange();
 				break;  // シーンが変わったらローカルシーンに入っているかもしれないので一度抜ける
 			}
 		}
@@ -782,7 +765,6 @@ export class GameLoop {
 		this._lastRequestedStartPointTime = -1;  // 同上。
 		this._omittedTickDuration = 0;
 		this._game._restartWithSnapshot(startPoint);
-		this._handleSceneChange();
 	}
 
 	_onGameStarted(): void {
@@ -792,7 +774,7 @@ export class GameLoop {
 	}
 
 	_onEventsProcessed(): void {
-		this._eventBuffer.processEvents(this._sceneLocalMode === g.LocalTickMode.FullLocal);
+		this._eventBuffer.processEvents(this._sceneLocalMode === "full-local");
 	}
 
 	_setLoopRenderMode(mode: LoopRenderMode): void {
@@ -813,31 +795,22 @@ export class GameLoop {
 	}
 
 	_renderOnRawFrame(): void {
-		const game = this._game;
-		if (game.modified && game.scenes.length > 0) {
-			game.render();
-		}
+		this._game.render();
 	}
 
-	_onGameRaiseEvent(e: g.Event): void {
-		const pev = this._eventConverter.toPlaylogEvent(e);
-		this._eventBuffer.onEvent(pev);
+	_onGameRaiseEvent(event: pl.Event): void {
+		this._eventBuffer.onEvent(event);
 	}
 
-	_onGameRaiseTick(es?: g.Event[]): void {
+	_onGameRaiseTick(es?: pl.Event[]): void {
 		if (this._executionMode !== ExecutionMode.Active)
 			return;
 		// TODO: イベントフィルタの中で呼ばれるとおかしくなる(フィルタ中のイベントがtickに乗らない)。
 		if (es) {
 			for (let i = 0; i < es.length; ++i)
-				this._eventBuffer.addEventDirect(this._eventConverter.toPlaylogEvent(es[i]));
+				this._eventBuffer.addEventDirect(es[i]);
 		}
 		this._tickController.forceGenerateTick();
-	}
-
-	_onGameOperationPluginOperated(op: g.InternalOperationPluginOperation): void {
-		const pev = this._eventConverter.makePlaylogOperationEvent(op);
-		this._eventBuffer.onEvent(pev);
 	}
 
 	_onPollingTick(): void {

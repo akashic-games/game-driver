@@ -2,9 +2,10 @@
 import * as pl from "@akashic/playlog";
 import { AMFlow } from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import * as EventIndex from "./EventIndex";
 import ExecutionMode from "./ExecutionMode";
 import StorageOnTick from "./StorageOnTick";
+
+const EventIndex = g.EventIndex;
 
 export interface TickBufferParameterObject {
 	/**

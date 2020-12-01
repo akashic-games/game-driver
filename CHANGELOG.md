@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## 2.0.0
+* @akashic/akashic-engine@3.0.0 に追従
+
+## 2.0.0-beta.12
+* `build` ディレクトリ以下のビルド成果物が壊れていたバグの修正
+
+## 2.0.0-beta.11
+* @akashic/akashic-engine@3.0.0-beta.36 に追従
+
+## 2.0.0-beta.10
+* @akashic/akashic-engine@3.0.0-beta.35 に追従
+
+## 2.0.0-beta.9
+* @akashic/amflowのmajor更新と@akashic/playlogのminor更新に伴うバージョンアップ
+
+## 2.0.0-beta.8
+* @akashic/akashic-engine@v3.0.0-beta.26 に追従
+* @akashic/pdi-types を使うように
+
+## 2.0.0-beta.7
+* @akashic/akashic-engine@v3.0.0-beta.18 に追従
+
+## 2.0.0-beta.2 - 6
+* @akashic/akashic-engine@v3.0.0-beta.0 - 17 に追従
+
+## 2.0.0-beta.1
+* `g.Game#modified` の関数化に伴い、`g.Game#modified()` に修正。
+
 ## 1.10.1
 * `build` ディレクトリ以下のビルド成果物が壊れていたバグの修正
 

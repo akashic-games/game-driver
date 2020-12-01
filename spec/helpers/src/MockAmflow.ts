@@ -94,7 +94,6 @@ export class MockAmflow implements AMFlow {
 		}
 		const from = optsOrBegin;
 		const to = endOrCallback;
-
 		var req: GetTicksRequest;
 		var wrap = (error: Error, tickArray: pl.Tick[]) => {
 			this.requestsGetTicks = this.requestsGetTicks.filter((r: GetTicksRequest) => { return r !== req; });

@@ -125,7 +125,7 @@ export class TickGenerator {
 	 */
 	requestStorageTick(keys: pl.StorageReadKey[]): number {
 		if (this._waitingStorage) {
-			var err = g.ExceptionFactory.createAssertionError("TickGenerator#requestStorageTick(): Unsupported: multiple storage request");
+			var err = new Error("TickGenerator#requestStorageTick(): Unsupported: multiple storage request");
 			this.errorTrigger.fire(err);
 			return -1;
 		}

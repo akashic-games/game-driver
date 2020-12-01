@@ -1,9 +1,7 @@
 import * as pl from "@akashic/playlog";
-import * as g from "@akashic/akashic-engine";
+import { EventIndex, EventPriority, Trigger } from "@akashic/akashic-engine";
 import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
-import * as EventIndex from "../../lib/EventIndex";
-import EventPriority from "../../lib/EventPriority";
 import { EventBuffer } from "../../lib/EventBuffer";
 import { TickGenerator } from "../../lib/TickGenerator";
 
@@ -23,9 +21,9 @@ describe("TickGenerator", function () {
 			errorHandlerOwner: errorCollector
 		});
 
-		expect(self.tickTrigger instanceof g.Trigger).toBe(true);
-		expect(self.gotStorageTrigger instanceof g.Trigger).toBe(true);
-		expect(self.errorTrigger instanceof g.Trigger).toBe(true);
+		expect(self.tickTrigger instanceof Trigger).toBe(true);
+		expect(self.gotStorageTrigger instanceof Trigger).toBe(true);
+		expect(self.errorTrigger instanceof Trigger).toBe(true);
 		expect(self.errorTrigger.contains(errorCollector.collect, errorCollector)).toBe(true);
 		expect(self._amflow).toBe(amflow);
 		expect(self._eventBuffer).toBe(eventBuffer);
