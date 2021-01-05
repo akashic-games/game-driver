@@ -174,8 +174,8 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 				let nearestTimestamp = this._startPoints[0].timestamp;
 				for (let i = 1; i < this._startPoints.length; ++i) {
 					const timestamp = this._startPoints[i].timestamp;
-					// @ts-ignore opts.frame が null の場合は opts.timestapm が non-null でなければならない
-					if (timestamp <= opts.timestamp && nearestTimestamp < timestamp) {
+					// NOTE: opts.frame が null の場合は opts.timestamp が non-null であることが仕様上保証されている
+					if (timestamp <= opts.timestamp! && nearestTimestamp < timestamp) {
 						nearestTimestamp = timestamp;
 						index = i;
 					}
