@@ -136,8 +136,11 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		}
 
 		const events = tick[EventIndex.Tick.Events];
-		if (events) {
-			tick[EventIndex.Tick.Events] = events.filter(event => !(event[EventIndex.General.EventFlags] & pl.EventFlagsMask.Transient));
+		const storageData = tick[EventIndex.Tick.StorageData];
+		if (events || storageData) {
+			if (events) {
+				tick[EventIndex.Tick.Events] = events.filter(event => !(event[EventIndex.General.EventFlags] & pl.EventFlagsMask.Transient));
+			}
 			// @ts-ignore
 			this._tickList[EventIndex.TickList.TicksWithEvents].push(tick);
 		}
