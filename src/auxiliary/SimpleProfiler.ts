@@ -66,20 +66,19 @@ export class SimpleProfiler implements Profiler {
 
 	_interval: number;
 	_limit: number;
-	_startTime: number;
-	_beforeFlushTime: number;
-	_beforeTimes: {[type: number]: number};
-	_values: {[type: number]: {time: number, value: number}[]};
-	_calculateProfilerValueTrigger: g.Trigger<SimpleProfilerValue>;
+	_startTime: number = 0;
+	_beforeFlushTime: number = 0;
+	_beforeTimes: {[type: number]: number} = [];
+	_values: {[type: number]: {time: number, value: number}[]} = [];
+	_calculateProfilerValueTrigger: g.Trigger<SimpleProfilerValue> = new g.Trigger();
 
 	constructor(param: SimpleProfilerParameterObject) {
-		this._interval = param.interval != null ? param.interval : SimpleProfiler.DEFAULT_INTERVAL;
+		this._interval = param.interval ?? SimpleProfiler.DEFAULT_INTERVAL;
 		if (param.limit != null) {
 			this._limit = param.limit >= SimpleProfiler.DEFAULT_LIMIT ? param.limit : SimpleProfiler.DEFAULT_LIMIT;
 		} else {
 			this._limit = SimpleProfiler.DEFAULT_LIMIT;
 		}
-		this._calculateProfilerValueTrigger = new g.Trigger<SimpleProfilerValue>();
 		if (param.getValueHandler) {
 			this._calculateProfilerValueTrigger.add(param.getValueHandler, param.getValueHandlerOwner);
 		}

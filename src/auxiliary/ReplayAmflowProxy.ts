@@ -11,7 +11,7 @@ export interface ReplayAmflowProxyParameterObject {
 
 export class ReplayAmflowProxy implements amf.AMFlow {
 	_amflow: amf.AMFlow;
-	_tickList: pl.TickList;
+	_tickList: pl.TickList | null;
 	_startPoints: amf.StartPoint[];
 
 	constructor(param: ReplayAmflowProxyParameterObject) {
@@ -31,7 +31,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 
 		const givenFrom = this._tickList[EventIndex.TickList.From];
 		const givenTo = this._tickList[EventIndex.TickList.To];
-		const givenTicksWithEvents = this._tickList[EventIndex.TickList.TicksWithEvents];
+		const givenTicksWithEvents = this._tickList[EventIndex.TickList.TicksWithEvents] || [];
 
 		if (age <= givenFrom) {
 			this._tickList = null;
@@ -101,7 +101,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 
 		const givenFrom = this._tickList[EventIndex.TickList.From];
 		const givenTo = this._tickList[EventIndex.TickList.To];
-		const givenTicksWithEvents = this._tickList[EventIndex.TickList.TicksWithEvents];
+		const givenTicksWithEvents = this._tickList[EventIndex.TickList.TicksWithEvents] || [];
 		const fromInGiven = givenFrom <= from && from <= givenTo;
 		const toInGiven = givenFrom <= to && to <= givenTo;
 
@@ -174,6 +174,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 				let nearestTimestamp = this._startPoints[0].timestamp;
 				for (let i = 1; i < this._startPoints.length; ++i) {
 					const timestamp = this._startPoints[i].timestamp;
+					// @ts-ignore opts.frame が null の場合は opts.timestapm が non-null でなければならない
 					if (timestamp <= opts.timestamp && nearestTimestamp < timestamp) {
 						nearestTimestamp = timestamp;
 						index = i;
@@ -183,13 +184,13 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 		}
 
 		const givenTo = this._tickList ? this._tickList[EventIndex.TickList.To] : -1;
-		if (opts.frame > givenTo) {
+		if (typeof opts.frame === "number" && opts.frame > givenTo) {
 			this._amflow.getStartPoint(opts, (err: Error | null, startPoint?: amf.StartPoint) => {
 				if (err) {
 					callback(err);
 					return;
 				}
-				if (givenTo < startPoint.frame) {
+				if (startPoint && givenTo < startPoint.frame) {
 					callback(null, startPoint);
 				} else {
 					// 与えられたティックリストの範囲内のスタートポイントが見つかったとしてもなかったかのように振る舞う

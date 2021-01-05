@@ -5,7 +5,7 @@ import * as pdi from "@akashic/pdi-types";
 import { GameConfiguration, GameConfigurationDefinitionDeclaration } from "./GameConfiguration";
 
 export module PdiUtil {
-	export type LoadConfigurationFunc = (url: string, asseBase: string, configurationBase: string,
+	export type LoadConfigurationFunc = (url: string, asseBase: string | undefined, configurationBase: string | undefined,
 	                                     callback: (err: any, conf: GameConfiguration) => void) => void;
 
 	/**
@@ -20,7 +20,7 @@ export module PdiUtil {
 	 */
 	export function makeLoadConfigurationFunc(pf: pdi.Platform): PdiUtil.LoadConfigurationFunc {
 		function loadResolvedConfiguration(url: string, assetBase: string | undefined, configurationBase: string | undefined,
-		                                   callback: (err: Error, conf: any) => void): void {
+		                                   callback: (err: Error | null, conf: any) => void): void {
 			pf.loadGameConfiguration(url, (err: any, conf: any) => {
 				if (err) {
 					callback(err, null);
@@ -50,9 +50,9 @@ export module PdiUtil {
 					.catch((e: Error) => callback(e, null));
 			});
 		}
-		function promisifiedLoad(url: string, assetBase: string, configurationBase: string): Promise<GameConfiguration> {
+		function promisifiedLoad(url: string, assetBase: string | undefined, configurationBase: string | undefined): Promise<GameConfiguration> {
 			return new Promise<GameConfiguration>((resolve: (conf: GameConfiguration) => void, reject: (err: any) => void) => {
-				loadResolvedConfiguration(url, assetBase, configurationBase, (err: Error, conf: GameConfiguration) => {
+				loadResolvedConfiguration(url, assetBase, configurationBase, (err, conf) => {
 					err ? reject(err) : resolve(conf);
 				});
 			});

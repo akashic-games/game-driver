@@ -88,47 +88,32 @@ export interface GameDriverInitializeParameterObject {
 }
 
 export class GameDriver {
-	errorTrigger: g.Trigger<any>;
-	configurationLoadedTrigger: g.Trigger<g.GameConfiguration>;
-	gameCreatedTrigger: g.Trigger<Game>;
+	errorTrigger: g.Trigger<any> = new g.Trigger();
+	configurationLoadedTrigger: g.Trigger<g.GameConfiguration> = new g.Trigger();
+	gameCreatedTrigger: g.Trigger<Game> = new g.Trigger();
 
 	_platform: pdi.Platform;
 	_loadConfigurationFunc: PdiUtil.LoadConfigurationFunc;
 	_player: g.Player;
-	_rendererRequirement: pdi.RendererRequirement;
-	_playId: string;
-	_game: Game;
-	_gameLoop: GameLoop;
-	_eventBuffer: EventBuffer;
+	_rendererRequirement: pdi.RendererRequirement | null = null;
+	_playId: string | undefined; // g.Game#playId と型を合わせる
+	_game: Game | null = null;
+	_gameLoop: GameLoop | null = null;
+	_eventBuffer: EventBuffer | null = null;
 
-	_openedAmflow: boolean;
-	_playToken: string;
-	_permission: amf.Permission;
-	_hidden: boolean;
-	_destroyed: boolean; // ゲームをdestroy済みかどうかのフラグ。destroy時にのみtrueになる。
+	_openedAmflow: boolean = false;
+	_playToken: string | null = null;
+	_permission: amf.Permission | null = null;
+	_hidden: boolean = false;
+	_destroyed: boolean = false;
 
 	constructor(param: GameDriverParameterObject) {
-		this.errorTrigger = new g.Trigger<any>();
-
 		if (param.errorHandler)
 			this.errorTrigger.add(param.errorHandler, param.errorHandlerOwner);
-
-		this.configurationLoadedTrigger = new g.Trigger<g.GameConfiguration>();
-		this.gameCreatedTrigger = new g.Trigger<Game>();
 
 		this._platform = param.platform;
 		this._loadConfigurationFunc = PdiUtil.makeLoadConfigurationFunc(param.platform);
 		this._player = param.player;
-		this._rendererRequirement = null;
-		this._playId = null;
-		this._game = null;
-		this._gameLoop = null;
-		this._eventBuffer = null;
-		this._openedAmflow = false;
-		this._playToken = null;
-		this._permission = null;
-		this._hidden = false;
-		this._destroyed = false;
 	}
 
 	/**
@@ -145,16 +130,16 @@ export class GameDriver {
 	 * `startGame()` によりゲームが開始されていた場合、暗黙に `stopGame()` が行われ、完了後 `startGame()` される。
 	 */
 	changeState(param: GameDriverInitializeParameterObject, callback: (err?: Error) => void): void {
-		var pausing = this._gameLoop && this._gameLoop.running;
+		const pausing = this._gameLoop && this._gameLoop.running;
 		if (pausing)
-			this._gameLoop.stop();
-		this.initialize(param, (err: Error) => {
+			this._gameLoop?.stop();
+		this.initialize(param, err => {
 			if (err) {
 				callback(err);
 				return;
 			}
 			if (pausing)
-				this._gameLoop.start();
+				this._gameLoop?.start();
 			callback();
 		});
 	}
@@ -191,23 +176,23 @@ export class GameDriver {
 	 * @param age 次に生成されるティックのage
 	 */
 	setNextAge(age: number): void {
-		this._gameLoop.setNextAge(age);
+		this._gameLoop?.setNextAge(age);
 	}
 
-	getPermission(): amf.Permission {
+	getPermission(): amf.Permission | null {
 		return this._permission;
 	}
 
 	getDriverConfiguration(): DriverConfiguration {
 		return {
 			playId: this._playId,
-			playToken: this._playToken,
+			playToken: this._playToken ?? undefined,
 			executionMode: this._gameLoop ? this._gameLoop.getExecutionMode() : undefined,
 			eventBufferMode: this._eventBuffer ? this._eventBuffer.getMode() : undefined
 		};
 	}
 
-	getLoopConfiguration(): LoopConfiguration {
+	getLoopConfiguration(): LoopConfiguration | null {
 		return this._gameLoop ? this._gameLoop.getLoopConfiguration() : null;
 	}
 
@@ -225,10 +210,10 @@ export class GameDriver {
 	resetPrimarySurface(width: number, height: number, rendererCandidates?: string[]): void {
 		rendererCandidates = rendererCandidates ? rendererCandidates
 		                                        : this._rendererRequirement ? this._rendererRequirement.rendererCandidates
-		                                                                    : null;
-		var game = this._game;
-		var pf = this._platform;
-		var primarySurface = pf.getPrimarySurface();
+		                                                                    : undefined;
+		const game = this._game!;
+		const pf = this._platform;
+		const primarySurface = pf.getPrimarySurface();
 		game.renderers = game.renderers.filter(renderer => renderer !== primarySurface.renderer());
 
 		pf.setRendererRequirement({
@@ -245,12 +230,12 @@ export class GameDriver {
 		game.renderers.push(pf.getPrimarySurface().renderer());
 		game.width = width;
 		game.height = height;
-		game.resized.fire({ width, height });
+		game.onResized.fire({ width, height });
 		game.modified();
 	}
 
 	doInitialize(param: GameDriverInitializeParameterObject): Promise<void> {
-		var p = new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
+		const p = new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
 			if (this._gameLoop && this._gameLoop.running) {
 				return reject(new Error("Game is running. Must be stopped."));
 			}
@@ -268,11 +253,12 @@ export class GameDriver {
 			this._assertLive();
 			return this._doSetDriverConfiguration(param.driverConfiguration);
 		});
-		if (!param.configurationUrl)
+		const configurationUrl = param.configurationUrl;
+		if (!configurationUrl)
 			return p;
 		return p.then<g.GameConfiguration>(() => {
 			this._assertLive();
-			return this._loadConfiguration(param.configurationUrl, param.assetBase, param.configurationBase);
+			return this._loadConfiguration(configurationUrl, param.assetBase, param.configurationBase);
 		}).then<void>((conf: g.GameConfiguration) => {
 			this._assertLive();
 			return this._createGame(conf, this._player, param);
@@ -288,21 +274,21 @@ export class GameDriver {
 				this._game = null;
 			}
 			this.errorTrigger.destroy();
-			this.errorTrigger = null;
+			this.errorTrigger = null!;
 			this.configurationLoadedTrigger.destroy();
-			this.configurationLoadedTrigger = null;
+			this.configurationLoadedTrigger = null!;
 			this.gameCreatedTrigger.destroy();
-			this.gameCreatedTrigger = null;
+			this.gameCreatedTrigger = null!;
 			if (this._platform.destroy) {
 				this._platform.destroy();
 			} else {
 				this._platform.setRendererRequirement(undefined);
 			}
-			this._platform = null;
-			this._loadConfigurationFunc = null;
-			this._player = null;
+			this._platform = null!;
+			this._loadConfigurationFunc = null!;
+			this._player = null!;
 			this._rendererRequirement = null;
-			this._playId = null;
+			this._playId = undefined;
 			this._gameLoop = null;
 			this._eventBuffer = null;
 			this._openedAmflow = false;
@@ -314,15 +300,18 @@ export class GameDriver {
 		});
 	}
 
-	_doSetDriverConfiguration(dconf: DriverConfiguration): Promise<void> {
+	_doSetDriverConfiguration(dconf?: DriverConfiguration): Promise<void> {
 		if (dconf == null) {
 			return Promise.resolve();
 		}
+		if (!this._permission) {
+			return Promise.reject(new Error("Not authenticated."));
+		}
 		// デフォルト値の補完
 		if (dconf.playId === undefined)
-			dconf.playId = this._playId;
+			dconf.playId = this._playId ?? undefined;
 		if (dconf.playToken === undefined)
-			dconf.playToken = this._playToken;
+			dconf.playToken = this._playToken ?? undefined;
 		if (dconf.eventBufferMode === undefined) {
 			if (dconf.executionMode === ExecutionMode.Active) {
 				dconf.eventBufferMode = { isReceiver: true, isSender: false };
@@ -330,7 +319,8 @@ export class GameDriver {
 				dconf.eventBufferMode = { isReceiver: false, isSender: true };
 			}
 		}
-		var p = Promise.resolve();
+		const permission = this._permission;
+		let p = Promise.resolve();
 		if (this._playId !== dconf.playId) {
 			p = p.then<void>(() => {
 				this._assertLive();
@@ -347,7 +337,7 @@ export class GameDriver {
 			this._assertLive();
 			if (dconf.eventBufferMode != null) {
 				if (dconf.eventBufferMode.defaultEventPriority == null) {
-					dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & this._permission.maxEventPriority;
+					dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & permission.maxEventPriority;
 				}
 				if (this._eventBuffer) {
 					this._eventBuffer.setMode(dconf.eventBufferMode);
@@ -376,7 +366,7 @@ export class GameDriver {
 		});
 	}
 
-	_doOpenAmflow(playId: string): Promise<void> {
+	_doOpenAmflow(playId: string | undefined): Promise<void> {
 		if (playId === undefined) {
 			return Promise.resolve();
 		}
@@ -401,7 +391,7 @@ export class GameDriver {
 		});
 	}
 
-	_doAuthenticate(playToken: string): Promise<void> {
+	_doAuthenticate(playToken: string | undefined): Promise<void> {
 		if (playToken == null)
 			return Promise.resolve();
 		return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
@@ -410,19 +400,27 @@ export class GameDriver {
 				if (error) {
 					return reject(error);
 				}
+				if (!permission) {
+					reject(new Error("Permission denied."));
+					return;
+				}
 				this._playToken = playToken;
 				this._permission = permission;
 				if (this._game) {
-					this._game.handlerSet.isSnapshotSaver = this._permission.writeTick;
+					this._game.handlerSet.isSnapshotSaver = permission.writeTick;
 				}
 				resolve();
 			});
 		});
 	}
 
-	_loadConfiguration(configurationUrl: string, assetBase: string, configurationBase: string): Promise<g.GameConfiguration> {
+	_loadConfiguration(
+		configurationUrl: string,
+		assetBase: string | undefined,
+		configurationBase: string | undefined
+	): Promise<g.GameConfiguration> {
 		return new Promise((resolve: (conf: g.GameConfiguration) => void, reject: (err: any) => void) => {
-			this._loadConfigurationFunc(configurationUrl, assetBase, configurationBase, (err: any, conf?: g.GameConfiguration) => {
+			this._loadConfigurationFunc(configurationUrl, assetBase, configurationBase, (err: any, conf: g.GameConfiguration) => {
 				const error = this._getCallbackError(err);
 				if (error) {
 					return reject(error);
@@ -436,7 +434,8 @@ export class GameDriver {
 	_putZerothStartPoint(data: StartPointData): Promise<void> {
 		return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
 			// AMFlowは第0スタートポイントに関して「書かれるまで待つ」という動作をするため、「なければ書き込む」ことはできない。
-			var zerothStartPoint = { frame: 0, timestamp: data.startedAt, data };
+			// NOTE: 仕様上第0スタートポイントには必ず data.startedAt が存在するとみなせる。
+			var zerothStartPoint = { frame: 0, timestamp: data.startedAt!, data };
 			this._platform.amflow.putStartPoint(zerothStartPoint, (err: any | null) => {
 				const error = this._getCallbackError(err);
 				if (error) {
@@ -448,23 +447,26 @@ export class GameDriver {
 	}
 
 	_getZerothStartPointData(): Promise<StartPointData> {
-		return new Promise<StartPointData>((resolve: (data: StartPointData) => void, reject: (err: any) => void) => {
-			this._platform.amflow.getStartPoint({ frame: 0 }, (err: Error, startPoint: amf.StartPoint) => {
+		return new Promise<StartPointData>((resolve, reject) => {
+			this._platform.amflow.getStartPoint({ frame: 0 }, (err, startPoint) => {
 				const error = this._getCallbackError(err);
-				if (error) {
+				if (error)
 					return reject(error);
-				}
-				var data = <StartPointData>startPoint.data;
-				if (typeof data.seed !== "number")  // 型がないので一応確認
-					return reject(new Error("GameDriver#_getRandomSeed: No seed found."));
+				if (!startPoint)
+					return reject(new Error("GameDriver#_getZerothStartPointData: No startPoint found"));
+
+				const data = startPoint.data;
+				if (typeof data.seed !== "number") // 型がないので一応確認
+					return reject(new Error("GameDriver#_getZerothStartPointData: No seed found."));
 				resolve(data);
 			});
 		});
 	}
 
 	_createGame(conf: g.GameConfiguration, player: g.Player, param: GameDriverInitializeParameterObject): Promise<void> {
-		var putSeed = (param.driverConfiguration.executionMode === ExecutionMode.Active) && this._permission.writeTick;
-		var p;
+		const writeTick = !!this._permission?.writeTick;
+		const putSeed = !!(param.driverConfiguration?.executionMode === ExecutionMode.Active) && writeTick;
+		let p;
 		if (putSeed) {
 			p = this._putZerothStartPoint({
 				seed: Date.now(),
@@ -479,25 +481,25 @@ export class GameDriver {
 			this._assertLive();
 			return this._getZerothStartPointData();
 		});
-		return p.then<void>((zerothData: StartPointData) => {
+		return p.then<void>(zerothData => {
 			this._assertLive();
-			var pf = this._platform;
-			var driverConf = param.driverConfiguration || {
+			const pf = this._platform;
+			const driverConf = param.driverConfiguration || {
 				eventBufferMode: { isReceiver: true, isSender: false },
 				executionMode: ExecutionMode.Active
 			};
-			var seed = zerothData.seed;
-			var args = param.gameArgs;
-			var globalArgs = zerothData.globalArgs;
-			var startedAt = zerothData.startedAt;
-			var rendererRequirement = {
+			const seed = zerothData.seed;
+			const args = param.gameArgs;
+			const globalArgs = zerothData.globalArgs;
+			const startedAt = zerothData.startedAt!;
+			const rendererRequirement = {
 				primarySurfaceWidth: conf.width,
 				primarySurfaceHeight: conf.height,
-				rendererCandidates: (<any>conf).renderers   // TODO: akashic-engineのGameConfigurationにrenderersの定義を加える
+				rendererCandidates: (conf as any).renderers // TODO: g.GameConfiguration に renderers の定義を加える
 			};
 			pf.setRendererRequirement(rendererRequirement);
 			const handlerSet = new GameHandlerSet({
-				isSnapshotSaver: this._permission.writeTick
+				isSnapshotSaver: writeTick
 			});
 			const game = new Game({
 				engineModule: g,
@@ -507,12 +509,17 @@ export class GameDriver {
 				player: player,
 				resourceFactory: pf.getResourceFactory(),
 				assetBase: param.assetBase,
-				operationPluginViewInfo: (pf.getOperationPluginViewInfo ? pf.getOperationPluginViewInfo() : null),
+				operationPluginViewInfo: (pf.getOperationPluginViewInfo ? pf.getOperationPluginViewInfo() : undefined),
 				gameArgs: args,
 				globalGameArgs: globalArgs
 			});
-			var eventBuffer = new EventBuffer({ game: game, amflow: pf.amflow });
-			eventBuffer.setMode(driverConf.eventBufferMode);
+			const eventBuffer = new EventBuffer({ game: game, amflow: pf.amflow });
+
+			// NOTE: this._doSetDriverConfiguration() により driverConf の各 config が non-null であることが保証されている
+			const eventBufferMode = driverConf.eventBufferMode!;
+			const executionMode = driverConf.executionMode!;
+
+			eventBuffer.setMode(eventBufferMode);
 			pf.setPlatformEventHandler(eventBuffer);
 			handlerSet.setEventFilterFuncs({
 				addFilter: eventBuffer.addFilter.bind(eventBuffer),
@@ -524,10 +531,11 @@ export class GameDriver {
 				game: game,
 				amflow: pf.amflow,
 				platform: pf,
-				executionMode: driverConf.executionMode,
-				eventBuffer: eventBuffer,
+				executionMode,
+				eventBuffer,
+				// @ts-ignore TODO: param.loopConfiguration === undefined の扱い
 				configuration: param.loopConfiguration,
-				startedAt: startedAt,
+				startedAt,
 				profiler: param.profiler
 			});
 
@@ -559,6 +567,7 @@ export class GameDriver {
 	_updateGamePlayId(game: Game): void {
 		game.playId = this._playId;
 		game.external.send = (data: any) => {
+			if (!this._playId) return;
 			this._platform.sendToExternal(this._playId, data);
 		};
 	}

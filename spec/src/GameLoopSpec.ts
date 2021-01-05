@@ -114,11 +114,11 @@ describe("GameLoop", function () {
 			jumpIgnoreThreshold: constants.DEFAULT_JUMP_IGNORE_THRESHOLD,
 			playbackRate: 1,
 			loopRenderMode: LoopRenderMode.AfterRawFrame,
-			targetTimeFunc: null,
-			targetTimeOffset: null,
-			originDate: null,
+			targetTimeFunc: undefined,
+			targetTimeOffset: undefined,
+			originDate: undefined,
 			omitInterpolatedTickOnReplay: true,
-			targetAge: null
+			targetAge: undefined
 		});
 		var loopConf = {
 			loopMode: LoopMode.Replay,
@@ -147,9 +147,9 @@ describe("GameLoop", function () {
 		expect(obtainedConf.loopRenderMode).toBe(loopConf.loopRenderMode);
 		expect(obtainedConf.targetTimeFunc).toBe(loopConf.targetTimeFunc);
 		expect(obtainedConf.targetTimeOffset).toBe(loopConf.targetTimeOffset);
-		expect(obtainedConf.originDate).toBe(null);
+		expect(obtainedConf.originDate).toBeUndefined();
 		expect(obtainedConf.omitInterpolatedTickOnReplay).toBe(loopConf.omitInterpolatedTickOnReplay);
-		expect(obtainedConf.targetAge).toBe(null);
+		expect(obtainedConf.targetAge).toBeUndefined();
 
 		self.setLoopConfiguration({
 			loopMode: undefined,
@@ -167,7 +167,7 @@ describe("GameLoop", function () {
 		expect(obtainedConf.loopRenderMode).toBe(loopConf.loopRenderMode);
 		expect(obtainedConf.targetTimeFunc).toBe(loopConf.targetTimeFunc);
 		expect(obtainedConf.targetTimeOffset).toBe(loopConf.targetTimeOffset);
-		expect(obtainedConf.originDate).toBe(null);
+		expect(obtainedConf.originDate).toBeUndefined();
 		expect(obtainedConf.omitInterpolatedTickOnReplay).toBe(loopConf.omitInterpolatedTickOnReplay);
 		expect(obtainedConf.targetAge).toBe(42);
 	});
@@ -286,7 +286,7 @@ describe("GameLoop", function () {
 		game._loadAndStart({ args: undefined });
 
 		// 最新の状態まで追いつく
-		await new Promise((resolve, reject) => {
+		await new Promise<void>((resolve, reject) => {
 			const timer = setInterval(() => {
 				if (game.age > 10) {
 					clearInterval(timer);
@@ -300,7 +300,7 @@ describe("GameLoop", function () {
 		amflow.sendTick([11]); // 新しいtickを送信
 
 		// 最新の状態まで追いつく
-		await new Promise((resolve, reject) => {
+		await new Promise<void>((resolve, reject) => {
 			let skipCalled = false;
 			game.skippingChangedTrigger.add(() => {
 				skipCalled = true;
@@ -319,7 +319,7 @@ describe("GameLoop", function () {
 		amflow.sendTick([12]); // 新しいtickを送信
 
 		// 最新の状態まで追いつく
-		await new Promise((resolve, reject) => {
+		await new Promise<void>((resolve, reject) => {
 			let skipCalled = false;
 			game.skippingChangedTrigger.add(() => {
 				skipCalled = true;

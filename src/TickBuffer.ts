@@ -63,30 +63,30 @@ export class TickBuffer {
 	 * 現在のage。
 	 * 次に `consume()` した時、このageのTickを返す。
 	 */
-	currentAge: number;
+	currentAge: number = 0;
 
 	/**
 	 * 既知の最新age。
 	 * AMFlow から受け取った限りで最後のage。
 	 */
-	knownLatestAge: number;
+	knownLatestAge: number = -1;
 
 	/**
 	 * 現在ageのTickを新たに取得したときにfireされる `g.Trigger` 。
 	 * Tick取得待ちを解除する契機として使える。
 	 */
-	gotNextTickTrigger: g.Trigger<void>;
+	gotNextTickTrigger: g.Trigger<void> = new g.Trigger();
 
 	/**
 	 * 最新Tick取得した結果、新たに消化すべきTickが存在しないときにfireされる `g.Trigger` 。
 	 * 取得済みのTickの消化待ちにかかわらず発火されることに注意。
 	 */
-	gotNoTickTrigger: g.Trigger<void>;
+	gotNoTickTrigger: g.Trigger<void> = new g.Trigger();
 
 	/**
 	 * ストレージを含むTickを取得した時にfireされる `g.Trigger` 。
 	 */
-	gotStorageTrigger: g.Trigger<StorageOnTick>;
+	gotStorageTrigger: g.Trigger<StorageOnTick> = new g.Trigger();
 
 	_amflow: AMFlow;
 	_prefetchThreshold: number;
@@ -99,12 +99,12 @@ export class TickBuffer {
 	_startedAt: number;
 	_oldTimestampThreshold: number;
 
-	_receiving: boolean;
+	_receiving: boolean = false;
 
 	/**
 	 * 取得したTick。
 	 */
-	_tickRanges: TickRange[];
+	_tickRanges: TickRange[] = [];
 
 	/**
 	 * `currentAge` からもっとも近い、Tickを取得していないage。
@@ -117,27 +117,19 @@ export class TickBuffer {
 	 *
 	 * 旧仕様(相対時刻)用の暫定対応のため、この値をティックのタイムスタンプと直接比較してはならない(cf. readNextTickTime())。
 	 */
-	_nextTickTimeCache: number;
+	_nextTickTimeCache: number | null = null;
 
 	_addTick_bound: (tick: pl.Tick) => void;
 	_onTicks_bound: (err: Error | null, ticks?: pl.TickList) => void;
 
 	constructor(param: TickBufferParameterObject) {
-		this.currentAge = 0;
-		this.knownLatestAge = -1;
-		this.gotNextTickTrigger = new g.Trigger<void>();
-		this.gotNoTickTrigger = new g.Trigger<void>();
-		this.gotStorageTrigger = new g.Trigger<StorageOnTick>();
 		this._amflow = param.amflow;
 		this._prefetchThreshold = param.prefetchThreshold || TickBuffer.DEFAULT_PREFETCH_THRESHOLD;
 		this._sizeRequestOnce = param.sizeRequestOnce || TickBuffer.DEFAULT_SIZE_REQUEST_ONCE;
 		this._executionMode = param.executionMode;
 		this._startedAt = param.startedAt || 0;
 		this._oldTimestampThreshold = (param.startedAt != null) ? (param.startedAt - (86400 * 1000 * 10)) : 0; // 数字は適当な値(10日分)。
-		this._receiving = false;
-		this._tickRanges = [];
 		this._nearestAbsentAge = this.currentAge;
-		this._nextTickTimeCache = null;
 		this._addTick_bound = this.addTick.bind(this);
 		this._onTicks_bound = this._onTicks.bind(this);
 	}
@@ -175,7 +167,7 @@ export class TickBuffer {
 		return this.currentAge !== this._nearestAbsentAge;
 	}
 
-	consume(): pl.Tick|number {
+	consume(): pl.Tick | number | null {
 		if (this.currentAge === this._nearestAbsentAge)
 			return null;
 		const age = this.currentAge;
@@ -191,7 +183,7 @@ export class TickBuffer {
 			}
 			if (range.start === range.end)
 				this._tickRanges.shift();
-			return (range.ticks.length > 0 && range.ticks[0][EventIndex.Tick.Age] === age) ? range.ticks.shift() : age;
+			return (range.ticks.length > 0 && range.ticks[0][EventIndex.Tick.Age] === age) ? range.ticks.shift()! : age;
 		}
 
 		// range.start < age。外部から前に追加された場合。破棄してリトライする。
@@ -199,7 +191,7 @@ export class TickBuffer {
 		return this.consume();
 	}
 
-	readNextTickTime(): number {
+	readNextTickTime(): number | null {
 		if (this._nextTickTimeCache != null)
 			return this._nextTickTimeCache;
 		if (this.currentAge === this._nearestAbsentAge)
@@ -249,8 +241,9 @@ export class TickBuffer {
 			this.knownLatestAge = age;
 		}
 
-		if (tick[EventIndex.Tick.StorageData]) {
-			this.gotStorageTrigger.fire({ age: tick[EventIndex.Tick.Age], storageData: tick[EventIndex.Tick.StorageData] });
+		const storageData = tick[EventIndex.Tick.StorageData];
+		if (storageData) {
+			this.gotStorageTrigger.fire({ age: tick[EventIndex.Tick.Age], storageData });
 		}
 
 		let i = this._tickRanges.length - 1;
@@ -355,8 +348,9 @@ export class TickBuffer {
 
 		for (let j = 0; j < ticks.length; ++j) {
 			const tick = ticks[j];
-			if (tick[EventIndex.Tick.StorageData])
-				this.gotStorageTrigger.fire({ age: tick[EventIndex.Tick.Age], storageData: tick[EventIndex.Tick.StorageData] });
+			const storageData = tick[EventIndex.Tick.StorageData];
+			if (storageData)
+				this.gotStorageTrigger.fire({ age: tick[EventIndex.Tick.Age], storageData });
 		}
 
 		const tickRange = { start: start, end: end, ticks: ticks };
@@ -379,7 +373,7 @@ export class TickBuffer {
 
 	_onTicks(err: Error | null , ticks?: pl.TickList): void {
 		if (err)
-			throw new Error();
+			throw err;
 		if (!ticks) {
 			this.gotNoTickTrigger.fire();
 			return;

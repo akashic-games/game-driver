@@ -3,8 +3,6 @@ import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
 
-const EventIndex = g.EventIndex;
-
 export class JoinLeaveRequest {
 	joinResolver: JoinResolver;
 	pev: pl.Event;
@@ -13,9 +11,9 @@ export class JoinLeaveRequest {
 	constructor(pev: pl.Event, joinResolver: JoinResolver, amflow?: amf.AMFlow, keys?: g.StorageKey[]) {
 		this.joinResolver = joinResolver;
 		this.pev = pev;
-		if (pev[EventIndex.General.Code] === pl.EventCode.Join && keys) {
+		if (pev[g.EventIndex.General.Code] === pl.EventCode.Join && keys) {
 			this.resolved = false;
-			amflow.getStorageData(keys, this._onGotStorageData.bind(this));
+			amflow?.getStorageData(keys, this._onGotStorageData.bind(this));
 		} else {
 			this.resolved = true;
 		}
@@ -27,7 +25,7 @@ export class JoinLeaveRequest {
 			this.joinResolver.errorTrigger.fire(err);
 			return;
 		}
-		this.pev[EventIndex.Join.StorageData] = sds;
+		this.pev[g.EventIndex.Join.StorageData] = sds;
 	}
 }
 
@@ -41,8 +39,8 @@ export class JoinResolver {
 	errorTrigger: g.Trigger<any>;
 
 	_amflow: amf.AMFlow;
-	_keysForJoin: pl.StorageKey[];
-	_requested: JoinLeaveRequest[];
+	_keysForJoin: pl.StorageKey[] | null = null;
+	_requested: JoinLeaveRequest[] = [];
 
 	constructor(param: JoinResolverParameterObject) {
 		this.errorTrigger = new g.Trigger<any>();
@@ -51,22 +49,21 @@ export class JoinResolver {
 			this.errorTrigger.add(param.errorHandler, param.errorHandlerOwner);
 
 		this._amflow = param.amflow;
-		this._keysForJoin = null;
-		this._requested = [];
 	}
 
 	request(pev: pl.Event): void {
-		this._requested.push(new JoinLeaveRequest(pev, this, this._amflow, this._keysForJoin));
+		this._requested.push(new JoinLeaveRequest(pev, this, this._amflow, this._keysForJoin || undefined));
 	}
 
-	readResolved(): pl.Event[] {
-		var len = this._requested.length;
+	readResolved(): pl.Event[] | null {
+		const len = this._requested.length;
 		if (len === 0 || !this._requested[0].resolved)
 			return null;
 
-		var ret: pl.Event[] = [];
-		for (var i = 0; i < len; ++i) {
-			var req = this._requested[i];
+		const ret: pl.Event[] = [];
+		let i: number;
+		for (i = 0; i < len; ++i) {
+			const req = this._requested[i];
 			if (!req.resolved)
 				break;
 			ret.push(req.pev);

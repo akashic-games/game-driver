@@ -72,7 +72,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	_joinLeaveBuffer: pl.Event[];
 	_localBuffer: pl.Event[];
 
-	_filters: EventFilterEntry[];
+	_filters: EventFilterEntry[] | null = null;
 	_filterController: g.EventFilterController;
 	_unfilteredLocalEvents: pl.Event[];
 	_unfilteredEvents: pl.Event[];
@@ -228,7 +228,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		}
 	}
 
-	readEvents(): pl.Event[] {
+	readEvents(): pl.Event[] | null {
 		let ret = this._buffer;
 		if (ret.length === 0)
 			return null;
@@ -236,7 +236,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		return ret;
 	}
 
-	readJoinLeaves(): pl.Event[] {
+	readJoinLeaves(): pl.Event[] | null {
 		let ret = this._joinLeaveBuffer;
 		if (ret.length === 0)
 			return null;
@@ -244,7 +244,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		return ret;
 	}
 
-	readLocalEvents(): pl.Event[] {
+	readLocalEvents(): pl.Event[] | null {
 		let ret = this._localBuffer;
 		if (ret.length === 0)
 			return null;

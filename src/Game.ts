@@ -6,6 +6,7 @@ import { GameHandlerSet } from "./GameHandlerSet";
 
 export interface GameParameterObject extends g.GameParameterObject {
 	player: g.Player;
+	handlerSet: GameHandlerSet;
 	gameArgs?: any;
 	globalGameArgs?: any;
 }
@@ -22,14 +23,14 @@ export class Game extends g.Game {
 	 * 特定ageへの到達を通知するTrigger。
 	 * fire時には到達したageが渡される。
 	 */
-	agePassedTrigger: g.Trigger<number>;
+	agePassedTrigger: g.Trigger<number> = new g.Trigger();
 
 	/**
 	 * 要求を受けた後の目標時刻到達を通知するTrigger。
 	 * 目標時刻関数を用いたリプレイ中でなければfireされない。
 	 * fire時には到達した目標時刻が渡される。
 	 */
-	targetTimeReachedTrigger: g.Trigger<number>;
+	targetTimeReachedTrigger: g.Trigger<number> = new g.Trigger();
 
 	/**
 	 * GameLoopのスキップ状態の変化を通知するTrigger。
@@ -38,7 +39,7 @@ export class Game extends g.Game {
 	 * ゲーム開発者に公開される g.Game#skippingChanged との違いに注意。
 	 * 組み込み側に公開されるこちらが常にfireされる一方、`skippingChanged` は `isSkipAware` が真の時のみfireされる。
 	 */
-	skippingChangedTrigger: g.Trigger<boolean>;
+	skippingChangedTrigger: g.Trigger<boolean> = new g.Trigger();
 
 	/**
 	 * Gameの続行が断念されたことを通知するTrigger。
@@ -47,26 +48,20 @@ export class Game extends g.Game {
 	 * それを引き起こすリトライ不能のアセットエラーだけである。
 	 * ただしこの `Game#_abortGame()` の仕様は今後変動しうる。
 	 */
-	abortTrigger: g.Trigger<void>;
+	abortTrigger: g.Trigger<void> = new g.Trigger();
 
 	player: g.Player;
 	handlerSet: GameHandlerSet;
-	_notifyPassedAgeTable: { [age: number]: boolean };
-	_notifiesTargetTimeReached: boolean;
-	_isSkipAware: boolean;
+	_notifyPassedAgeTable: { [age: number]: boolean } = Object.create(null);
+	_notifiesTargetTimeReached: boolean = false;
+	_isSkipAware: boolean = false;
 	_gameArgs: any;
 	_globalGameArgs: any;
 
 	constructor(param: GameParameterObject) {
 		super(param);
-		this.agePassedTrigger = new g.Trigger<number>();
-		this.targetTimeReachedTrigger = new g.Trigger<number>();
-		this.skippingChangedTrigger = new g.Trigger<boolean>();
-		this.abortTrigger = new g.Trigger<void>();
 		this.player = param.player;
-		this._notifyPassedAgeTable = {};
-		this._notifiesTargetTimeReached = false;
-		this._isSkipAware = false;
+		this.handlerSet = param.handlerSet;
 		this._gameArgs = param.gameArgs;
 		this._globalGameArgs = param.globalGameArgs;
 		this.skippingChangedTrigger.add(this._onSkippingChanged, this);
@@ -130,16 +125,16 @@ export class Game extends g.Game {
 
 	_destroy(): void {
 		this.agePassedTrigger.destroy();
-		this.agePassedTrigger = null;
+		this.agePassedTrigger = null!;
 		this.targetTimeReachedTrigger.destroy();
-		this.targetTimeReachedTrigger = null;
+		this.targetTimeReachedTrigger = null!;
 		this.skippingChangedTrigger.destroy();
-		this.skippingChangedTrigger = null;
+		this.skippingChangedTrigger = null!;
 		this.abortTrigger.destroy();
-		this.abortTrigger = null;
-		this.player = null;
-		this.handlerSet = null;
-		this._notifyPassedAgeTable = null;
+		this.abortTrigger = null!;
+		this.player = null!;
+		this.handlerSet = null!;
+		this._notifyPassedAgeTable = null!;
 		this._gameArgs = null;
 		this._globalGameArgs = null;
 		super._destroy();
@@ -170,7 +165,7 @@ export class Game extends g.Game {
 
 	_onSkippingChanged(skipping: boolean): void {
 		if (this._isSkipAware) {
-			this.skippingChanged.fire(skipping);
+			this.onSkipChange.fire(skipping);
 		}
 	}
 }
