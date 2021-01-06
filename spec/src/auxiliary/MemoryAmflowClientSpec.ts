@@ -79,7 +79,7 @@ describe("MemoryAmflowClient", function () {
 			});
 			self.getTickList(0, 10, (err, tickList) => {
 				expect(err).toBeNull();
-				expect(tickList).toBeNull();
+				expect(tickList).toBeUndefined();
 				self.sendTick([5, [joinEvent]]);
 				try {
 					self.sendTick([5, [joinEvent]]);

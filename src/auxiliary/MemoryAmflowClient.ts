@@ -13,7 +13,7 @@ export interface MemoryAmflowClientParameterObject {
 }
 
 export interface AmflowDump {
-	tickList: pl.TickList;
+	tickList: pl.TickList | null;
 	startPoints: amf.StartPoint[];
 }
 
@@ -35,15 +35,15 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	_putStorageDataSyncFunc: (key: pl.StorageKey, value: pl.StorageValue, options: any) => void;
 	_getStorageDataSyncFunc: (keys: pl.StorageReadKey[]) => pl.StorageData[];
 
-	_tickHandlers: ((tick: pl.Tick) => void)[];
-	_eventHandlers: ((ev: pl.Event) => void)[];
+	_tickHandlers: ((tick: pl.Tick) => void)[] = [];
+	_eventHandlers: ((ev: pl.Event) => void)[] = [];
 
 	/**
 	 * onEvent() 呼び出し前に sendEvent() されたものを保持しておくバッファ。
 	 */
-	_events: pl.Event[];
+	_events: pl.Event[] = [];
 
-	_tickList: pl.TickList;
+	_tickList: pl.TickList | null = null;
 	_startPoints: amf.StartPoint[];
 
 	constructor(param: MemoryAmflowClientParameterObject) {
@@ -51,15 +51,10 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		this._putStorageDataSyncFunc = param.putStorageDataSyncFunc || ((): any => { throw new Error("Implementation not given"); });
 		this._getStorageDataSyncFunc = param.getStorageDataSyncFunc || ((): any => { throw new Error("Implementation not given"); });
 
-		this._tickHandlers = [];
-		this._eventHandlers = [];
-
-		this._events = [];
-
-		this._tickList = null;
-
 		if (param.startPoints) {
-			this._tickList = param.tickList;
+			if (param.tickList) {
+				this._tickList = param.tickList;
+			}
 			this._startPoints = param.startPoints;
 		} else {
 			this._startPoints = [];
@@ -75,6 +70,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 
 	open(playId: string, callback?: (error: Error | null) => void): void {
 		setTimeout(() => {
+			if (!callback) return;
 			if (playId !== this._playId)
 				return void callback(new Error("MemoryAmflowClient#open: unknown playId"));
 			callback(null);
@@ -82,6 +78,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	}
 
 	close(callback?: (error: Error | null) => void): void {
+		if (!callback) return;
 		setTimeout(() => { callback(null); }, 0);
 	}
 
@@ -129,7 +126,8 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			this._tickList = [tick[EventIndex.Tick.Age], tick[EventIndex.Tick.Age], []];
 		} else {
 			// 既に存在するTickListのfrom~to間にtickが挿入されることは無い
-			if (this._tickList[EventIndex.TickList.From] <= tick[EventIndex.Tick.Age] &&
+			if (
+				this._tickList[EventIndex.TickList.From] <= tick[EventIndex.Tick.Age] &&
 				tick[EventIndex.Tick.Age] <= this._tickList[EventIndex.TickList.To]
 			)
 				throw new Error("illegal age tick");
@@ -137,11 +135,13 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			this._tickList[EventIndex.TickList.To] = tick[EventIndex.Tick.Age];
 		}
 
-		if (!!tick[EventIndex.Tick.Events] || !!tick[EventIndex.Tick.StorageData]) {
-			if (!!tick[EventIndex.Tick.Events]) {
-				tick[EventIndex.Tick.Events] = tick[EventIndex.Tick.Events]
-					.filter(event => !(event[EventIndex.General.EventFlags] & pl.EventFlagsMask.Transient));
+		const events = tick[EventIndex.Tick.Events];
+		const storageData = tick[EventIndex.Tick.StorageData];
+		if (events || storageData) {
+			if (events) {
+				tick[EventIndex.Tick.Events] = events.filter(event => !(event[EventIndex.General.EventFlags] & pl.EventFlagsMask.Transient));
 			}
+			// @ts-ignore
 			this._tickList[EventIndex.TickList.TicksWithEvents].push(tick);
 		}
 
@@ -186,7 +186,12 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
 		callback?: (error: Error | null, tickList?: pl.TickList) => void
 	): void {
-		if (!this._tickList) return void setTimeout(() => callback(null, null), 0);
+		if (!this._tickList) {
+			if (callback) {
+				setTimeout(() => callback(null), 0);
+			}
+			return;
+		}
 
 		// TODO: @akashic/amflow@3.0.0 追従
 		if (
@@ -203,6 +208,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 
 		const from = Math.max(optsOrBegin, this._tickList[EventIndex.TickList.From]);
 		const to = Math.min(endOrCallback, this._tickList[EventIndex.TickList.To]);
+		// @ts-ignore
 		const ticks = this._tickList[EventIndex.TickList.TicksWithEvents].filter((tick) => {
 			const age = tick[EventIndex.Tick.Age];
 			return from <= age && age <= to;
@@ -235,7 +241,8 @@ export class MemoryAmflowClient implements amf.AMFlow {
 				let nearestTimestamp = this._startPoints[0].timestamp;
 				for (let i = 1; i < this._startPoints.length; ++i) {
 					var timestamp = this._startPoints[i].timestamp;
-					if (timestamp <= opts.timestamp && nearestTimestamp < timestamp) {
+					// NOTE: opts.frame が null の場合は opts.timestamp が non-null であることが仕様上保証されている
+					if (timestamp <= opts.timestamp! && nearestTimestamp < timestamp) {
 						nearestTimestamp = timestamp;
 						index = i;
 					}
@@ -281,6 +288,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			this._startPoints = [];
 		} else if (age <= to) {
 			this._tickList[EventIndex.TickList.To] = age - 1;
+			// @ts-ignore
 			this._tickList[EventIndex.TickList.TicksWithEvents] = this._tickList[EventIndex.TickList.TicksWithEvents].filter((tick) => {
 				const ta = tick[EventIndex.Tick.Age];
 				return from <= ta && ta <= (age - 1);

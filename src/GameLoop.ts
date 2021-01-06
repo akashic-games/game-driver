@@ -39,11 +39,10 @@ export interface GameLoopParameterObejct {
  * start() から stop() までの間、最後に呼び出された _amflow.authenticate() は Permission#readTick を返していなければならない。
  */
 export class GameLoop {
+	errorTrigger: g.Trigger<any> = new g.Trigger();
+	rawTargetTimeReachedTrigger: g.Trigger<number> = new g.Trigger();
 
-	errorTrigger: g.Trigger<any>;
-	rawTargetTimeReachedTrigger: g.Trigger<number>;
-
-	running: boolean;
+	running: boolean = false;
 
 	/**
 	 * 時刻。
@@ -65,7 +64,7 @@ export class GameLoop {
 	 * ただし Realtime 時や omitInterpolatedTickOnReplay フラグが真の場合には「タイムスタンプ待ちをせずに即座に時間を進める」場合がある。
 	 * このような時に「タイムスタンプ待ちを行なっていたらいくつのローカルティックがある時間だったか」は求まる。この時間を累積する変数。
 	 */
-	_omittedTickDuration: number;
+	_omittedTickDuration: number = 0;
 
 	/**
 	 * Replay時の目標時刻関数。
@@ -73,11 +72,11 @@ export class GameLoop {
 	 * 存在する場合、この値を毎フレーム呼び出し、その戻り値を目標時刻として扱う。
 	 * すなわち、「この関数の戻り値を超えない最大のティック時刻を持つティック」が消化されるよう早送りやスナップショットジャンプを行う。
 	 */
-	_targetTimeFunc: () => number;
+	_targetTimeFunc: (() => number) | null;
 
 	_startedAt: number;
-	_targetTimeOffset: number;
-	_originDate: number;
+	_targetTimeOffset: number | null;
+	_originDate: number | null;
 	_realTargetTimeOffset: number;
 
 	_delayIgnoreThreshold: number;
@@ -88,7 +87,7 @@ export class GameLoop {
 	_jumpIgnoreThreshold: number;
 	_pollingTickThreshold: number;
 	_playbackRate: number;
-	_loopRenderMode: LoopRenderMode;
+	_loopRenderMode: LoopRenderMode | null;
 	_omitInterpolatedTickOnReplay: boolean;
 
 	_loopMode: LoopMode;
@@ -97,32 +96,28 @@ export class GameLoop {
 	_eventBuffer: EventBuffer;
 	_executionMode: ExecutionMode;
 
-	_sceneTickMode: g.TickGenerationModeString;
-	_sceneLocalMode: g.LocalTickModeString;
+	_sceneTickMode: g.TickGenerationModeString | null = null;
+	_sceneLocalMode: g.LocalTickModeString | null = null;
 
-	_targetAge: number;
-	_waitingStartPoint: boolean;
-	_lastRequestedStartPointAge: number;
-	_lastRequestedStartPointTime: number;
-	_waitingNextTick: boolean;
-	_consumedLatestTick: boolean;
-	_skipping: boolean;
-	_lastPollingTickTime: number;
+	_targetAge: number | null;
+	_waitingStartPoint: boolean = false;
+	_lastRequestedStartPointAge: number = -1;
+	_lastRequestedStartPointTime: number = -1;
+	_waitingNextTick: boolean = false;
+	_consumedLatestTick: boolean = false;
+	_skipping: boolean = false;
+	_lastPollingTickTime: number = 0;
 
 	_clock: Clock;
 	_tickController: TickController;
 	_tickBuffer: TickBuffer;
-	_events: pl.Event[];
+	_events: pl.Event[] = [];
 
 	_onGotStartPoint_bound: (err: Error | null, startPoint?: amf.StartPoint) => void;
 
 	constructor(param: GameLoopParameterObejct) {
-		this.errorTrigger = new g.Trigger<any>();
-		this.rawTargetTimeReachedTrigger = new g.Trigger<number>();
-		this.running = false;
 		this._currentTime = param.startedAt;
 		this._frameTime = 1000 / param.game.fps;
-		this._omittedTickDuration = 0;
 
 		if (param.errorHandler) {
 			this.errorTrigger.add(param.errorHandler, param.errorHandlerOwner);
@@ -144,7 +139,7 @@ export class GameLoop {
 		this._pollingTickThreshold = conf._pollingTickThreshold || constants.DEFAULT_POLLING_TICK_THRESHOLD;
 		this._playbackRate = conf.playbackRate || 1;
 		const loopRenderMode = (conf.loopRenderMode != null) ? conf.loopRenderMode : LoopRenderMode.AfterRawFrame;
-		this._loopRenderMode = null;  // 後の_setLoopRenderMode()で初期化
+		this._loopRenderMode = null; // 後の_setLoopRenderMode()で初期化
 		this._omitInterpolatedTickOnReplay = (conf.omitInterpolatedTickOnReplay != null) ? conf.omitInterpolatedTickOnReplay : true;
 
 		this._loopMode = conf.loopMode;
@@ -153,18 +148,7 @@ export class GameLoop {
 		this._eventBuffer = param.eventBuffer;
 		this._executionMode = param.executionMode;
 
-		this._sceneTickMode = null;
-		this._sceneLocalMode = null;
-
 		this._targetAge = (conf.targetAge != null) ? conf.targetAge : null;
-		this._waitingStartPoint = false;
-		this._lastRequestedStartPointAge = -1;
-		this._lastRequestedStartPointTime = -1;
-		this._waitingNextTick = false;
-		this._consumedLatestTick = false;
-		this._skipping = false;
-		this._lastPollingTickTime = 0;
-		this._events = [];
 
 		// todo: 本来は、パフォーマンス測定機構を含まないリリースモードによるビルド方式も提供すべき。
 		if (!param.profiler) {
@@ -204,7 +188,7 @@ export class GameLoop {
 		this._game.handlerSet.raiseEventTrigger.add(this._onGameRaiseEvent, this);
 		this._game.handlerSet.raiseTickTrigger.add(this._onGameRaiseTick, this);
 		this._game.handlerSet.changeSceneModeTrigger.add(this._handleSceneChange, this);
-		this._game._started.add(this._onGameStarted, this);
+		this._game._onStart.add(this._onGameStarted, this);
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
 		this._tickBuffer.gotNoTickTrigger.add(this._onGotNoTick, this);
 		this._tickBuffer.start();
@@ -244,12 +228,12 @@ export class GameLoop {
 			jumpTryThreshold: this._jumpTryThreshold,
 			jumpIgnoreThreshold: this._jumpIgnoreThreshold,
 			playbackRate: this._playbackRate,
-			loopRenderMode: this._loopRenderMode,
-			targetTimeFunc: this._targetTimeFunc,
-			targetTimeOffset: this._targetTimeOffset,
-			originDate: this._originDate,
+			loopRenderMode: this._loopRenderMode ?? undefined,
+			targetTimeFunc: this._targetTimeFunc ?? undefined,
+			targetTimeOffset: this._targetTimeOffset ?? undefined,
+			originDate: this._originDate ?? undefined,
 			omitInterpolatedTickOnReplay: this._omitInterpolatedTickOnReplay,
-			targetAge: this._targetAge
+			targetAge: this._targetAge ?? undefined
 		};
 	}
 
@@ -382,7 +366,11 @@ export class GameLoop {
 		const game = this._game;
 		const pevs = this._eventBuffer.readLocalEvents();
 		this._currentTime += this._frameTime;
-		game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime), pevs);
+		if (pevs) {
+			game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime), pevs);
+		} else {
+			game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime));
+		}
 		this._omittedTickDuration = 0;
 	}
 
@@ -507,20 +495,22 @@ export class GameLoop {
 			let consumedAge = -1;
 			this._events.length = 0;
 
-			const plEvents = this._eventBuffer.readLocalEvents();
-			if (plEvents) {
-				this._events.push(...plEvents);
-			}
-			if (typeof tick === "number") {
-				consumedAge = tick;
-				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
-			} else {
-				consumedAge = tick[EventIndex.Tick.Age];
-				const pevs: pl.Event[] = tick[EventIndex.Tick.Events];
-				if (pevs) {
-					this._events.push(...pevs);
+			if (tick != null) {
+				const plEvents = this._eventBuffer.readLocalEvents();
+				if (plEvents) {
+					this._events.push(...plEvents);
 				}
-				sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
+				if (typeof tick === "number") {
+					consumedAge = tick;
+					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
+				} else {
+					consumedAge = tick[EventIndex.Tick.Age];
+					const pevs = tick[EventIndex.Tick.Events];
+					if (pevs) {
+						this._events.push(...pevs);
+					}
+					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
+				}
 			}
 			this._omittedTickDuration = 0;
 
@@ -565,7 +555,7 @@ export class GameLoop {
 			return;
 		}
 
-		let targetAge: number;
+		let targetAge: number | null;
 		let ageGap: number;
 		const currentAge = this._tickBuffer.currentAge;
 		if (this._loopMode === LoopMode.Realtime) {
@@ -587,9 +577,11 @@ export class GameLoop {
 			}
 		}
 
-		if ((ageGap > this._jumpTryThreshold || ageGap < 0) &&
-		    (!this._waitingStartPoint) &&
-		    (this._lastRequestedStartPointAge < currentAge)) {
+		if (
+			(ageGap > this._jumpTryThreshold || ageGap < 0) &&
+			(!this._waitingStartPoint) &&
+			(this._lastRequestedStartPointAge < currentAge)
+		) {
 			// スナップショットを要求だけして続行する(スナップショットが来るまで進める限りは進む)。
 			//
 			// 上の条件が _lastRequestedStartPointAge を参照しているのは、スナップショットで飛んだ後もなお
@@ -599,7 +591,9 @@ export class GameLoop {
 			// が、`Realtime` で実行している場合 `targetAge` は毎フレーム変化してしまうし、
 			// スナップショットがそれほど頻繁に保存されるとは思えない(すべきでもない)。ここでは割り切って抑制しておく。
 			this._waitingStartPoint = true;
+			// @ts-ignore TODO: targetAge が null の場合の振る舞い
 			this._lastRequestedStartPointAge = targetAge;
+			// @ts-ignore TODO: targetAge が null の場合の振る舞い
 			this._amflow.getStartPoint({ frame: targetAge }, this._onGotStartPoint_bound);
 		}
 
@@ -670,7 +664,7 @@ export class GameLoop {
 					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 				} else {
 					consumedAge = tick[EventIndex.Tick.Age];
-					const pevs: pl.Event[] = tick[EventIndex.Tick.Events];
+					const pevs = tick[EventIndex.Tick.Events];
 					if (pevs) {
 						this._events.push(...pevs);
 					}
@@ -698,6 +692,7 @@ export class GameLoop {
 			}
 		}
 
+		// @ts-ignore TODO: targetAge が null の場合の振る舞い
 		if (this._skipping && (targetAge - this._tickBuffer.currentAge < 1))
 			this._stopSkipping();
 	}
@@ -722,6 +717,10 @@ export class GameLoop {
 		this._waitingStartPoint = false;
 		if (err) {
 			this.errorTrigger.fire(err);
+			return;
+		}
+		if (!startPoint) {
+			// NOTE: err が無ければ startPoint は必ず存在するはずだが、念の為にバリデートする。
 			return;
 		}
 

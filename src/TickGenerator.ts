@@ -18,26 +18,22 @@ export interface TickGeneratorParameterObject {
  * `next()` が呼ばれる度に、EventBuffer に蓄積されたイベントを集めてtickを生成、`tickTrigger` で通知する。
  */
 export class TickGenerator {
-	tickTrigger: g.Trigger<pl.Tick>;
-	gotStorageTrigger: g.Trigger<StorageOnTick>;
-	errorTrigger: g.Trigger<Error>;
+	tickTrigger: g.Trigger<pl.Tick> = new g.Trigger();
+	gotStorageTrigger: g.Trigger<StorageOnTick> = new g.Trigger();
+	errorTrigger: g.Trigger<Error> = new g.Trigger();
 
 	_amflow: amf.AMFlow;
 	_eventBuffer: EventBuffer;
 	_joinResolver: JoinResolver;
 
-	_nextAge: number;
-	_storageDataForNext: pl.StorageData[];
-	_generatingTick: boolean;
-	_waitingStorage: boolean;
+	_nextAge: number = 0;
+	_storageDataForNext: pl.StorageData[] | null = null;
+	_generatingTick: boolean = false;
+	_waitingStorage: boolean = false;
 
-	_onGotStorageData_bound: (err: Error, sds: pl.StorageData[]) => void;
+	_onGotStorageData_bound: (err: Error | null, storageData?: pl.StorageData[]) => void;
 
 	constructor(param: TickGeneratorParameterObject) {
-		this.tickTrigger = new g.Trigger<pl.Tick>();
-		this.gotStorageTrigger = new g.Trigger<StorageOnTick>();
-		this.errorTrigger = new g.Trigger<Error>();
-
 		if (param.errorHandler)
 			this.errorTrigger.add(param.errorHandler, param.errorHandlerOwner);
 
@@ -49,10 +45,6 @@ export class TickGenerator {
 			errorHandlerOwner: this.errorTrigger
 		});
 
-		this._nextAge = 0;
-		this._storageDataForNext = null;
-		this._generatingTick = false;
-		this._waitingStorage = false;
 		this._onGotStorageData_bound = this._onGotStorageData.bind(this);
 	}
 
@@ -60,14 +52,14 @@ export class TickGenerator {
 		if (!this._generatingTick || this._waitingStorage)
 			return;
 
-		var joinLeaves = this._eventBuffer.readJoinLeaves();
+		const joinLeaves = this._eventBuffer.readJoinLeaves();
 		if (joinLeaves) {
-			for (var i = 0; i < joinLeaves.length; ++i)
+			for (let i = 0; i < joinLeaves.length; ++i)
 				this._joinResolver.request(joinLeaves[i]);
 		}
 
-		var evs = this._eventBuffer.readEvents();
-		var resolvedJoinLeaves = this._joinResolver.readResolved();
+		let evs = this._eventBuffer.readEvents();
+		const resolvedJoinLeaves = this._joinResolver.readResolved();
 		if (resolvedJoinLeaves) {
 			if (evs) {
 				evs.push.apply(evs, resolvedJoinLeaves);
@@ -76,13 +68,20 @@ export class TickGenerator {
 			}
 		}
 
-		var sds = this._storageDataForNext;
+		const sds = this._storageDataForNext;
 		this._storageDataForNext = null;
-		this.tickTrigger.fire([
-			this._nextAge++,  // 0: フレーム番号
-			evs,              // 1?: イベント
-			sds               // 2?: ストレージデータ
-		]);
+		if (sds) {
+			this.tickTrigger.fire([
+				this._nextAge++,  // 0: フレーム番号
+				evs,              // 1?: イベント
+				sds               // 2?: ストレージデータ
+			]);
+		} else {
+			this.tickTrigger.fire([
+				this._nextAge++,  // 0: フレーム番号
+				evs               // 1?: イベント
+			]);
+		}
 	}
 
 	forceNext(): void {
@@ -90,7 +89,7 @@ export class TickGenerator {
 			this.errorTrigger.fire(new Error("TickGenerator#forceNext(): cannot generate tick while waiting storage."));
 			return;
 		}
-		var origValue = this._generatingTick;
+		const origValue = this._generatingTick;
 		this._generatingTick = true;
 		this.next();
 		this._generatingTick = origValue;
@@ -125,7 +124,7 @@ export class TickGenerator {
 	 */
 	requestStorageTick(keys: pl.StorageReadKey[]): number {
 		if (this._waitingStorage) {
-			var err = new Error("TickGenerator#requestStorageTick(): Unsupported: multiple storage request");
+			const err = new Error("TickGenerator#requestStorageTick(): Unsupported: multiple storage request");
 			this.errorTrigger.fire(err);
 			return -1;
 		}
@@ -138,10 +137,14 @@ export class TickGenerator {
 		this._joinResolver.setRequestValuesForJoin(keys);
 	}
 
-	_onGotStorageData(err: Error, sds: pl.StorageData[]): void {
+	_onGotStorageData(err: Error | null, sds?: pl.StorageData[]): void {
 		this._waitingStorage = false;
 		if (err) {
 			this.errorTrigger.fire(err);
+			return;
+		}
+		if (!sds) {
+			// NOTE: err が無ければ storageData は必ず存在するはずだが、念の為にバリデートする。
 			return;
 		}
 		this._storageDataForNext = sds;

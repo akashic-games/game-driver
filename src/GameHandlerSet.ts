@@ -13,14 +13,14 @@ export interface GameHandlerSetParameterObject {
 
 export class GameHandlerSet implements g.GameHandlerSet {
 	raiseEventTrigger: g.Trigger<pl.Event> = new g.Trigger();
-	raiseTickTrigger: g.Trigger<pl.Event[]> = new g.Trigger();
+	raiseTickTrigger: g.Trigger<pl.Event[] | undefined> = new g.Trigger();
 	snapshotTrigger: g.Trigger<amf.StartPoint> = new g.Trigger();
 	changeSceneModeTrigger: g.Trigger<g.SceneMode> = new g.Trigger();
 	isSnapshotSaver: boolean;
-	_getCurrentTimeFunc: () => number;
-	_eventFilterFuncs: GameEventFilterFuncs;
-	_local: g.LocalTickModeString;
-	_tickGenerationMode: g.TickGenerationModeString;
+	_getCurrentTimeFunc: (() => number) | null = null;
+	_eventFilterFuncs: GameEventFilterFuncs | null = null;
+	_local: g.LocalTickModeString | null = null;
+	_tickGenerationMode: g.TickGenerationModeString | null = null;
 
 	constructor(param: GameHandlerSetParameterObject) {
 		this.isSnapshotSaver = !!param.isSnapshotSaver;
@@ -55,7 +55,7 @@ export class GameHandlerSet implements g.GameHandlerSet {
 
 	getCurrentTime(): number {
 		// GameLoopの同名メソッドとは戻り値が異なるが、 `Game.getCurrentTime()` は `Date.now()` の代替として使用されるため、整数値を返す。
-		return Math.floor(this._getCurrentTimeFunc());
+		return Math.floor(this._getCurrentTimeFunc!());
 	}
 
 	raiseEvent(event: pl.Event): void {
@@ -85,7 +85,7 @@ export class GameHandlerSet implements g.GameHandlerSet {
 		return this.shouldSaveSnapshot() ? "active" : "passive";
 	}
 
-	saveSnapshot(frame: number, gameSnapshot: any, randGenSer: any, timestamp: number = this._getCurrentTimeFunc()): void {
+	saveSnapshot(frame: number, gameSnapshot: any, randGenSer: any, timestamp: number = this._getCurrentTimeFunc!()): void {
 		if (!this.shouldSaveSnapshot())
 			return;
 		this.snapshotTrigger.fire({

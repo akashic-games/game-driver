@@ -55,8 +55,8 @@ describe("TickGenerator", function () {
 		self.next();
 		expect(self._nextAge).toBe(2);
 		expect(ticks).toEqual([
-			[0, null, null],
-			[1, null, null]
+			[0, null],
+			[1, null]
 		]);
 
 		self.stopTick();
@@ -98,15 +98,15 @@ describe("TickGenerator", function () {
 		self.next();
 		expect(self._nextAge).toBe(2);
 		expect(ticks).toEqual([
-			[0, null, null],
-			[1, null, null]
+			[0, null],
+			[1, null]
 		]);
 
 		// しばらくのちにストレージが解決され、次のtickにjoinが乗る
 		amflow.requestsGetStorageData[0]();
 		self.next();
 		expect(ticks.length).toBe(3);
-		expect(ticks[2]).toEqual([2, [resolvedJoin], null]);
+		expect(ticks[2]).toEqual([2, [resolvedJoin]]);
 
 		// ほかのイベントと同時に解決されるケースではほかのイベントと一緒にtickに乗る
 		eventBuffer.onEvent(pjoin);
@@ -117,7 +117,7 @@ describe("TickGenerator", function () {
 		eventBuffer.processEvents();
 		self.next();
 		expect(ticks.length).toBe(5);
-		expect(ticks[4]).toEqual([4, [msg, resolvedJoin], null]);
+		expect(ticks[4]).toEqual([4, [msg, resolvedJoin]]);
 	});
 
 	it("gets storage", function () {
@@ -139,7 +139,7 @@ describe("TickGenerator", function () {
 
 		self.next();
 		expect(self._nextAge).toBe(1);
-		expect(ticks).toEqual([ [0, null, null] ]);
+		expect(ticks).toEqual([ [0, null] ]);
 
 		self.requestStorageTick([skey]);
 		self.next();

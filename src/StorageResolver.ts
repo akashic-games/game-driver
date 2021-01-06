@@ -35,7 +35,7 @@ export interface StorageRequest {
  * このクラスは、読み込みリクエストを得られたストレージデータと付き合わせて完了を通知する役割を持つ。
  */
 export class StorageResolver {
-	errorTrigger: g.Trigger<Error>;
+	errorTrigger: g.Trigger<Error> = new g.Trigger<Error>();
 
 	getStorageFunc: sf.StorageGetFunc;
 	putStorageFunc: sf.StoragePutFunc;
@@ -45,22 +45,21 @@ export class StorageResolver {
 	_amflow: amf.AMFlow;
 	_tickGenerator: TickGenerator;
 	_tickBuffer: TickBuffer;
-	_executionMode: ExecutionMode;
+	_executionMode: ExecutionMode | null;
 
-	_unresolvedLoaders: { [index: number]: g.StorageLoader };
-	_unresolvedStorages: { [index: number]: pl.StorageData[] };
+	_unresolvedLoaders: { [index: number]: g.StorageLoader } = Object.create(null);
+	_unresolvedStorages: { [index: number]: pl.StorageData[] } = Object.create(null);
 
 	_onStoragePut_bound: (err: Error | null) => void;
 
 	constructor(param: StorageResolverParameterObject) {
-		this.errorTrigger = new g.Trigger<Error>();
-
 		if (param.errorHandler)
 			this.errorTrigger.add(param.errorHandler, param.errorHandlerOwner);
 
 		this.getStorageFunc = this._getStorage.bind(this);
 		this.putStorageFunc = this._putStorage.bind(this);
 		this.requestValuesForJoinFunc = this._requestValuesForJoin.bind(this);
+		this._onStoragePut_bound = this._onStoragePut.bind(this);
 
 		this._game = param.game;
 		this._amflow = param.amflow;
@@ -68,11 +67,6 @@ export class StorageResolver {
 		this._tickBuffer = param.tickBuffer;
 		this._executionMode = null; // 後続のsetExecutionMode()で設定する。
 		this.setExecutionMode(param.executionMode);
-
-		this._unresolvedLoaders = {};
-		this._unresolvedStorages = {};
-
-		this._onStoragePut_bound = this._onStoragePut.bind(this);
 	}
 
 	/**
@@ -82,8 +76,8 @@ export class StorageResolver {
 		if (this._executionMode === executionMode)
 			return;
 		this._executionMode = executionMode;
-		var tickBuf = this._tickBuffer;
-		var tickGen = this._tickGenerator;
+		const tickBuf = this._tickBuffer;
+		const tickGen = this._tickGenerator;
 		if (executionMode === ExecutionMode.Active) {
 			tickBuf.gotStorageTrigger.remove(this._onGotStorageOnTick, this);
 			tickGen.gotStorageTrigger.add(this._onGotStorageOnTick, this);
@@ -94,26 +88,26 @@ export class StorageResolver {
 	}
 
 	_onGotStorageOnTick(storageOnTick: StorageOnTick): void {
-		var resolvingAge = storageOnTick.age;
-		var storageData = storageOnTick.storageData;
+		const resolvingAge = storageOnTick.age;
+		const storageData = storageOnTick.storageData;
 
-		var loader = this._unresolvedLoaders[resolvingAge];
+		const loader = this._unresolvedLoaders[resolvingAge];
 		if (!loader) {
 			this._unresolvedStorages[resolvingAge] = storageData;
 			return;
 		}
 		delete this._unresolvedLoaders[resolvingAge];
-		var serialization = resolvingAge;
-		var values = storageData.map((d: pl.StorageData) => { return d.values; });
+		const serialization = resolvingAge;
+		const values = storageData.map(d => d.values);
 		loader._onLoaded(values, serialization);
 	}
 
 	_getStorage(keys: g.StorageKey[], loader: g.StorageLoader, ser?: g.StorageValueStoreSerialization): void {
-		var resolvingAge: number;
+		let resolvingAge: number;
 		if (ser != null) {
 			// akashic-engineにとって `ser' の型は単にanyである。実態は実装(game-driver)に委ねられている。
 			// game-driverはシリアリゼーションとして「ストレージが含められていたTickのage」を採用する。
-			resolvingAge = <number>ser;
+			resolvingAge = ser;
 			this._tickBuffer.requestTicks(resolvingAge, 1); // request しておけば後は _onGotStorageOnTick() に渡ってくる
 		} else {
 			if (this._executionMode === ExecutionMode.Active) {
@@ -124,18 +118,18 @@ export class StorageResolver {
 			}
 		}
 
-		var sd = this._unresolvedStorages[resolvingAge];
+		const sd = this._unresolvedStorages[resolvingAge];
 		if (!sd) {
 			this._unresolvedLoaders[resolvingAge] = loader;
 			return;
 		}
 		delete this._unresolvedStorages[resolvingAge];
-		var serialization = resolvingAge;
-		var values = sd.map((d: pl.StorageData) => { return d.values; });
+		const serialization = resolvingAge;
+		const values = sd.map(d => d.values);
 		loader._onLoaded(values, serialization);
 	}
 
-	_putStorage(key: g.StorageKey, value: g.StorageValue, option: g.StorageWriteOption): void {
+	_putStorage(key: g.StorageKey, value: g.StorageValue, option?: g.StorageWriteOption): void {
 		if (this._executionMode === ExecutionMode.Active) {
 			this._amflow.putStorageData(key, value, option, this._onStoragePut_bound);
 		}
