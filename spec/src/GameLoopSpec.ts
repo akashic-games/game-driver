@@ -1,17 +1,17 @@
 "use strict";
-import * as pl from "@akashic/playlog";
 import * as g from "@akashic/akashic-engine";
-import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
-import * as mockpf from "../helpers/lib/MockPlatform";
+import * as pl from "@akashic/playlog";
+import { MemoryAmflowClient } from "../../lib/auxiliary/MemoryAmflowClient";
 import * as constants from "../../lib/constants";
+import { EventBuffer } from "../../lib/EventBuffer";
+import ExecutionMode from "../../lib/ExecutionMode";
+import { GameLoop } from "../../lib/GameLoop";
 import LoopMode from "../../lib/LoopMode";
 import LoopRenderMode from "../../lib/LoopRenderMode";
-import ExecutionMode from "../../lib/ExecutionMode";
-import { EventBuffer } from "../../lib/EventBuffer";
 import { TickBuffer } from "../../lib/TickBuffer";
-import { GameLoop } from "../../lib/GameLoop";
-import { MemoryAmflowClient } from "../../lib/auxiliary/MemoryAmflowClient";
+import { MockAmflow } from "../helpers/lib/MockAmflow";
+import * as mockpf from "../helpers/lib/MockPlatform";
+import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 
 describe("GameLoop", function () {
 	function makeTimestampEvent(timestamp: number): pl.TimestampEvent {
@@ -198,18 +198,18 @@ describe("GameLoop", function () {
 		var skippingTestState = 0;
 		game.skippingChangedTrigger.add((skipping) => {
 			switch (skippingTestState) {
-			case 0:
-				expect(skipping).toBe(true);
-				expect(game.age).toBe(0);  // age 0 で必ずskipに入る
-				expect(contentSkippingTestState).toBe(1);  // 実装上の理由でコンテンツへの通知が先行する
-				break;
-			case 1:
-				expect(skipping).toBe(false);
-				expect(game.age).toBe(1);  // Activeなので第0tickを消化した時点で追いついた
-				expect(contentSkippingTestState).toBe(2);
-				break;
-			default:
-				done.fail();
+				case 0:
+					expect(skipping).toBe(true);
+					expect(game.age).toBe(0);  // age 0 で必ずskipに入る
+					expect(contentSkippingTestState).toBe(1);  // 実装上の理由でコンテンツへの通知が先行する
+					break;
+				case 1:
+					expect(skipping).toBe(false);
+					expect(game.age).toBe(1);  // Activeなので第0tickを消化した時点で追いついた
+					expect(contentSkippingTestState).toBe(2);
+					break;
+				default:
+					done.fail();
 			}
 			++skippingTestState;
 		});
@@ -236,14 +236,14 @@ describe("GameLoop", function () {
 		// コンテンツ向けの `skippingChanged` (`skippingChangedTrigger` でない) は `_reset()` で初期化された後に設定する必要がある
 		game.skippingChanged.add((skipping) => {
 			switch (contentSkippingTestState) {
-			case 0:
-				expect(skipping).toBe(true);
-				break;
-			case 1:
-				expect(skipping).toBe(false);
-				break;
-			default:
-				done.fail();
+				case 0:
+					expect(skipping).toBe(true);
+					break;
+				case 1:
+					expect(skipping).toBe(false);
+					break;
+				default:
+					done.fail();
 			}
 			++contentSkippingTestState;
 		});
@@ -286,7 +286,7 @@ describe("GameLoop", function () {
 		game._loadAndStart({ args: undefined });
 
 		// 最新の状態まで追いつく
-		await new Promise<void>((resolve, reject) => {
+		await new Promise<void>((resolve, _reject) => {
 			const timer = setInterval(() => {
 				if (game.age > 10) {
 					clearInterval(timer);
@@ -300,7 +300,7 @@ describe("GameLoop", function () {
 		amflow.sendTick([11]); // 新しいtickを送信
 
 		// 最新の状態まで追いつく
-		await new Promise<void>((resolve, reject) => {
+		await new Promise<void>((resolve, _reject) => {
 			let skipCalled = false;
 			game.skippingChangedTrigger.add(() => {
 				skipCalled = true;
@@ -319,7 +319,7 @@ describe("GameLoop", function () {
 		amflow.sendTick([12]); // 新しいtickを送信
 
 		// 最新の状態まで追いつく
-		await new Promise<void>((resolve, reject) => {
+		await new Promise<void>((resolve, _reject) => {
 			let skipCalled = false;
 			game.skippingChangedTrigger.add(() => {
 				skipCalled = true;
@@ -363,16 +363,16 @@ describe("GameLoop", function () {
 		var skippingTestState = 0;
 		game.skippingChangedTrigger.add((skipping) => {
 			switch (skippingTestState) {
-			case 0:
-				expect(skipping).toBe(true);
-				expect(game.age).toBe(0);  // age 0 で必ずskipに入る
-				break;
-			case 1:
-				expect(skipping).toBe(false);
-				expect(game.age).toBe(1);  // Activeなので第0tickを消化した時点で追いついた
-				break;
-			default:
-				done.fail();
+				case 0:
+					expect(skipping).toBe(true);
+					expect(game.age).toBe(0);  // age 0 で必ずskipに入る
+					break;
+				case 1:
+					expect(skipping).toBe(false);
+					expect(game.age).toBe(1);  // Activeなので第0tickを消化した時点で追いついた
+					break;
+				default:
+					done.fail();
 			}
 			++skippingTestState;
 		});
@@ -406,7 +406,7 @@ describe("GameLoop", function () {
 	it("replays game in syncrhonization with the target time function", function (done: any) {
 		var timeFuncCount = 0;
 		var timeTable = [1000, 1001, 1030, 3070]; // 最後の3070は、age 5(3000ms)の通過タイミング次第でage 6消化が3066.66ms(の直前)になるため。
-		var timeFunc = () => {
+		var timeFunc = (): number => {
 			return (timeFuncCount in timeTable) ? timeTable[timeFuncCount] : timeTable[timeTable.length - 1];
 		};
 		var startedAt = 140;
@@ -468,16 +468,16 @@ describe("GameLoop", function () {
 		var skippingTestState = 0;
 		game.skippingChangedTrigger.add((skipping) => {
 			switch (skippingTestState) {
-			case 0:
-				expect(skipping).toBe(true);
-				expect(game.age).toBe(0);  // age 0 で必ずskipに入る
-				break;
-			case 1:
-				expect(skipping).toBe(false);
-				expect(game.age).toBe(3);  // 最初の目標時刻1000に到達できる＝skipから戻れるのはage 3を消化したあと
-				break;
-			default:
-				done.fail();
+				case 0:
+					expect(skipping).toBe(true);
+					expect(game.age).toBe(0);  // age 0 で必ずskipに入る
+					break;
+				case 1:
+					expect(skipping).toBe(false);
+					expect(game.age).toBe(3);  // 最初の目標時刻1000に到達できる＝skipから戻れるのはage 3を消化したあと
+					break;
+				default:
+					done.fail();
 			}
 			++skippingTestState;
 		});
@@ -549,7 +549,7 @@ describe("GameLoop", function () {
 	it("replays game in syncrhonization with the target time function - omit interpolated ticks", function (done: any) {
 		var timeFuncCount = 0;
 		var timeTable = [1000, 1001, 1030, 3500]; // 最後の3500は、age 5(3000ms)の通過タイミング次第でage 6消化が3066.66ms(の直前)になるため、それより大きい値。
-		var timeFunc = () => {
+		var timeFunc = (): number => {
 			return (timeFuncCount in timeTable) ? timeTable[timeFuncCount] : timeTable[timeTable.length - 1];
 		};
 		var startedAt = 140;
@@ -593,7 +593,7 @@ describe("GameLoop", function () {
 		});
 
 		game.requestNotifyTargetTimeReached();
-		game.targetTimeReachedTrigger.add((t) => {
+		game.targetTimeReachedTrigger.add((_t) => {
 			++timeFuncCount;
 			game.requestNotifyTargetTimeReached();
 		});
@@ -811,7 +811,9 @@ describe("GameLoop", function () {
 			looper.fun(self._frameTime);
 		}, 1);
 
-		game.handlerSet.setEventFilterFuncs({ addFilter: (filter: g.EventFilter) => null, removeFilter: (filter?: g.EventFilter) => null });
+		game.handlerSet.setEventFilterFuncs({
+			 addFilter: (_filter: g.EventFilter) => null, removeFilter: (_filter?: g.EventFilter) => null
+		});
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });

@@ -1,9 +1,9 @@
 import * as g from "@akashic/akashic-engine";
 import * as pl from "@akashic/playlog";
-import * as mockrf from "../helpers/lib/MockResourceFactory";
 import { Game } from "../../lib/Game";
-import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 import { GameHandlerSet } from "../../lib/GameHandlerSet";
+import * as mockrf from "../helpers/lib/MockResourceFactory";
+import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 
 describe("Game", function() {
 
@@ -115,7 +115,9 @@ describe("Game", function() {
 			expect(game._notifyPassedAgeTable[2]).toBe(true);
 
 			var notifiedAge: number[] = [];
-			game.agePassedTrigger.add((age: number) => { notifiedAge.push(age); });
+			game.agePassedTrigger.add((age: number) => {
+				notifiedAge.push(age);
+			});
 			game.tick(true);
 			game.fireAgePassedIfNeeded();
 			game.tick(true);

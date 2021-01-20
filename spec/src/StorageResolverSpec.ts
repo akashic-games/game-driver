@@ -1,20 +1,26 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
-import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
+import { EventBuffer } from "../../lib/EventBuffer";
 import ExecutionMode from "../../lib/ExecutionMode";
 import { Game } from "../../lib/Game";
-import { EventBuffer } from "../../lib/EventBuffer";
-import { TickGenerator } from "../../lib/TickGenerator";
-import { TickBuffer } from "../../lib/TickBuffer";
 import { StorageResolver } from "../../lib/StorageResolver";
+import { TickBuffer } from "../../lib/TickBuffer";
+import { TickGenerator } from "../../lib/TickGenerator";
+import { MockAmflow } from "../helpers/lib/MockAmflow";
+import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 
 describe("StorageResolver", function () {
 	class ErrorCollector {
 		errors: any[];
-		constructor() { this.reset(); }
-		add(e: any): void { this.errors.push(e); }
-		reset(): void { this.errors = []; }
+		constructor() {
+			this.reset();
+		}
+		add(e: any): void {
+			this.errors.push(e);
+		}
+		reset(): void {
+			this.errors = [];
+		}
 	}
 
 	interface PrepareStorageResolverResult {
@@ -37,7 +43,15 @@ describe("StorageResolver", function () {
 		var eventBuffer = new EventBuffer({ amflow, game });
 		var tickGenerator = new TickGenerator({ amflow, eventBuffer, errorHandler, errorHandlerOwner });
 		var tickBuffer = new TickBuffer({ amflow, executionMode });
-		var storageResolver = new StorageResolver({ game, amflow, tickGenerator, tickBuffer, executionMode, errorHandler, errorHandlerOwner });
+		var storageResolver = new StorageResolver({
+			 game,
+			 amflow,
+			 tickGenerator,
+			 tickBuffer,
+			  executionMode,
+			  errorHandler,
+			  errorHandlerOwner
+		});
 		game.setStorageFunc({
 			storageGetFunc: storageResolver.getStorageFunc,
 			storagePutFunc: storageResolver.putStorageFunc,
@@ -134,7 +148,7 @@ describe("StorageResolver", function () {
 		var self = prepared.storageResolver;
 		self.putStorageFunc({ region: 0, regionKey: "foostoragekey" }, { data: 42 }, null);
 		prepared.amflow.requestsPutStorageData[0]();
-		expect(prepared.amflow.storage["foostoragekey"]).toEqual({ data: 42 });
+		expect(prepared.amflow.storage.foostoragekey).toEqual({ data: 42 });
 	});
 
 	it("handles storage writing failure", function () {

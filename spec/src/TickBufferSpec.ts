@@ -1,6 +1,6 @@
 import * as pl from "@akashic/playlog";
-import { TickBuffer } from "../../lib/TickBuffer";
 import ExecutionMode from "../../lib/ExecutionMode";
+import { TickBuffer } from "../../lib/TickBuffer";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
 
 describe("TickBuffer", function() {
@@ -11,7 +11,7 @@ describe("TickBuffer", function() {
 		0,                      // 3: ポインターID
 		10,                     // 4: X座標
 		100                     // 5: Y座標
-														// 6?: エンティティID
+		// 6?: エンティティID
 	];
 	var msg0: pl.MessageEvent = [
 		pl.EventCode.Message,   // 0: EventCode
@@ -59,7 +59,7 @@ describe("TickBuffer", function() {
 		var tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
 
 		var gotNextTickCount = 0;
-		function gotNextTick() {
+		function gotNextTick(): void {
 			++gotNextTickCount;
 		}
 		tb.gotNextTickTrigger.add(gotNextTick, null);
@@ -175,7 +175,7 @@ describe("TickBuffer", function() {
 		var tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
 
 		var gotNextTickCount = 0;
-		function gotNextTick() {
+		function gotNextTick(): void {
 			++gotNextTickCount;
 		}
 		tb.gotNextTickTrigger.add(gotNextTick, null);
@@ -201,6 +201,7 @@ describe("TickBuffer", function() {
 		expect(tb._nearestAbsentAge).toBe(100);
 		expect(tb._tickRanges).toEqual([]);
 		tb._onTicks(null, [ 100, 100, null ]);
+		expect(gotNextTickCount).toBe(1);
 		expect(tb.currentAge).toBe(100);
 		expect(tb._nearestAbsentAge).toBe(101);
 		expect(tb._tickRanges).toEqual([
@@ -363,7 +364,7 @@ describe("TickBuffer", function() {
 		expect(tb._sizeRequestOnce).toBe(2);
 
 		var gotNextTickCount = 0;
-		function gotNextTick() {
+		function gotNextTick(): void {
 			++gotNextTickCount;
 		}
 		tb.gotNextTickTrigger.add(gotNextTick, null);

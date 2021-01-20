@@ -1,8 +1,8 @@
-import * as pl from "@akashic/playlog";
 import { EventIndex, EventPriority } from "@akashic/akashic-engine";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
-import { ErrorCollector } from "../helpers/lib/ErrorCollector";
+import * as pl from "@akashic/playlog";
 import { JoinResolver } from "../../lib/JoinResolver";
+import { ErrorCollector } from "../helpers/lib/ErrorCollector";
+import { MockAmflow } from "../helpers/lib/MockAmflow";
 
 describe("JoinResolver", function() {
 	it("can be instantiated", function() {
@@ -46,7 +46,7 @@ describe("JoinResolver", function() {
 		var collector = new ErrorCollector();
 		var self = new JoinResolver({ amflow: amflow, errorHandler: collector.onError, errorHandlerOwner: collector });
 
-		amflow.storage["foo"] = { data: 100 };
+		amflow.storage.foo = { data: 100 };
 		self.setRequestValuesForJoin([{ region: 0, regionKey: "foo" }]);   // MockAMFlowはregionを無視する点に注意
 
 		var pjoin: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name"];
@@ -60,7 +60,7 @@ describe("JoinResolver", function() {
 		var amflow = new MockAmflow();
 		var self = new JoinResolver({ amflow: amflow });
 
-		amflow.storage["foo"] = { data: 100 };
+		amflow.storage.foo = { data: 100 };
 		self.setRequestValuesForJoin([{ region: 0, regionKey: "foo" }]);   // MockAMFlowはregionを無視する点に注意
 
 		var pleave: pl.LeaveEvent = [ pl.EventCode.Leave, EventPriority.System, "dummyPlayerId"];

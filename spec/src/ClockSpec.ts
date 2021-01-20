@@ -93,13 +93,20 @@ describe("Clock", function() {
 		expect(l.fun(waitTime * 5 + 1)).toBe(waitTime - 2);
 		expect(target.count).toBe(6);
 
-		expect(l.fun(waitTime * 10 + 1)).toBe((waitTime - 2) - (2 * waitTime) - 1); // (waitTime - 2):前回の値, (2 * waitTime):maxFramePerOnceを超過する分
+		// (waitTime - 2):前回の値, (2 * waitTime):maxFramePerOnceを超過する分
+		expect(l.fun(waitTime * 10 + 1)).toBe((waitTime - 2) - (2 * waitTime) - 1);
 		expect(target.count).toBe(14);  // waitTimeの10倍進めても8(=== maxFramePerOnce)しか呼ばれない
 
 		// 複数回呼んでもクラッシュなどしないことを確認
-		expect(() => { clock.start(); }).not.toThrow();
-		expect(() => { clock.stop(); }).not.toThrow();
-		expect(() => { clock.stop(); }).not.toThrow();
+		expect(() => {
+			clock.start();
+		}).not.toThrow();
+		expect(() => {
+			clock.stop();
+		}).not.toThrow();
+		expect(() => {
+			clock.stop();
+		}).not.toThrow();
 	});
 
 	it("ignores deltaTime greater than _deltaTimeBrokenThreshold", function() {

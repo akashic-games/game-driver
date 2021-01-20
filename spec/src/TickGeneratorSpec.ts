@@ -1,9 +1,9 @@
-import * as pl from "@akashic/playlog";
 import { EventIndex, EventPriority, Trigger } from "@akashic/akashic-engine";
-import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
+import * as pl from "@akashic/playlog";
 import { EventBuffer } from "../../lib/EventBuffer";
 import { TickGenerator } from "../../lib/TickGenerator";
+import { MockAmflow } from "../helpers/lib/MockAmflow";
+import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 
 describe("TickGenerator", function () {
 	it("can be instantiated", function () {
@@ -12,7 +12,9 @@ describe("TickGenerator", function () {
 		var eventBuffer = new EventBuffer({ amflow: amflow, game: game });
 		var errorCollector = {
 			errors: <any[]>[],
-			collect: (e: any) => { this.errors.push(e); }
+			collect: (e: any) => {
+				this.errors.push(e);
+			}
 		};
 		var self = new TickGenerator({
 			amflow: amflow,
@@ -39,7 +41,9 @@ describe("TickGenerator", function () {
 		var self = new TickGenerator({ amflow: amflow, eventBuffer: eventBuffer });
 
 		var ticks: pl.Tick[] = [];
-		self.tickTrigger.add((tick: pl.Tick) => { ticks.push(tick); });
+		self.tickTrigger.add((tick: pl.Tick) => {
+			ticks.push(tick);
+		});
 
 		expect(self._generatingTick).toBe(false);
 		expect(self._nextAge).toBe(0);
@@ -84,10 +88,12 @@ describe("TickGenerator", function () {
 		var msg: pl.MessageEvent = [pl.EventCode.Message, EventPriority.Joined, "dummyPlayerId", "MSG!!"];
 
 		eventBuffer.setMode({ isReceiver: true });
-		amflow.storage["FooValue"] = { data: 42 };
+		amflow.storage.FooValue = { data: 42 };
 
 		var ticks: pl.Tick[] = [];
-		self.tickTrigger.add((tick: pl.Tick) => { ticks.push(tick); });
+		self.tickTrigger.add((tick: pl.Tick) => {
+			ticks.push(tick);
+		});
 		self.startTick();
 
 		self.setRequestValuesForJoin([skey]);
@@ -125,16 +131,20 @@ describe("TickGenerator", function () {
 		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
 		var error = false;
 		var eventBuffer = new EventBuffer({ amflow: amflow, game: game });
-		var self = new TickGenerator({ amflow: amflow, eventBuffer: eventBuffer, errorHandler: (e: any) => { error = true; } });
+		var self = new TickGenerator({ amflow: amflow, eventBuffer: eventBuffer, errorHandler: (_e: any) => {
+			error = true;
+		} });
 
 		var skey = { region: 0, regionKey: "FooValue" };
 		var resolvedStorageDataSet = [{ readKey: skey, values: [{ data: 42 }] }];
 
 		eventBuffer.setMode({ isReceiver: true });
-		amflow.storage["FooValue"] = { data: 42 };
+		amflow.storage.FooValue = { data: 42 };
 
 		var ticks: pl.Tick[] = [];
-		self.tickTrigger.add((tick: pl.Tick) => { ticks.push(tick); });
+		self.tickTrigger.add((tick: pl.Tick) => {
+			ticks.push(tick);
+		});
 		self.startTick();
 
 		self.next();

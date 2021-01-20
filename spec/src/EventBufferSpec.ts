@@ -1,9 +1,9 @@
-import * as pl from "@akashic/playlog";
-import { PlatformPointEvent, PlatformPointType } from "@akashic/pdi-types";
 import { EventFilterController, EventIndex, EventPriority } from "@akashic/akashic-engine";
+import { PlatformPointEvent, PlatformPointType } from "@akashic/pdi-types";
+import * as pl from "@akashic/playlog";
+import { EventBuffer } from "../../lib/EventBuffer";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
 import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
-import { EventBuffer } from "../../lib/EventBuffer";
 
 describe("EventBuffer", function () {
 	it("can be instantiated", function () {
@@ -182,10 +182,12 @@ describe("EventBuffer", function () {
 		var self = new EventBuffer({ amflow: amflow, game: game });
 
 		var anyPassFilter = ((pevs: any[]): any[] => pevs);
-		var noPassFilter = ((pevs: any[]): any[] => null);
-		var nonMessagePassFilter = (pevs: any[]) => (pevs.filter((pev: any) => (pev[EventIndex.General.Code] !== pl.EventCode.Message)));
+		var noPassFilter = ((_pevs: any[]): any[] => null);
+		var nonMessagePassFilter = (pevs: any[]): any[] => {
+			return pevs.filter((pev: any) => (pev[EventIndex.General.Code] !== pl.EventCode.Message));
+		};
 		var count = 0;
-		var handleEmptyFilter = (pevs: any[]) => (pevs.length === 0 && ++count, pevs);
+		var handleEmptyFilter = (pevs: any[]): any[] => (pevs.length === 0 && ++count, pevs);
 
 		self.removeFilter(noPassFilter);  // 未追加のフィルタを削除しても何も起きないことを確認するパス
 
@@ -245,14 +247,14 @@ describe("EventBuffer", function () {
 		var self = new EventBuffer({ amflow: amflow, game: game });
 
 		var anyPassFilter = ((pevs: any[]): any[] => pevs);
-		var nonMessagePassFilter = (pevs: any[]) => {
+		var nonMessagePassFilter = (pevs: any[]): any[] | null => {
 			expect(pevs).not.toBe(null);
 			var filtered = pevs.filter((pev: any) => (pev[EventIndex.General.Code] !== pl.EventCode.Message));
 			return filtered.length > 0 ? filtered : null;
 		};
 
 		var count = 0;
-		var handleEmptyFilter = (pevs: any[]) => (pevs.length === 0 && ++count, pevs);
+		var handleEmptyFilter = (pevs: any[]): any[] => (pevs.length === 0 && ++count, pevs);
 
 		self.addFilter(anyPassFilter);
 		self.addFilter(nonMessagePassFilter);
@@ -598,6 +600,8 @@ describe("EventBuffer", function () {
 		expect(!!EventBuffer.isEventLocal(ope)).toBe(true);
 
 		var invalidEvent: pl.Event = [ -1, 0, "dummyPid" ];
-		expect(() => { EventBuffer.isEventLocal(invalidEvent); }).toThrow();
+		expect(() => {
+			EventBuffer.isEventLocal(invalidEvent);
+		}).toThrow();
 	});
 });

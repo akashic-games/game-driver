@@ -247,7 +247,7 @@ describe("PdiUtil", function() {
 		it("handles load failure", function (done: any) {
 			var pf = new mockpf.Platform({ configurations: confs });
 			var fun = PdiUtil.makeLoadConfigurationFunc(pf);
-			fun(mockpf.Platform.INEXISTENT_GAME_CONFIGURATION, "", "", (err: any, conf: any) => {
+			fun(mockpf.Platform.INEXISTENT_GAME_CONFIGURATION, "", "", (err: any, _conf: any) => {
 				expect(!!err).toBe(true);
 				done();
 			});
@@ -256,7 +256,7 @@ describe("PdiUtil", function() {
 		it("handles nested load failure", function (done: any) {
 			var pf = new mockpf.Platform({ configurations: confs });
 			var fun = PdiUtil.makeLoadConfigurationFunc(pf);
-			fun("fail", "", "", (err: any, conf: any) => {
+			fun("fail", "", "", (err: any, _conf: any) => {
 				expect(!!err).toBe(true);
 				done();
 			});
@@ -265,7 +265,7 @@ describe("PdiUtil", function() {
 		it("catches normalize failure", function (done: any) {
 			var pf = new mockpf.Platform({ configurations: confs });
 			var fun = PdiUtil.makeLoadConfigurationFunc(pf);
-			fun("fail2", "", "", (err: any, conf: any) => {
+			fun("fail2", "", "", (err: any, _conf: any) => {
 				expect(!!err).toBe(true);
 				done();
 			});
@@ -274,7 +274,7 @@ describe("PdiUtil", function() {
 		it("supports configuration base url", function (done: any) {
 			var pf = new mockpf.Platform({ configurations: confs });
 			var fun = PdiUtil.makeLoadConfigurationFunc(pf);
-			fun("conf(1+2+3)", "./", "/base/", (err: any, conf: any) => {
+			fun("conf(1+2+3)", "./", "/base/", (_err: any, conf: any) => {
 				expect(conf).toEqual({
 					width: 800,
 					height: 450,

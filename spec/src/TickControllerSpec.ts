@@ -1,22 +1,28 @@
 "use strict";
-import * as mockpf from "../helpers/lib/MockPlatform";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
-import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
-import ExecutionMode from "../../lib/ExecutionMode";
-import { Game } from "../../lib/Game";
 import { Clock } from "../../lib/Clock";
 import { EventBuffer } from "../../lib/EventBuffer";
-import { TickGenerator } from "../../lib/TickGenerator";
-import { TickBuffer } from "../../lib/TickBuffer";
+import ExecutionMode from "../../lib/ExecutionMode";
+import { Game } from "../../lib/Game";
 import { StorageResolver } from "../../lib/StorageResolver";
+import { TickBuffer } from "../../lib/TickBuffer";
 import { TickController } from "../../lib/TickController";
+import { TickGenerator } from "../../lib/TickGenerator";
+import { MockAmflow } from "../helpers/lib/MockAmflow";
+import * as mockpf from "../helpers/lib/MockPlatform";
+import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 
 describe("TickController", function () {
 	class ErrorCollector {
 		errors: any[];
-		constructor() { this.reset(); }
-		add(e: any): void { this.errors.push(e); }
-		reset(): void { this.errors = []; }
+		constructor() {
+			this.reset();
+		}
+		add(e: any): void {
+			this.errors.push(e);
+		}
+		reset(): void {
+			this.errors = [];
+		}
 	}
 
 	interface PrepareTickControllerResult {
