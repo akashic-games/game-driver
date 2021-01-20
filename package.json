@@ -12,7 +12,7 @@
     "browserify": "shx mkdir -p build && browserify -r ./lib/index.js:@akashic/game-driver -x @akashic/akashic-engine -o build/game-driver.js && npm run browserify:ae",
     "browserify:ae": "browserify -r ./node_modules/@akashic/akashic-engine/index.js:@akashic/akashic-engine -o build/akashic-engine.js",
     "lint": "npm run lint:ts && npm run lint:md",
-    "lint:ts": "tslint src/*.ts src/auxiliary/*.ts spec/src/*.ts spec/helpers/src/*.ts",
+    "lint:ts": "eslint -c .eslintrc src/**/*.ts --fix",
     "lint:md": "remark ./*.md --frail --no-stdout --quiet --rc-path ./.remarkrc",
     "test": "npm run build && npm run test:compile && jest && npm run lint",
     "test:compile": "tsc -p spec/helpers/src/ && tsc -p spec/src/"
@@ -35,17 +35,21 @@
   },
   "devDependencies": {
     "@akashic/amflow": "~3.0.0",
+    "@akashic/eslint-config": "^0.1.2",
     "@akashic/pdi-common-impl": "0.0.4",
     "@akashic/pdi-types": "~1.1.0",
     "@akashic/playlog": "~3.1.0",
     "@akashic/remark-preset-lint": "~0.1.1",
     "@types/jest": "24.0.22",
     "@types/node": "12.12.6",
+    "@typescript-eslint/eslint-plugin": "^4.14.0",
     "browserify": "^16.5.0",
+    "eslint": "^7.18.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.1.3",
     "jest": "24.9.0",
     "remark-cli": "~7.0.0",
     "shx": "~0.3.2",
-    "tslint": "^5.20.1",
     "typescript": "^3.7.2"
   },
   "dependencies": {
