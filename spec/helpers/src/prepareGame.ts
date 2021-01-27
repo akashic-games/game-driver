@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as g from "@akashic/akashic-engine";
+import * as utils from "@akashic/game-configuration/lib/utils";
 import * as mockrf from "./MockResourceFactory";
 import { MockGame } from "./MockGame";
-import { PdiUtil } from "../../../lib/PdiUtil";
 import { GameHandlerSet } from "../../../lib/GameHandlerSet";
 
 export enum FixtureGame {
@@ -28,10 +28,19 @@ export interface PrepareGameParameterObject {
 }
 
 export function prepareGame(param: PrepareGameParameterObject): MockGame {
-	var gamePath = gameTitleTable[param.title];
-	var assetBase = path.resolve(__dirname, gamePath);
-	var configuration = JSON.parse(fs.readFileSync(path.resolve(assetBase, "game.json"), "utf8"));
-	configuration = PdiUtil._resolveConfigurationBasePath(configuration, assetBase);
+	const gamePath = gameTitleTable[param.title];
+	const assetBase = path.resolve(__dirname, gamePath);
+
+	// NOTE: 本来非同期で処理されている部分を無理やり同期処理に直している。
+	let configuration = JSON.parse(fs.readFileSync(path.resolve(assetBase, "game.json"), "utf8"));
+	const loadGameConfiguration: utils.LoadGameConfigurationFunc = (_url, callback) => {
+		return callback(null, configuration);
+	};
+
+	const loadConfiguration = utils.makeLoadConfigurationFunc(loadGameConfiguration);
+	loadConfiguration("", "", assetBase, (_err, conf) => {
+		configuration = conf;
+	});
 
 	var game = new MockGame({
 		engineModule: g,
