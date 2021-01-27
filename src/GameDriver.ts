@@ -4,6 +4,7 @@ import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
 import * as pdi from "@akashic/pdi-types";
 import * as pl from "@akashic/playlog";
+import { makeLoadConfigurationFunc, LoadConfigurationFunc } from "@akashic/game-configuration/lib/utils";
 import ExecutionMode from "./ExecutionMode";
 import LoopConfiguration from "./LoopConfiguration";
 import DriverConfiguration from "./DriverConfiguration";
@@ -12,7 +13,6 @@ import { Game } from "./Game";
 import { GameHandlerSet } from "./GameHandlerSet";
 import { EventBuffer } from "./EventBuffer";
 import { GameLoop } from "./GameLoop";
-import { PdiUtil } from "./PdiUtil";
 import { Profiler } from "./Profiler";
 
 const GAME_DESTROYED_MESSAGE = "GAME_DESTROYED";
@@ -93,7 +93,7 @@ export class GameDriver {
 	gameCreatedTrigger: g.Trigger<Game> = new g.Trigger();
 
 	_platform: pdi.Platform;
-	_loadConfigurationFunc: PdiUtil.LoadConfigurationFunc;
+	_loadConfigurationFunc: LoadConfigurationFunc;
 	_player: g.Player;
 	_rendererRequirement: pdi.RendererRequirement | null = null;
 	_playId: string | undefined; // g.Game#playId と型を合わせる
@@ -112,7 +112,7 @@ export class GameDriver {
 			this.errorTrigger.add(param.errorHandler, param.errorHandlerOwner);
 
 		this._platform = param.platform;
-		this._loadConfigurationFunc = PdiUtil.makeLoadConfigurationFunc(param.platform);
+		this._loadConfigurationFunc = makeLoadConfigurationFunc(param.platform.loadGameConfiguration);
 		this._player = param.player;
 	}
 
@@ -420,10 +420,13 @@ export class GameDriver {
 		configurationBase: string | undefined
 	): Promise<g.GameConfiguration> {
 		return new Promise((resolve: (conf: g.GameConfiguration) => void, reject: (err: any) => void) => {
-			this._loadConfigurationFunc(configurationUrl, assetBase, configurationBase, (err: any, conf: g.GameConfiguration) => {
+			this._loadConfigurationFunc(configurationUrl, assetBase, configurationBase, (err, conf) => {
 				const error = this._getCallbackError(err);
 				if (error) {
-					return reject(error);
+					return void reject(error);
+				}
+				if (!conf) {
+					return void reject(new Error("GameDriver#_loadConfiguration: No configuration found."));
 				}
 				this.configurationLoadedTrigger.fire(conf);
 				resolve(conf);

@@ -15,7 +15,6 @@
     "../helpers/lib/ErrorCollector.d.ts",
     "./auxiliary/MemoryAmflowClientSpec.ts",
     "./auxiliary/ReplayAmflowProxySpec.ts",
-    "./PdiUtilSpec.ts",
     "./ClockSpec.ts",
     "./ProfilerClockSpec.ts",
     "./TickBufferSpec.ts",
