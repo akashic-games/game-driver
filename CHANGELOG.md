@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.3
+* @akashic/game-configuration@1.0.1 に追従
+
 ## 2.0.2
 * 常に No permission となってしまうバグの修正
 
