@@ -1,7 +1,7 @@
 # CHANGELOG
 
 ## 2.0.2
-* 常に permission denied となってしまうバグの修正
+* 常に No permission となってしまうバグの修正
 
 ## 2.0.1
 * @akashic/game-configuration を利用するように変更
