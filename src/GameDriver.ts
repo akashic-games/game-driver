@@ -304,9 +304,6 @@ export class GameDriver {
 		if (dconf == null) {
 			return Promise.resolve();
 		}
-		if (!this._permission) {
-			return Promise.reject(new Error("Not authenticated."));
-		}
 		// デフォルト値の補完
 		if (dconf.playId === undefined)
 			dconf.playId = this._playId ?? undefined;
@@ -319,7 +316,6 @@ export class GameDriver {
 				dconf.eventBufferMode = { isReceiver: false, isSender: true };
 			}
 		}
-		const permission = this._permission;
 		let p = Promise.resolve();
 		if (this._playId !== dconf.playId) {
 			p = p.then<void>(() => {
@@ -337,7 +333,12 @@ export class GameDriver {
 			this._assertLive();
 			if (dconf.eventBufferMode != null) {
 				if (dconf.eventBufferMode.defaultEventPriority == null) {
-					dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & permission.maxEventPriority;
+					if (this._permission) {
+						dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & this._permission.maxEventPriority;
+					} else {
+						// NOTE: permission が無ければイベントを送信することはできないが、念の為に優先度を最低につけておく。
+						dconf.eventBufferMode.defaultEventPriority = 0;
+					}
 				}
 				if (this._eventBuffer) {
 					this._eventBuffer.setMode(dconf.eventBufferMode);
