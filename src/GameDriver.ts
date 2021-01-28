@@ -304,9 +304,6 @@ export class GameDriver {
 		if (dconf == null) {
 			return Promise.resolve();
 		}
-		if (!this._permission) {
-			return Promise.reject(new Error("Not authenticated."));
-		}
 		// デフォルト値の補完
 		if (dconf.playId === undefined)
 			dconf.playId = this._playId ?? undefined;
@@ -337,7 +334,11 @@ export class GameDriver {
 			this._assertLive();
 			if (dconf.eventBufferMode != null) {
 				if (dconf.eventBufferMode.defaultEventPriority == null) {
-					dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & permission.maxEventPriority;
+					if (permission) {
+						dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & permission.maxEventPriority;
+					} else {
+						dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority;
+					}
 				}
 				if (this._eventBuffer) {
 					this._eventBuffer.setMode(dconf.eventBufferMode);
