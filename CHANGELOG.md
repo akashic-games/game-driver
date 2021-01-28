@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.1
+* @akashic/game-configuration を利用するように変更
+
 ## 2.0.0
 * @akashic/akashic-engine@3.0.0 に追従
 
