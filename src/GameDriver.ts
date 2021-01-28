@@ -336,7 +336,8 @@ export class GameDriver {
 					if (this._permission) {
 						dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & this._permission.maxEventPriority;
 					} else {
-						dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority;
+						// NOTE: permission が無ければイベントを送信することはできないが、念の為に優先度を最低につけておく。
+						dconf.eventBufferMode.defaultEventPriority = 0;
 					}
 				}
 				if (this._eventBuffer) {
