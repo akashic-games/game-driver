@@ -32,6 +32,7 @@ export function prepareGame(param: PrepareGameParameterObject): MockGame {
 	const assetBase = path.resolve(__dirname, gamePath);
 
 	// NOTE: 本来非同期で処理されている部分を無理やり同期処理に直している。
+	// TODO: 無理やり同期処理にせず、呼び出し元で await をつける
 	let configuration = JSON.parse(fs.readFileSync(path.resolve(assetBase, "game.json"), "utf8"));
 	const loadGameConfiguration: utils.LoadGameConfigurationFunc = (_url, callback) => {
 		return callback(null, configuration);
