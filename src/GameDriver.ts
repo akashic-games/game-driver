@@ -316,7 +316,6 @@ export class GameDriver {
 				dconf.eventBufferMode = { isReceiver: false, isSender: true };
 			}
 		}
-		const permission = this._permission;
 		let p = Promise.resolve();
 		if (this._playId !== dconf.playId) {
 			p = p.then<void>(() => {
@@ -334,8 +333,8 @@ export class GameDriver {
 			this._assertLive();
 			if (dconf.eventBufferMode != null) {
 				if (dconf.eventBufferMode.defaultEventPriority == null) {
-					if (permission) {
-						dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & permission.maxEventPriority;
+					if (this._permission) {
+						dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority & this._permission.maxEventPriority;
 					} else {
 						dconf.eventBufferMode.defaultEventPriority = pl.EventFlagsMask.Priority;
 					}
