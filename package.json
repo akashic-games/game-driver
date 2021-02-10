@@ -12,8 +12,8 @@
     "browserify": "shx mkdir -p build && browserify -r ./lib/index.js:@akashic/game-driver -x @akashic/akashic-engine -o build/game-driver.js && npm run browserify:ae",
     "browserify:ae": "browserify -r ./node_modules/@akashic/akashic-engine/index.js:@akashic/akashic-engine -o build/akashic-engine.js",
     "lint": "npm run lint:ts &&  npm run lint:spec && npm run lint:md",
-    "lint:ts": "eslint -c .eslintrc src/**/*.ts --fix",
-    "lint:spec": "eslint -c ./spec/.eslintrc spec/src/*.ts",
+    "lint:ts": "eslint src/*.ts src/**/*.ts --fix",
+    "lint:spec": "eslint spec/src/*.ts",
     "lint:md": "remark ./*.md --frail --no-stdout --quiet --rc-path ./.remarkrc",
     "test": "npm run build && npm run test:compile && jest && npm run lint",
     "test:compile": "tsc -p spec/helpers/src/ && tsc -p spec/src/"
