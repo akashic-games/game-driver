@@ -184,8 +184,24 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	getTickList(
 		optsOrBegin: number | amf.GetTickListOptions,
 		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
-		callback?: (error: Error | null, tickList?: pl.TickList) => void
+		callbackOrUndefined?: (error: Error | null, tickList?: pl.TickList) => void
 	): void {
+		let opts: amf.GetTickListOptions;
+		let callback: ((error: Error | null, tickList?: pl.TickList) => void);
+
+		if (typeof optsOrBegin === "number") {
+			// NOTE: optsOrBegin === "number" であれば必ず amflow@2 以前の引数だとみなしてキャストする
+			opts = {
+				begin: optsOrBegin,
+				end: endOrCallback as number
+			};
+			callback = callbackOrUndefined as (error: Error | null, tickList?: pl.TickList) => void;
+		} else {
+			// NOTE: optsOrBegin !== "number" であれば必ず amflow@3 以降の引数だとみなしてキャストする
+			opts = optsOrBegin;
+			callback = endOrCallback as (error: Error | null, tickList?: pl.TickList) => void;
+		}
+
 		if (!this._tickList) {
 			if (callback) {
 				setTimeout(() => callback(null), 0);
@@ -193,21 +209,8 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			return;
 		}
 
-		// TODO: @akashic/amflow@3.0.0 追従
-		if (
-			typeof optsOrBegin !== "number" ||
-			typeof endOrCallback !== "number" ||
-			typeof callback !== "function"
-		) {
-			if (typeof endOrCallback === "function") {
-				endOrCallback(new Error("not implemented"));
-				return;
-			}
-			throw new Error("not implemented");
-		}
-
-		const from = Math.max(optsOrBegin, this._tickList[EventIndex.TickList.From]);
-		const to = Math.min(endOrCallback, this._tickList[EventIndex.TickList.To]);
+		const from = Math.max(opts.begin, this._tickList[EventIndex.TickList.From]);
+		const to = Math.min(opts.end, this._tickList[EventIndex.TickList.To]);
 		// @ts-ignore
 		const ticks = this._tickList[EventIndex.TickList.TicksWithEvents].filter((tick) => {
 			const age = tick[EventIndex.Tick.Age];

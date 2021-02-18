@@ -78,24 +78,26 @@ export class MockAmflow implements AMFlow {
 	getTickList(
 		optsOrBegin: number | GetTickListOptions,
 		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
-		callback?: (error: Error | null, tickList?: pl.TickList) => void
+		callbackOrUndefined?: (error: Error | null, tickList?: pl.TickList) => void
 	): void {
-		// TODO: @akashic/amflow@3.0.0 追従
-		if (
-			typeof optsOrBegin !== "number" ||
-			typeof endOrCallback !== "number" ||
-			typeof callback !== "function"
-		) {
-			if (typeof endOrCallback === "function") {
-				endOrCallback(new Error("not implemented"));
-				return;
-			}
-			throw new Error("not implemented");
+		let opts: GetTickListOptions;
+		let callback: ((error: Error | null, tickList?: pl.TickList) => void);
+
+		if (typeof optsOrBegin === "number") {
+			// NOTE: optsOrBegin === "number" であれば必ず amflow@2 以前の引数だとみなしてキャストする
+			opts = {
+				begin: optsOrBegin,
+				end: endOrCallback as number
+			};
+			callback = callbackOrUndefined;
+		} else {
+			// NOTE: optsOrBegin !== "number" であれば必ず amflow@3 以降の引数だとみなしてキャストする
+			opts = optsOrBegin;
+			callback = endOrCallback as (error: Error | null, tickList?: pl.TickList) => void;
 		}
-		const from = optsOrBegin;
-		const to = endOrCallback;
-		var req: GetTicksRequest;
-		var wrap = (error: Error, tickArray: pl.Tick[]) => {
+
+		let req: GetTicksRequest;
+		const wrap = (error: Error, tickArray: pl.Tick[]) => {
 			this.requestsGetTicks = this.requestsGetTicks.filter((r: GetTicksRequest) => { return r !== req; });
 			if (!tickArray || tickArray.length === 0) {
 				callback(null, null);
@@ -108,7 +110,7 @@ export class MockAmflow implements AMFlow {
 			];
 			callback(error, ret);
 		};
-		req = { from: from, to: to, respond: wrap };
+		req = { from: opts.begin, to: opts.end, respond: wrap };
 		this.requestsGetTicks.push(req);
 	}
 
