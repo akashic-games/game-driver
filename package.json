@@ -14,8 +14,9 @@
     "lint": "npm run lint:ts && npm run lint:md",
     "lint:ts": "tslint src/*.ts src/auxiliary/*.ts spec/src/*.ts spec/helpers/src/*.ts",
     "lint:md": "remark ./*.md --frail --no-stdout --quiet --rc-path ./.remarkrc",
-    "test": "npm run build && npm run test:compile && jest && npm run lint",
-    "test:compile": "tsc -p spec/helpers/src/ && tsc -p spec/src/"
+    "test": "npm run build && npm run test:compile && npm run test:jest && npm run lint",
+    "test:compile": "tsc -p spec/helpers/src/ && tsc -p spec/src/",
+    "test:jest": "jest"
   },
   "author": "DWANGO Co., Ltd.",
   "license": "MIT",
