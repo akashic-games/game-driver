@@ -603,7 +603,7 @@ export class GameLoop {
 					// NOTE: Manualのシーンでは age=1 のティックが長時間受信できない場合がある。(TickBuffer#addTick()が呼ばれない)
 					// そのケースでは最初のティックの受信にポーリング時間(初期値: 10秒)かかってしまうため、ここで最新ティックを要求する。
 					// (初期シーンがNonLocalであってもティックの進行によりManualのシーンに移行してしまう可能性があるため、常に最新のティックを要求している。)
-					this._tickBuffer.requestTicks();
+					this._tickBuffer.requestTicks(undefined, undefined, { ignorable: true });
 				}
 				// 既知最新ティックに追いついたので、ポーリング処理により後続ティックを要求する。
 				// NOTE: Manualのシーンでは最新ティックの生成そのものが長時間起きない可能性がある。

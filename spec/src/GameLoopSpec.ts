@@ -516,8 +516,10 @@ describe("GameLoop", function () {
 
 						clearInterval(timer);
 						expect(spyOnGetTickList.calls.count()).toBe(1);
-						expect(spyOnGetTickList.calls.argsFor(0)[0]).toBe(0);
-						expect(spyOnGetTickList.calls.argsFor(0)[1]).toBe(TickBuffer.DEFAULT_SIZE_REQUEST_ONCE);
+						expect(spyOnGetTickList.calls.argsFor(0)[0]).toEqual({
+							begin: 0,
+							end: TickBuffer.DEFAULT_SIZE_REQUEST_ONCE
+						});
 						expect(passedTestAges).toEqual([4, 6]);
 						expect(timeReachedCount).toBe(3);
 						expect(skippingTestState).toBe(2);
