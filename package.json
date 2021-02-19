@@ -32,7 +32,8 @@
     "url": "https://github.com/akashic-games/game-driver.git"
   },
   "publishConfig": {
-    "@akashic:registry": "https://registry.npmjs.org/"
+    "@akashic:registry": "https://registry.npmjs.org/",
+    "tag": "beta"
   },
   "devDependencies": {
     "@akashic/amflow": "~3.0.0",
