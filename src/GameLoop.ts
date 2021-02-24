@@ -673,7 +673,7 @@ export class GameLoop {
 				this._omittedTickDuration = 0;
 			} else {
 				// 時間は経過しているが消費すべきティックが届いていない
-				this._tickBuffer.requestTicks();
+				this._tickBuffer.requestTicks(undefined, undefined, { ignorable: true });
 				this._startWaitingNextTick();
 				break;
 			}
