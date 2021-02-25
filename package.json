@@ -5,7 +5,7 @@
   "main": "index.js",
   "typings": "lib/index.d.ts",
   "scripts": {
-    "prepublish": "npm run clean && npm run build",
+    "prepare": "npm run clean && npm run build",
     "ver": "tsc --version",
     "clean": "rm -rf lib/ && rm -rf spec/lib/ spec/helpers/lib/",
     "build": "tsc -p ./src/ && npm run browserify",
@@ -31,7 +31,8 @@
     "url": "https://github.com/akashic-games/game-driver.git"
   },
   "publishConfig": {
-    "@akashic:registry": "https://registry.npmjs.org/"
+    "@akashic:registry": "https://registry.npmjs.org/",
+    "tag": "for_ae1x"
   },
   "devDependencies": {
     "@akashic/akashic-pdi": "~1.15.0",
