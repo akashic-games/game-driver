@@ -39,7 +39,7 @@ export function prepareGame(param: PrepareGameParameterObject): MockGame {
 	};
 
 	const loadConfiguration = utils.makeLoadConfigurationFunc(loadGameConfiguration);
-	loadConfiguration("", "", assetBase, (_err, conf) => {
+	loadConfiguration("", assetBase, "", (_err, conf) => {
 		configuration = conf;
 	});
 

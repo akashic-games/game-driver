@@ -2,6 +2,7 @@
 import * as pl from "@akashic/playlog";
 import { AMFlow } from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
+import ExcludeEventFlags from "./ExcludeEventFlags";
 import ExecutionMode from "./ExecutionMode";
 import StorageOnTick from "./StorageOnTick";
 
@@ -228,10 +229,10 @@ export class TickBuffer {
 		return this.readNextTickTime();
 	}
 
-	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
+	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce, excludeEventFlags?: ExcludeEventFlags): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
-		this._amflow.getTickList(from, from + len, this._onTicks_bound);
+		this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags }, this._onTicks_bound);
 	}
 
 	addTick(tick: pl.Tick): void {

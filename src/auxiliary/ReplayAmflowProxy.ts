@@ -76,29 +76,31 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 	getTickList(
 		optsOrBegin: number | amf.GetTickListOptions,
 		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
-		callback?: (error: Error | null, tickList?: pl.TickList) => void
+		callbackOrUndefined?: (error: Error | null, tickList?: pl.TickList) => void
 	): void {
-		// TODO: @akashic/amflow@3.0.0 追従
-		if (
-			typeof optsOrBegin !== "number" ||
-			typeof endOrCallback !== "number" ||
-			typeof callback !== "function"
-		) {
-			if (typeof endOrCallback === "function") {
-				endOrCallback(new Error("not implemented"));
-				return;
-			}
-			throw new Error("not implemented");
+		let opts: amf.GetTickListOptions;
+		let callback: ((error: Error | null, tickList?: pl.TickList) => void);
+
+		if (typeof optsOrBegin === "number") {
+			// NOTE: optsOrBegin === "number" であれば必ず amflow@2 以前の引数だとみなしてキャストする
+			opts = {
+				begin: optsOrBegin,
+				end: endOrCallback as number
+			};
+			callback = callbackOrUndefined as (error: Error | null, tickList?: pl.TickList) => void;
+		} else {
+			// NOTE: optsOrBegin !== "number" であれば必ず amflow@3 以降の引数だとみなしてキャストする
+			opts = optsOrBegin;
+			callback = endOrCallback as (error: Error | null, tickList?: pl.TickList) => void;
 		}
-		const from = optsOrBegin;
-		const to = endOrCallback;
 
 		if (!this._tickList) {
-			// TODO: 後方互換性のため旧インタフェースを一時的に利用する
-			this._amflow.getTickList(from, to, callback);
+			this._amflow.getTickList(opts, callback);
 			return;
 		}
 
+		const from = opts.begin;
+		const to = opts.end;
 		const givenFrom = this._tickList[EventIndex.TickList.From];
 		const givenTo = this._tickList[EventIndex.TickList.To];
 		const givenTicksWithEvents = this._tickList[EventIndex.TickList.TicksWithEvents] || [];
@@ -110,7 +112,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 				callback(null, [from, to, this._sliceTicks(givenTicksWithEvents, from, to)]);
 			}, 0);
 		} else {
-			this._amflow.getTickList(from, to, (err: Error | null, tickList?: pl.TickList) => {
+			this._amflow.getTickList({ begin: from, end: to }, (err: Error | null, tickList?: pl.TickList) => {
 				if (err) return void callback(err);
 				if (!tickList) {
 					// 何も得られなかった。手持ちの重複範囲を返すだけ。
