@@ -101,6 +101,7 @@ export class TickBuffer {
 	_oldTimestampThreshold: number;
 
 	_receiving: boolean = false;
+	_skipping: boolean = false;
 
 	/**
 	 * 取得したTick。
@@ -164,6 +165,14 @@ export class TickBuffer {
 		this._nearestAbsentAge = this._findNearestAbscentAge(age);
 	}
 
+	startSkipping(): void {
+		this._skipping = true;
+	}
+
+	endSkipping(): void {
+		this._skipping = false;
+	}
+
 	hasNextTick(): boolean {
 		return this.currentAge !== this._nearestAbsentAge;
 	}
@@ -180,7 +189,11 @@ export class TickBuffer {
 			++range.start;
 
 			if (age + this._prefetchThreshold === this._nearestAbsentAge) {
-				this.requestTicks(this._nearestAbsentAge, this._sizeRequestOnce);
+				if (this._skipping) {
+					this.requestTicks(this._nearestAbsentAge, this._sizeRequestOnce);
+				} else {
+					this.prefetchTicks(this._nearestAbsentAge, this._sizeRequestOnce);
+				}
 			}
 			if (range.start === range.end)
 				this._tickRanges.shift();
@@ -229,10 +242,16 @@ export class TickBuffer {
 		return this.readNextTickTime();
 	}
 
-	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce, excludeEventFlags?: ExcludeEventFlags): void {
+	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
-		this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags }, this._onTicks_bound);
+		this._amflow.getTickList({ begin: from, end: from + len }, this._onTicks_bound);
+	}
+
+	prefetchTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
+		if (this._executionMode !== ExecutionMode.Passive)
+			return;
+		this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags: { ignorable: true } }, this._onTicks_bound);
 	}
 
 	addTick(tick: pl.Tick): void {
@@ -426,6 +445,10 @@ export class TickBuffer {
 				break;
 		}
 		range.ticks = range.ticks.slice(i);
+	}
+
+	_dropAll(): void {
+		this._tickRanges = [];
 	}
 
 	private _createTickRangeFromTick(tick: pl.Tick): TickRange {
