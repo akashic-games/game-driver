@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## unreleased changes
+* @akashic/amflow@3.0.0 に対応
+
 ## 2.0.3
 * @akashic/game-configuration@1.0.1 に追従
 
