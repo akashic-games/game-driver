@@ -188,11 +188,7 @@ export class TickBuffer {
 			++range.start;
 
 			if (age + this._prefetchThreshold === this._nearestAbsentAge) {
-				if (this._skipping) {
-					this.requestNonIgnorableTicks(this._nearestAbsentAge, this._sizeRequestOnce);
-				} else {
-					this.requestTicks(this._nearestAbsentAge, this._sizeRequestOnce);
-				}
+				this.requestTicks(this._nearestAbsentAge, this._sizeRequestOnce);
 			}
 			if (range.start === range.end)
 				this._tickRanges.shift();
@@ -242,6 +238,14 @@ export class TickBuffer {
 	}
 
 	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
+		if (this._skipping) {
+			this.requestNonIgnorableTicks(from, len);
+		} else {
+			this.requestAllTicks(from, len);
+		}
+	}
+
+	requestAllTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
 		this._amflow.getTickList({ begin: from, end: from + len }, this._onTicks_bound);
