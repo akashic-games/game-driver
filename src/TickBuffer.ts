@@ -2,7 +2,6 @@
 import * as pl from "@akashic/playlog";
 import { AMFlow } from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import ExcludeEventFlags from "./ExcludeEventFlags";
 import ExecutionMode from "./ExecutionMode";
 import StorageOnTick from "./StorageOnTick";
 
