@@ -383,6 +383,10 @@ export class TickBuffer {
 		return tickRange;
 	}
 
+	dropAll(): void {
+		this._tickRanges = [];
+	}
+
 	_updateAmflowReceiveState(): void {
 		if (this._receiving && this._executionMode === ExecutionMode.Passive) {
 			this._amflow.onTick(this._addTick_bound);
@@ -445,10 +449,6 @@ export class TickBuffer {
 				break;
 		}
 		range.ticks = range.ticks.slice(i);
-	}
-
-	_dropAll(): void {
-		this._tickRanges = [];
 	}
 
 	private _createTickRangeFromTick(tick: pl.Tick): TickRange {

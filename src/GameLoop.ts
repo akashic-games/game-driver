@@ -533,7 +533,7 @@ export class GameLoop {
 		if (this._skipping && (targetTime - this._currentTime < this._frameTime)) {
 			this._stopSkipping();
 			// スキップ状態が解除された (≒等倍に戻った) タイミングで改めてすべてのティックを取得し直す
-			this._tickBuffer._dropAll();
+			this._tickBuffer.dropAll();
 			this._tickBuffer.requestTicks();
 		}
 	}
