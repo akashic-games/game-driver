@@ -190,9 +190,9 @@ export class TickBuffer {
 
 			if (age + this._prefetchThreshold === this._nearestAbsentAge) {
 				if (this._skipping) {
-					this.requestTicks(this._nearestAbsentAge, this._sizeRequestOnce);
-				} else {
 					this.requestNonIgnorableTicks(this._nearestAbsentAge, this._sizeRequestOnce);
+				} else {
+					this.requestTicks(this._nearestAbsentAge, this._sizeRequestOnce);
 				}
 			}
 			if (range.start === range.end)
