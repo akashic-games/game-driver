@@ -441,7 +441,7 @@ export class GameLoop {
 				if (!this._waitingNextTick) {
 					this._startWaitingNextTick();
 					if (!this._consumedLatestTick)
-						this._tickBuffer.prefetchTicks();
+						this._tickBuffer.requestNonIgnorableTicks();
 				}
 				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === "interpolate-local") {
 					if (this._consumedLatestTick) {
@@ -609,7 +609,7 @@ export class GameLoop {
 					// NOTE: Manualのシーンでは age=1 のティックが長時間受信できない場合がある。(TickBuffer#addTick()が呼ばれない)
 					// そのケースでは最初のティックの受信にポーリング時間(初期値: 10秒)かかってしまうため、ここで最新ティックを要求する。
 					// (初期シーンがNonLocalであってもティックの進行によりManualのシーンに移行してしまう可能性があるため、常に最新のティックを要求している。)
-					this._tickBuffer.prefetchTicks();
+					this._tickBuffer.requestNonIgnorableTicks();
 				}
 				// 既知最新ティックに追いついたので、ポーリング処理により後続ティックを要求する。
 				// NOTE: Manualのシーンでは最新ティックの生成そのものが長時間起きない可能性がある。
