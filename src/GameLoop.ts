@@ -300,6 +300,7 @@ export class GameLoop {
 	_startSkipping(): void {
 		this._skipping = true;
 		this._updateGamePlaybackRate();
+		this._tickBuffer.startSkipping();
 		this._game.skippingChangedTrigger.fire(true);
 	}
 
@@ -309,6 +310,7 @@ export class GameLoop {
 	_stopSkipping(): void {
 		this._skipping = false;
 		this._updateGamePlaybackRate();
+		this._tickBuffer.endSkipping();
 		this._game.skippingChangedTrigger.fire(false);
 	}
 
@@ -439,7 +441,7 @@ export class GameLoop {
 				if (!this._waitingNextTick) {
 					this._startWaitingNextTick();
 					if (!this._consumedLatestTick)
-						this._tickBuffer.requestTicks();
+						this._tickBuffer.requestNonIgnorableTicks();
 				}
 				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === "interpolate-local") {
 					if (this._consumedLatestTick) {
@@ -528,8 +530,12 @@ export class GameLoop {
 			}
 		}
 
-		if (this._skipping && (targetTime - this._currentTime < this._frameTime))
+		if (this._skipping && (targetTime - this._currentTime < this._frameTime)) {
 			this._stopSkipping();
+			// スキップ状態が解除された (≒等倍に戻った) タイミングで改めてすべてのティックを取得し直す
+			this._tickBuffer.dropAll();
+			this._tickBuffer.requestTicks();
+		}
 	}
 
 	/**
@@ -603,7 +609,7 @@ export class GameLoop {
 					// NOTE: Manualのシーンでは age=1 のティックが長時間受信できない場合がある。(TickBuffer#addTick()が呼ばれない)
 					// そのケースでは最初のティックの受信にポーリング時間(初期値: 10秒)かかってしまうため、ここで最新ティックを要求する。
 					// (初期シーンがNonLocalであってもティックの進行によりManualのシーンに移行してしまう可能性があるため、常に最新のティックを要求している。)
-					this._tickBuffer.requestTicks(undefined, undefined, { ignorable: true });
+					this._tickBuffer.requestNonIgnorableTicks();
 				}
 				// 既知最新ティックに追いついたので、ポーリング処理により後続ティックを要求する。
 				// NOTE: Manualのシーンでは最新ティックの生成そのものが長時間起きない可能性がある。
@@ -673,7 +679,7 @@ export class GameLoop {
 				this._omittedTickDuration = 0;
 			} else {
 				// 時間は経過しているが消費すべきティックが届いていない
-				this._tickBuffer.requestTicks(undefined, undefined, { ignorable: true });
+				this._tickBuffer.requestTicks();
 				this._startWaitingNextTick();
 				break;
 			}

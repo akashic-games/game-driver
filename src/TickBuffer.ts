@@ -2,7 +2,6 @@
 import * as pl from "@akashic/playlog";
 import { AMFlow } from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import ExcludeEventFlags from "./ExcludeEventFlags";
 import ExecutionMode from "./ExecutionMode";
 import StorageOnTick from "./StorageOnTick";
 
@@ -101,6 +100,7 @@ export class TickBuffer {
 	_oldTimestampThreshold: number;
 
 	_receiving: boolean = false;
+	_skipping: boolean = false;
 
 	/**
 	 * 取得したTick。
@@ -162,6 +162,14 @@ export class TickBuffer {
 		this._nextTickTimeCache = null;
 		this.currentAge = age;
 		this._nearestAbsentAge = this._findNearestAbscentAge(age);
+	}
+
+	startSkipping(): void {
+		this._skipping = true;
+	}
+
+	endSkipping(): void {
+		this._skipping = false;
 	}
 
 	hasNextTick(): boolean {
@@ -229,10 +237,24 @@ export class TickBuffer {
 		return this.readNextTickTime();
 	}
 
-	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce, excludeEventFlags?: ExcludeEventFlags): void {
+	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
+		if (this._skipping) {
+			this.requestNonIgnorableTicks(from, len);
+		} else {
+			this.requestAllTicks(from, len);
+		}
+	}
+
+	requestAllTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
-		this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags }, this._onTicks_bound);
+		this._amflow.getTickList({ begin: from, end: from + len }, this._onTicks_bound);
+	}
+
+	requestNonIgnorableTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
+		if (this._executionMode !== ExecutionMode.Passive)
+			return;
+		this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags: { ignorable: true } }, this._onTicks_bound);
 	}
 
 	addTick(tick: pl.Tick): void {
@@ -362,6 +384,10 @@ export class TickBuffer {
 			this._nearestAbsentAge = this._findNearestAbscentAge(this._nearestAbsentAge);
 		}
 		return tickRange;
+	}
+
+	dropAll(): void {
+		this._tickRanges = [];
 	}
 
 	_updateAmflowReceiveState(): void {
