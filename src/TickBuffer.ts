@@ -177,7 +177,7 @@ export class TickBuffer {
 	}
 
 	consume(): pl.Tick | number | null {
-		if (this.currentAge === this._nearestAbsentAge)
+		if (this.currentAge === this._nearestAbsentAge || !this._tickRanges.length)
 			return null;
 		const age = this.currentAge;
 		let range = this._tickRanges[0];
