@@ -177,7 +177,7 @@ export class TickBuffer {
 	}
 
 	consume(): pl.Tick | number | null {
-		if (this.currentAge === this._nearestAbsentAge || !this._tickRanges.length)
+		if (this.currentAge === this._nearestAbsentAge)
 			return null;
 		const age = this.currentAge;
 		let range = this._tickRanges[0];
@@ -388,6 +388,8 @@ export class TickBuffer {
 
 	dropAll(): void {
 		this._tickRanges = [];
+		this._nearestAbsentAge = this.currentAge;
+		this._nextTickTimeCache = null;
 	}
 
 	_updateAmflowReceiveState(): void {
