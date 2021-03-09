@@ -388,6 +388,8 @@ export class TickBuffer {
 
 	dropAll(): void {
 		this._tickRanges = [];
+		this._nearestAbsentAge = this.currentAge;
+		this._nextTickTimeCache = null;
 	}
 
 	_updateAmflowReceiveState(): void {
