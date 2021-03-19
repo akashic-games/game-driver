@@ -1,7 +1,8 @@
 # CHANGELOG
 
-## unreleased changes
+## 2.1.0
 * @akashic/amflow@3.0.0 に対応
+* ignorable event に対応
 
 ## 2.0.3
 * @akashic/game-configuration@1.0.1 に追従
