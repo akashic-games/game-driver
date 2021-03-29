@@ -1,15 +1,15 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import ExecutionMode from "./ExecutionMode";
-import { StorageFunc } from "./StorageFunc";
-import { Game } from "./Game";
-import { EventBuffer } from "./EventBuffer";
+import * as amf from "@akashic/amflow";
+import * as pl from "@akashic/playlog";
 import { Clock } from "./Clock";
+import { EventBuffer } from "./EventBuffer";
+import ExecutionMode from "./ExecutionMode";
+import { Game } from "./Game";
+import { StorageFunc } from "./StorageFunc";
+import * as sr from "./StorageResolver";
 import { TickBuffer } from "./TickBuffer";
 import { TickGenerator } from "./TickGenerator";
-import * as sr from "./StorageResolver";
 
 export interface TickControllerParameterObject {
 	amflow: amf.AMFlow;

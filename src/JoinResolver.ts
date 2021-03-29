@@ -1,7 +1,7 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
+import * as amf from "@akashic/amflow";
+import * as pl from "@akashic/playlog";
 
 export class JoinLeaveRequest {
 	joinResolver: JoinResolver;

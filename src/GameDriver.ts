@@ -1,19 +1,19 @@
 "use strict";
-import { Promise } from "es6-promise";
-import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
+import * as amf from "@akashic/amflow";
+import { makeLoadConfigurationFunc, LoadConfigurationFunc } from "@akashic/game-configuration/lib/utils";
 import * as pdi from "@akashic/pdi-types";
 import * as pl from "@akashic/playlog";
-import { makeLoadConfigurationFunc, LoadConfigurationFunc } from "@akashic/game-configuration/lib/utils";
-import ExecutionMode from "./ExecutionMode";
-import LoopConfiguration from "./LoopConfiguration";
+import { Promise } from "es6-promise";
 import DriverConfiguration from "./DriverConfiguration";
-import StartPointData from "./StartPointData";
+import { EventBuffer } from "./EventBuffer";
+import ExecutionMode from "./ExecutionMode";
 import { Game } from "./Game";
 import { GameHandlerSet } from "./GameHandlerSet";
-import { EventBuffer } from "./EventBuffer";
 import { GameLoop } from "./GameLoop";
+import LoopConfiguration from "./LoopConfiguration";
 import { Profiler } from "./Profiler";
+import StartPointData from "./StartPointData";
 
 const GAME_DESTROYED_MESSAGE = "GAME_DESTROYED";
 
@@ -120,7 +120,9 @@ export class GameDriver {
 	 * `GameDriver` を初期化する。
 	 */
 	initialize(param: GameDriverInitializeParameterObject, callback: (err?: Error) => void): void {
-		this.doInitialize(param).then(() => { callback(); }, callback);
+		this.doInitialize(param).then(() => {
+			callback();
+		}, callback);
 	}
 
 	/**
@@ -353,7 +355,7 @@ export class GameDriver {
 	}
 
 	_doCloseAmflow(): Promise<void> {
-		return new Promise<void>((resolve: () => void , reject: (err: any) => void) => {
+		return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
 			if (!this._openedAmflow)
 				return resolve();
 			this._platform.amflow.close((err: any | null) => {

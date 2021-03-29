@@ -1,7 +1,7 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import { AMFlow } from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
+import { AMFlow } from "@akashic/amflow";
+import * as pl from "@akashic/playlog";
 import ExecutionMode from "./ExecutionMode";
 import StorageOnTick from "./StorageOnTick";
 
@@ -400,7 +400,7 @@ export class TickBuffer {
 		}
 	}
 
-	_onTicks(err: Error | null , ticks?: pl.TickList): void {
+	_onTicks(err: Error | null, ticks?: pl.TickList): void {
 		if (err)
 			throw err;
 		if (!ticks) {

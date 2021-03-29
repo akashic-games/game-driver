@@ -1,13 +1,13 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import * as sf from "./StorageFunc";
+import * as amf from "@akashic/amflow";
+import * as pl from "@akashic/playlog";
 import ExecutionMode from "./ExecutionMode";
-import StorageOnTick from "./StorageOnTick";
 import { Game } from "./Game";
-import { TickGenerator } from "./TickGenerator";
+import * as sf from "./StorageFunc";
+import StorageOnTick from "./StorageOnTick";
 import { TickBuffer } from "./TickBuffer";
+import { TickGenerator } from "./TickGenerator";
 
 export interface StorageResolverParameterObject {
 	game: Game;
