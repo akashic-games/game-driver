@@ -1,6 +1,5 @@
 {
 	"extends": ["@akashic/eslint-config"],
-	"ignorePatterns": ["GameConfiguration.ts", "ExcludeEventFlags.ts"],
 	"parserOptions": {
 		"project": "./src/tsconfig.json",
 		"sourceType": "module"
