@@ -1,7 +1,7 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import * as amf from "@akashic/amflow";
 import { EventIndex } from "@akashic/akashic-engine";
+import * as amf from "@akashic/amflow";
+import * as pl from "@akashic/playlog";
 
 export interface ReplayAmflowProxyParameterObject {
 	amflow: amf.AMFlow;
@@ -144,11 +144,13 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 							callback(null, [from, to, ticksWithEvents]);
 						}
 					} else if (fromInGiven) { // 前半重複
-						let ticksWithEvents = this._sliceTicks(givenTicksWithEvents, from, to).concat(tickList[EventIndex.TickList.TicksWithEvents] || []);
+						let ticksWithEvents = this._sliceTicks(givenTicksWithEvents, from, to)
+							.concat(tickList[EventIndex.TickList.TicksWithEvents] || []);
 						callback(null, [from, tickList[EventIndex.TickList.To], ticksWithEvents]);
 
 					} else { // 後半重複
-						let ticksWithEvents = (tickList[EventIndex.TickList.TicksWithEvents] || []).concat(this._sliceTicks(givenTicksWithEvents, from, to));
+						let ticksWithEvents = (tickList[EventIndex.TickList.TicksWithEvents] || [])
+							.concat(this._sliceTicks(givenTicksWithEvents, from, to));
 						callback(null, [tickList[EventIndex.TickList.From], to, ticksWithEvents]);
 					}
 				}

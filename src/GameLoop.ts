@@ -1,22 +1,22 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
+import * as amf from "@akashic/amflow";
 import * as pdi from "@akashic/pdi-types";
+import * as pl from "@akashic/playlog";
+import { Clock, ClockFrameTriggerParameterObject } from "./Clock";
 import * as constants from "./constants";
-import LoopMode from "./LoopMode";
-import LoopRenderMode from "./LoopRenderMode";
-import LoopConfiguration from "./LoopConfiguration";
+import { EventBuffer } from "./EventBuffer";
 import ExecutionMode from "./ExecutionMode";
 import { Game } from "./Game";
-import { EventBuffer } from "./EventBuffer";
-import { Clock, ClockFrameTriggerParameterObject } from "./Clock";
+import LoopConfiguration from "./LoopConfiguration";
+import LoopMode from "./LoopMode";
+import LoopRenderMode from "./LoopRenderMode";
+import { Profiler } from "./Profiler";
 import { ProfilerClock } from "./ProfilerClock";
 import { TickBuffer } from "./TickBuffer";
 import { TickController } from "./TickController";
-import { Profiler } from "./Profiler";
 
-const EventIndex = g.EventIndex;
+const EventIndex = g.EventIndex; // eslint-disable-line @typescript-eslint/naming-convention
 
 export interface GameLoopParameterObejct {
 	amflow: amf.AMFlow;
@@ -332,25 +332,25 @@ export class GameLoop {
 			this._clock.frameTrigger.remove(this._onFrame, this);
 			this._clock.frameTrigger.remove(this._onLocalFrame, this);
 			switch (localMode) {
-			case "full-local":
+				case "full-local":
 				// ローカルシーン: TickGenerationMode に関係なくローカルティックのみ
-				this._tickController.stopTick();
-				this._clock.frameTrigger.add(this._onLocalFrame, this);
-				break;
-			case "non-local":
-			case "interpolate-local":
-				if (tickMode === "by-clock") {
-					this._tickController.startTick();
-				} else {
+					this._tickController.stopTick();
+					this._clock.frameTrigger.add(this._onLocalFrame, this);
+					break;
+				case "non-local":
+				case "interpolate-local":
+					if (tickMode === "by-clock") {
+						this._tickController.startTick();
+					} else {
 					// Manual の場合: storageDataが乗る可能性がある最初のTickだけ生成させ、あとは生成を止める。(Manualの仕様どおりの挙動)
 					// storageDataがある場合は送らないとPassiveのインスタンスがローディングシーンを終えられない。
-					this._tickController.startTickOnce();
-				}
-				this._clock.frameTrigger.add(this._onFrame, this);
-				break;
-			default:
-				this.errorTrigger.fire(new Error("Unknown LocalTickMode: " + localMode));
-				return;
+						this._tickController.startTickOnce();
+					}
+					this._clock.frameTrigger.add(this._onFrame, this);
+					break;
+				default:
+					this.errorTrigger.fire(new Error("Unknown LocalTickMode: " + localMode));
+					return;
 			}
 		}
 	}
@@ -787,15 +787,15 @@ export class GameLoop {
 			return;
 		this._loopRenderMode = mode;
 		switch (mode) {
-		case LoopRenderMode.AfterRawFrame:
-			this._clock.rawFrameTrigger.add(this._renderOnRawFrame, this);
-			break;
-		case LoopRenderMode.None:
-			this._clock.rawFrameTrigger.remove(this._renderOnRawFrame, this);
-			break;
-		default:
-			this.errorTrigger.fire(new Error("GameLoop#_setLoopRenderMode: unknown mode: " + mode));
-			break;
+			case LoopRenderMode.AfterRawFrame:
+				this._clock.rawFrameTrigger.add(this._renderOnRawFrame, this);
+				break;
+			case LoopRenderMode.None:
+				this._clock.rawFrameTrigger.remove(this._renderOnRawFrame, this);
+				break;
+			default:
+				this.errorTrigger.fire(new Error("GameLoop#_setLoopRenderMode: unknown mode: " + mode));
+				break;
 		}
 	}
 

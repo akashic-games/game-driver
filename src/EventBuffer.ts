@@ -1,8 +1,8 @@
 "use strict";
-import * as pl from "@akashic/playlog";
+import * as g from "@akashic/akashic-engine";
 import { AMFlow } from "@akashic/amflow";
 import * as pdi from "@akashic/pdi-types";
-import * as g from "@akashic/akashic-engine";
+import * as pl from "@akashic/playlog";
 import { Game } from "./Game";
 
 export interface EventBufferMode {
@@ -82,26 +82,26 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 
 	static isEventLocal(pev: pl.Event): boolean {
 		switch (pev[g.EventIndex.General.Code]) {
-		case pl.EventCode.Join:
-			return pev[g.EventIndex.Join.Local];
-		case pl.EventCode.Leave:
-			return pev[g.EventIndex.Leave.Local];
-		case pl.EventCode.Timestamp:
-			return pev[g.EventIndex.Timestamp.Local];
-		case pl.EventCode.PlayerInfo:
-			return pev[g.EventIndex.PlayerInfo.Local];
-		case pl.EventCode.Message:
-			return pev[g.EventIndex.Message.Local];
-		case pl.EventCode.PointDown:
-			return pev[g.EventIndex.PointDown.Local];
-		case pl.EventCode.PointMove:
-			return pev[g.EventIndex.PointMove.Local];
-		case pl.EventCode.PointUp:
-			return pev[g.EventIndex.PointUp.Local];
-		case pl.EventCode.Operation:
-			return pev[g.EventIndex.Operation.Local];
-		default:
-			throw new Error("EventBuffer.isEventLocal");
+			case pl.EventCode.Join:
+				return pev[g.EventIndex.Join.Local];
+			case pl.EventCode.Leave:
+				return pev[g.EventIndex.Leave.Local];
+			case pl.EventCode.Timestamp:
+				return pev[g.EventIndex.Timestamp.Local];
+			case pl.EventCode.PlayerInfo:
+				return pev[g.EventIndex.PlayerInfo.Local];
+			case pl.EventCode.Message:
+				return pev[g.EventIndex.Message.Local];
+			case pl.EventCode.PointDown:
+				return pev[g.EventIndex.PointDown.Local];
+			case pl.EventCode.PointMove:
+				return pev[g.EventIndex.PointMove.Local];
+			case pl.EventCode.PointUp:
+				return pev[g.EventIndex.PointUp.Local];
+			case pl.EventCode.Operation:
+				return pev[g.EventIndex.Operation.Local];
+			default:
+				throw new Error("EventBuffer.isEventLocal");
 		}
 	}
 

@@ -1,8 +1,8 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
+import { GameHandlerSet } from "./GameHandlerSet";
 import StartPointData from "./StartPointData";
 import { StorageFunc } from "./StorageFunc";
-import { GameHandlerSet } from "./GameHandlerSet";
 
 export interface GameParameterObject extends g.GameParameterObject {
 	player: g.Player;

@@ -1,6 +1,6 @@
 "use strict";
-import { Profiler, ProfilerValueType } from "../Profiler";
 import * as g from "@akashic/akashic-engine";
+import { Profiler, ProfilerValueType } from "../Profiler";
 
 export interface SimpleProfilerParameterObject {
 	/**
@@ -69,7 +69,7 @@ export class SimpleProfiler implements Profiler {
 	_startTime: number = 0;
 	_beforeFlushTime: number = 0;
 	_beforeTimes: {[type: number]: number} = [];
-	_values: {[type: number]: {time: number, value: number}[]} = [];
+	_values: {[type: number]: {time: number; value: number}[]} = [];
 	_calculateProfilerValueTrigger: g.Trigger<SimpleProfilerValue> = new g.Trigger();
 
 	constructor(param: SimpleProfilerParameterObject) {
