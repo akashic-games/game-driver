@@ -16,7 +16,7 @@ import { ProfilerClock } from "./ProfilerClock";
 import { TickBuffer } from "./TickBuffer";
 import { TickController } from "./TickController";
 
-const EventIndex = g.EventIndex;
+const EventIndex = g.EventIndex; // eslint-disable-line @typescript-eslint/naming-convention
 
 export interface GameLoopParameterObejct {
 	amflow: amf.AMFlow;

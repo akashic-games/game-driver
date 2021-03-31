@@ -269,7 +269,7 @@ export class GameDriver {
 
 	destroy(): Promise<void> {
 		// NOTE: ここで破棄されるTriggerのfire中に呼ばれるとクラッシュするので、同期的処理だが念のためPromiseに包んで非同期で実行する
-		return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
+		return new Promise<void>((resolve: () => void, _reject: (err: any) => void) => {
 			this.stopGame();
 			if (this._game) {
 				this._game._destroy();

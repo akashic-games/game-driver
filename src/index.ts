@@ -2,6 +2,8 @@
 
 export * from "./constants";
 
+import { MemoryAmflowClient } from "./auxiliary/MemoryAmflowClient";
+export { MemoryAmflowClient };
 import { ReplayAmflowProxy, ReplayAmflowProxyParameterObject } from "./auxiliary/ReplayAmflowProxy";
 import { SimpleProfiler } from "./auxiliary/SimpleProfiler";
 import DriverConfiguration from "./DriverConfiguration";
@@ -25,6 +27,4 @@ export { GameDriver, GameDriverInitializeParameterObject };
 export { Game };
 
 export { ReplayAmflowProxy, ReplayAmflowProxyParameterObject };
-import { MemoryAmflowClient } from "./auxiliary/MemoryAmflowClient";
-export { MemoryAmflowClient };
 export { SimpleProfiler };
