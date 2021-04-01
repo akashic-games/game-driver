@@ -61,11 +61,11 @@ describe("MemoryAmflowClient", function () {
 
 			self.sendTick([5, [joinEvent]]);
 			expect(self._tickList).toEqual([5, 5, [[5, [joinEvent]]]]);
-			self.getTickList(0, 10, (err, tickList) => {
+			self.getTickList({ begin: 0, end: 10 }, (err, tickList) => {
 				expect(err).toBeNull();
 				expect(tickList).toEqual([5, 5, [[5, [joinEvent]]]]);
 				self.sendTick([8, [joinEvent]]);
-				self.getTickList(0, 10, (err, tickList) => {
+				self.getTickList({ begin: 0, end: 10 }, (err, tickList) => {
 					expect(err).toBeNull();
 					expect(tickList).toEqual([5, 8, [[5, [joinEvent]], [8, [joinEvent]]]]);
 					done();
@@ -77,7 +77,7 @@ describe("MemoryAmflowClient", function () {
 			var self = new MemoryAmflowClient({
 				playId: "testuser",
 			});
-			self.getTickList(0, 10, (err, tickList) => {
+			self.getTickList({ begin: 0, end: 10 }, (err, tickList) => {
 				expect(err).toBeNull();
 				expect(tickList).toBeUndefined();
 				self.sendTick([5, [joinEvent]]);
@@ -135,7 +135,7 @@ describe("MemoryAmflowClient", function () {
 					[3, []]
 				]
 			]);
-			self.getTickList(0, 10, (err, tickList) => {
+			self.getTickList({ begin: 0, end: 10 }, (err, tickList) => {
 				expect(err).toBeNull();
 				expect(tickList).toEqual([
 					1,
@@ -146,7 +146,7 @@ describe("MemoryAmflowClient", function () {
 					]
 				]);
 				self.sendTick([8, [joinEvent]]);
-				self.getTickList(0, 10, (err, tickList) => {
+				self.getTickList({ begin: 0, end: 10 }, (err, tickList) => {
 					expect(err).toBeNull();
 					expect(tickList).toEqual([
 						1,
@@ -231,7 +231,7 @@ describe("MemoryAmflowClient", function () {
 
 	});
 
-	describe("#getTickList", function () {
+	describe("#getTickList (deprecated)", function () {
 		it("starts from 0", function (done: any) {
 			var joinEvent: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null];
 			var joinEvent2: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId2", "dummy-name2", null];
@@ -299,6 +299,77 @@ describe("MemoryAmflowClient", function () {
 			});
 		});
 	});
+
+	describe("#getTickList", () => {
+		it("starts from 0", done => {
+			const joinEvent: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null];
+			const joinEvent2: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId2", "dummy-name2", null];
+			const self = new MemoryAmflowClient({
+				playId: "testuser",
+				tickList: [
+					0,
+					20,
+					[[7, [joinEvent]], [9, [joinEvent2]]]
+				],
+				startPoints: [
+					{ frame: 6, timestamp: 150, data: { content: "dataFor6" } },
+					{ frame: 18, timestamp: 450, data: { content: "dataFor18" } },
+				]
+			});
+			self.getTickList({ begin: 0, end: 5 }, (err, tickList) => {
+				expect(err).toBeNull();
+				expect(tickList).toEqual([0, 5, []]);
+
+				self.getTickList({ begin: 5, end: 10 }, (err, tickList) => {
+					expect(err).toBeNull();
+					expect(tickList).toEqual([5, 10,
+						[[7, [joinEvent]], [9, [joinEvent2]]]
+					]);
+
+					self.getTickList({ begin: 10, end: 12 }, (err, tickList) => {
+						expect(err).toBeNull();
+						expect(tickList).toEqual([10, 12, []]);
+						done();
+					});
+				});
+			});
+		});
+
+		it("starts from no 0", done => {
+			const joinEvent: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId", "dummy-name", null];
+			const joinEvent2: pl.JoinEvent = [ pl.EventCode.Join, EventPriority.System, "dummyPlayerId2", "dummy-name2", null];
+
+			const self = new MemoryAmflowClient({
+				playId: "testuser",
+				tickList: [
+					5,
+					20,
+					[[7, [joinEvent]], [9, [joinEvent2]]]
+				],
+				startPoints: [
+					{ frame: 6, timestamp: 600, data: { content: "dataFor6" } },
+					{ frame: 18, timestamp: 1800, data: { content: "dataFor18" } },
+				]
+			});
+			self.getTickList({ begin: 0, end: 5 }, (err, tickList) => {
+				expect(err).toBeNull();
+				expect(tickList).toEqual([5, 5, []]);
+
+				self.getTickList({ begin: 5, end: 10 }, (err, tickList) => {
+					expect(err).toBeNull();
+					expect(tickList).toEqual([5, 10,
+						[[7, [joinEvent]], [9, [joinEvent2]]]
+					]);
+					self.getTickList({ begin: 10, end: 12 }, (err, tickList) => {
+						expect(err).toBeNull();
+						expect(tickList).toEqual([10, 12, []]);
+						done();
+					});
+				});
+			});
+		});
+	});
+
 	describe("#getStartPoint", function () {
 		it("when empty startPoints", function (done: any) {
 			var sp6 = { frame: 6, timestamp: 600, data: { content: "dataFor6" } };

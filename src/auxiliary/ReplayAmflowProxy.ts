@@ -1,7 +1,7 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import * as amf from "@akashic/amflow";
 import { EventIndex } from "@akashic/akashic-engine";
+import * as amf from "@akashic/amflow";
+import * as pl from "@akashic/playlog";
 
 export interface ReplayAmflowProxyParameterObject {
 	amflow: amf.AMFlow;
@@ -76,29 +76,31 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 	getTickList(
 		optsOrBegin: number | amf.GetTickListOptions,
 		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
-		callback?: (error: Error | null, tickList?: pl.TickList) => void
+		callbackOrUndefined?: (error: Error | null, tickList?: pl.TickList) => void
 	): void {
-		// TODO: @akashic/amflow@3.0.0 追従
-		if (
-			typeof optsOrBegin !== "number" ||
-			typeof endOrCallback !== "number" ||
-			typeof callback !== "function"
-		) {
-			if (typeof endOrCallback === "function") {
-				endOrCallback(new Error("not implemented"));
-				return;
-			}
-			throw new Error("not implemented");
+		let opts: amf.GetTickListOptions;
+		let callback: ((error: Error | null, tickList?: pl.TickList) => void);
+
+		if (typeof optsOrBegin === "number") {
+			// NOTE: optsOrBegin === "number" であれば必ず amflow@2 以前の引数だとみなしてキャストする
+			opts = {
+				begin: optsOrBegin,
+				end: endOrCallback as number
+			};
+			callback = callbackOrUndefined as (error: Error | null, tickList?: pl.TickList) => void;
+		} else {
+			// NOTE: optsOrBegin !== "number" であれば必ず amflow@3 以降の引数だとみなしてキャストする
+			opts = optsOrBegin;
+			callback = endOrCallback as (error: Error | null, tickList?: pl.TickList) => void;
 		}
-		const from = optsOrBegin;
-		const to = endOrCallback;
 
 		if (!this._tickList) {
-			// TODO: 後方互換性のため旧インタフェースを一時的に利用する
-			this._amflow.getTickList(from, to, callback);
+			this._amflow.getTickList(opts, callback);
 			return;
 		}
 
+		const from = opts.begin;
+		const to = opts.end;
 		const givenFrom = this._tickList[EventIndex.TickList.From];
 		const givenTo = this._tickList[EventIndex.TickList.To];
 		const givenTicksWithEvents = this._tickList[EventIndex.TickList.TicksWithEvents] || [];
@@ -110,7 +112,7 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 				callback(null, [from, to, this._sliceTicks(givenTicksWithEvents, from, to)]);
 			}, 0);
 		} else {
-			this._amflow.getTickList(from, to, (err: Error | null, tickList?: pl.TickList) => {
+			this._amflow.getTickList({ begin: from, end: to }, (err: Error | null, tickList?: pl.TickList) => {
 				if (err) return void callback(err);
 				if (!tickList) {
 					// 何も得られなかった。手持ちの重複範囲を返すだけ。
@@ -142,11 +144,13 @@ export class ReplayAmflowProxy implements amf.AMFlow {
 							callback(null, [from, to, ticksWithEvents]);
 						}
 					} else if (fromInGiven) { // 前半重複
-						let ticksWithEvents = this._sliceTicks(givenTicksWithEvents, from, to).concat(tickList[EventIndex.TickList.TicksWithEvents] || []);
+						let ticksWithEvents = this._sliceTicks(givenTicksWithEvents, from, to)
+							.concat(tickList[EventIndex.TickList.TicksWithEvents] || []);
 						callback(null, [from, tickList[EventIndex.TickList.To], ticksWithEvents]);
 
 					} else { // 後半重複
-						let ticksWithEvents = (tickList[EventIndex.TickList.TicksWithEvents] || []).concat(this._sliceTicks(givenTicksWithEvents, from, to));
+						let ticksWithEvents = (tickList[EventIndex.TickList.TicksWithEvents] || [])
+							.concat(this._sliceTicks(givenTicksWithEvents, from, to));
 						callback(null, [tickList[EventIndex.TickList.From], to, ticksWithEvents]);
 					}
 				}

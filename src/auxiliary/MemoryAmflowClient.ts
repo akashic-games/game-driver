@@ -1,7 +1,7 @@
 "use strict";
+import { EventIndex } from "@akashic/akashic-engine";
 import * as amf from "@akashic/amflow";
 import * as pl from "@akashic/playlog";
-import { EventIndex } from "@akashic/akashic-engine";
 
 export interface MemoryAmflowClientParameterObject {
 	playId: string;
@@ -48,8 +48,12 @@ export class MemoryAmflowClient implements amf.AMFlow {
 
 	constructor(param: MemoryAmflowClientParameterObject) {
 		this._playId = param.playId;
-		this._putStorageDataSyncFunc = param.putStorageDataSyncFunc || ((): any => { throw new Error("Implementation not given"); });
-		this._getStorageDataSyncFunc = param.getStorageDataSyncFunc || ((): any => { throw new Error("Implementation not given"); });
+		this._putStorageDataSyncFunc = param.putStorageDataSyncFunc || ((): any => {
+			throw new Error("Implementation not given");
+		});
+		this._getStorageDataSyncFunc = param.getStorageDataSyncFunc || ((): any => {
+			throw new Error("Implementation not given");
+		});
 
 		if (param.startPoints) {
 			if (param.tickList) {
@@ -79,42 +83,44 @@ export class MemoryAmflowClient implements amf.AMFlow {
 
 	close(callback?: (error: Error | null) => void): void {
 		if (!callback) return;
-		setTimeout(() => { callback(null); }, 0);
+		setTimeout(() => {
+			callback(null);
+		}, 0);
 	}
 
-	authenticate(token: string, callback: (error: Error | null , permission?: any) => void): void {
+	authenticate(token: string, callback: (error: Error | null, permission?: any) => void): void {
 		setTimeout(() => {
 			switch (token) {
-			case MemoryAmflowClient.TOKEN_ACTIVE:
-				callback(null, {
-					writeTick: true,
-					readTick: true,
-					subscribeTick: false,
-					sendEvent: false,
-					subscribeEvent: true,
-					maxEventPriority: 2
-				});
-				break;
-			case MemoryAmflowClient.TOKEN_PASSIVE:
-				callback(null, {
-					writeTick: false,
-					readTick: true,
-					subscribeTick: true,
-					sendEvent: true,
-					subscribeEvent: false,
-					maxEventPriority: 2
-				});
-				break;
-			default:
-				callback(null, {
-					writeTick: true,
-					readTick: true,
-					subscribeTick: true,
-					sendEvent: true,
-					subscribeEvent: true,
-					maxEventPriority: 2
-				});
-				break;
+				case MemoryAmflowClient.TOKEN_ACTIVE:
+					callback(null, {
+						writeTick: true,
+						readTick: true,
+						subscribeTick: false,
+						sendEvent: false,
+						subscribeEvent: true,
+						maxEventPriority: 2
+					});
+					break;
+				case MemoryAmflowClient.TOKEN_PASSIVE:
+					callback(null, {
+						writeTick: false,
+						readTick: true,
+						subscribeTick: true,
+						sendEvent: true,
+						subscribeEvent: false,
+						maxEventPriority: 2
+					});
+					break;
+				default:
+					callback(null, {
+						writeTick: true,
+						readTick: true,
+						subscribeTick: true,
+						sendEvent: true,
+						subscribeEvent: true,
+						maxEventPriority: 2
+					});
+					break;
 			}
 		}, 0);
 	}
@@ -139,7 +145,9 @@ export class MemoryAmflowClient implements amf.AMFlow {
 		const storageData = tick[EventIndex.Tick.StorageData];
 		if (events || storageData) {
 			if (events) {
-				tick[EventIndex.Tick.Events] = events.filter(event => !(event[EventIndex.General.EventFlags] & pl.EventFlagsMask.Transient));
+				tick[EventIndex.Tick.Events] = events.filter(
+					event => !(event[EventIndex.General.EventFlags] & pl.EventFlagsMask.Transient)
+				);
 			}
 			// @ts-ignore
 			this._tickList[EventIndex.TickList.TicksWithEvents].push(tick);
@@ -184,8 +192,24 @@ export class MemoryAmflowClient implements amf.AMFlow {
 	getTickList(
 		optsOrBegin: number | amf.GetTickListOptions,
 		endOrCallback: number | ((error: Error | null, tickList?: pl.TickList) => void),
-		callback?: (error: Error | null, tickList?: pl.TickList) => void
+		callbackOrUndefined?: (error: Error | null, tickList?: pl.TickList) => void
 	): void {
+		let opts: amf.GetTickListOptions;
+		let callback: ((error: Error | null, tickList?: pl.TickList) => void);
+
+		if (typeof optsOrBegin === "number") {
+			// NOTE: optsOrBegin === "number" であれば必ず amflow@2 以前の引数だとみなしてキャストする
+			opts = {
+				begin: optsOrBegin,
+				end: endOrCallback as number
+			};
+			callback = callbackOrUndefined as (error: Error | null, tickList?: pl.TickList) => void;
+		} else {
+			// NOTE: optsOrBegin !== "number" であれば必ず amflow@3 以降の引数だとみなしてキャストする
+			opts = optsOrBegin;
+			callback = endOrCallback as (error: Error | null, tickList?: pl.TickList) => void;
+		}
+
 		if (!this._tickList) {
 			if (callback) {
 				setTimeout(() => callback(null), 0);
@@ -193,21 +217,8 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			return;
 		}
 
-		// TODO: @akashic/amflow@3.0.0 追従
-		if (
-			typeof optsOrBegin !== "number" ||
-			typeof endOrCallback !== "number" ||
-			typeof callback !== "function"
-		) {
-			if (typeof endOrCallback === "function") {
-				endOrCallback(new Error("not implemented"));
-				return;
-			}
-			throw new Error("not implemented");
-		}
-
-		const from = Math.max(optsOrBegin, this._tickList[EventIndex.TickList.From]);
-		const to = Math.min(endOrCallback, this._tickList[EventIndex.TickList.To]);
+		const from = Math.max(opts.begin, this._tickList[EventIndex.TickList.From]);
+		const to = Math.min(opts.end, this._tickList[EventIndex.TickList.To]);
 		// @ts-ignore
 		const ticks = this._tickList[EventIndex.TickList.TicksWithEvents].filter((tick) => {
 			const age = tick[EventIndex.Tick.Age];

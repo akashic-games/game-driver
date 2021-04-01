@@ -93,7 +93,7 @@ describe("ReplayAmflowProxy", function () {
 		});
 
 		it("merges the original and given tick #1", (done: any) => {
-			self.getTickList(7, 22, (err: Error, tickList?: pl.TickList) => {
+			self.getTickList({ begin: 7, end: 22 }, (err: Error, tickList?: pl.TickList) => {
 				expect(err).toBe(null);
 				expect(tickList).toEqual([
 					7,
@@ -113,7 +113,7 @@ describe("ReplayAmflowProxy", function () {
 		});
 
 		it("merges the original and given tick #1-2", (done: any) => {
-			self.getTickList(7, 22, (err: Error, tickList?: pl.TickList) => {
+			self.getTickList({ begin: 7, end: 22 }, (err: Error, tickList?: pl.TickList) => {
 				expect(err).toBe(null);
 				expect(tickList).toEqual([
 					7,
@@ -129,7 +129,7 @@ describe("ReplayAmflowProxy", function () {
 		});
 
 		it("merges the original and given tick #2", (done: any) => {
-			self.getTickList(3, 7, (err: Error, tickList?: pl.TickList) => {
+			self.getTickList({ begin: 3, end: 7 }, (err: Error, tickList?: pl.TickList) => {
 				expect(err).toBe(null);
 				expect(tickList).toEqual([
 					3,
@@ -146,7 +146,7 @@ describe("ReplayAmflowProxy", function () {
 		});
 
 		it("merges the original and given tick #2-2", (done: any) => {
-			self.getTickList(3, 7, (err: Error, tickList?: pl.TickList) => {
+			self.getTickList({ begin: 3, end: 7 }, (err: Error, tickList?: pl.TickList) => {
 				expect(err).toBe(null);
 				expect(tickList).toEqual([
 					5,
@@ -160,7 +160,7 @@ describe("ReplayAmflowProxy", function () {
 
 
 		it("merges the original and given tick #3", (done: any) => {
-			self.getTickList(3, 22, (err: Error, tickList?: pl.TickList) => {
+			self.getTickList({ begin: 3, end: 22 }, (err: Error, tickList?: pl.TickList) => {
 				expect(err).toBe(null);
 				expect(tickList).toEqual([
 					3,
@@ -185,7 +185,7 @@ describe("ReplayAmflowProxy", function () {
 		});
 
 		it("merges the original and given tick #3-2", (done: any) => {
-			self.getTickList(3, 22, (err: Error, tickList?: pl.TickList) => {
+			self.getTickList({ begin: 3, end: 22 }, (err: Error, tickList?: pl.TickList) => {
 				expect(err).toBe(null);
 				expect(tickList).toEqual([
 					5,
@@ -201,7 +201,7 @@ describe("ReplayAmflowProxy", function () {
 		});
 
 		it("bypasses calling the original", (done: any) => {
-			self.getTickList(7, 20, (err: Error, tickList?: pl.TickList) => {
+			self.getTickList({ begin: 7, end: 20 }, (err: Error, tickList?: pl.TickList) => {
 				expect(err).toBe(null);
 				expect(tickList).toEqual([
 					7,
@@ -209,7 +209,7 @@ describe("ReplayAmflowProxy", function () {
 					[[7, [joinEvent]], [9, [pdownEvent]]]
 				]);
 
-				self.getTickList(5, 9, (err: Error, tickList?: pl.TickList) => {
+				self.getTickList({ begin: 5, end: 9 }, (err: Error, tickList?: pl.TickList) => {
 					expect(err).toBe(null);
 					expect(tickList).toEqual([
 						5,
@@ -222,7 +222,7 @@ describe("ReplayAmflowProxy", function () {
 		});
 
 		it("merely calls the original when it does not have", (done: any) => {
-			self.getTickList(21, 23, (err: Error, tickList?: pl.TickList) => {
+			self.getTickList({ begin: 21, end: 23 }, (err: Error, tickList?: pl.TickList) => {
 				expect(err).toBe(null);
 				expect(tickList).toEqual([21, 23, []]);
 				done();

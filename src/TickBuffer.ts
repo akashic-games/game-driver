@@ -1,11 +1,11 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import { AMFlow } from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
+import { AMFlow } from "@akashic/amflow";
+import * as pl from "@akashic/playlog";
 import ExecutionMode from "./ExecutionMode";
 import StorageOnTick from "./StorageOnTick";
 
-const EventIndex = g.EventIndex;
+const EventIndex = g.EventIndex; // eslint-disable-line @typescript-eslint/naming-convention
 
 export interface TickBufferParameterObject {
 	/**
@@ -100,6 +100,7 @@ export class TickBuffer {
 	_oldTimestampThreshold: number;
 
 	_receiving: boolean = false;
+	_skipping: boolean = false;
 
 	/**
 	 * 取得したTick。
@@ -161,6 +162,14 @@ export class TickBuffer {
 		this._nextTickTimeCache = null;
 		this.currentAge = age;
 		this._nearestAbsentAge = this._findNearestAbscentAge(age);
+	}
+
+	startSkipping(): void {
+		this._skipping = true;
+	}
+
+	endSkipping(): void {
+		this._skipping = false;
 	}
 
 	hasNextTick(): boolean {
@@ -229,9 +238,23 @@ export class TickBuffer {
 	}
 
 	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
+		if (this._skipping) {
+			this.requestNonIgnorableTicks(from, len);
+		} else {
+			this.requestAllTicks(from, len);
+		}
+	}
+
+	requestAllTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
-		this._amflow.getTickList(from, from + len, this._onTicks_bound);
+		this._amflow.getTickList({ begin: from, end: from + len }, this._onTicks_bound);
+	}
+
+	requestNonIgnorableTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
+		if (this._executionMode !== ExecutionMode.Passive)
+			return;
+		this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags: { ignorable: true } }, this._onTicks_bound);
 	}
 
 	addTick(tick: pl.Tick): void {
@@ -363,6 +386,12 @@ export class TickBuffer {
 		return tickRange;
 	}
 
+	dropAll(): void {
+		this._tickRanges = [];
+		this._nearestAbsentAge = this.currentAge;
+		this._nextTickTimeCache = null;
+	}
+
 	_updateAmflowReceiveState(): void {
 		if (this._receiving && this._executionMode === ExecutionMode.Passive) {
 			this._amflow.onTick(this._addTick_bound);
@@ -371,7 +400,7 @@ export class TickBuffer {
 		}
 	}
 
-	_onTicks(err: Error | null , ticks?: pl.TickList): void {
+	_onTicks(err: Error | null, ticks?: pl.TickList): void {
 		if (err)
 			throw err;
 		if (!ticks) {
