@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.1.1
+* `TickBuffer#requestTicks()` で @akashic/amflow@2 以前の `AMFlow#getTickList()` の引数を利用するように差し戻し
+
 ## 2.1.0
 * @akashic/amflow@3.0.0 に対応
 * ignorable event に対応
