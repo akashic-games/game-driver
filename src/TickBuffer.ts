@@ -248,13 +248,19 @@ export class TickBuffer {
 	requestAllTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
-		this._amflow.getTickList({ begin: from, end: from + len }, this._onTicks_bound);
+		// NOTE: 移行期のため一時的に旧インタフェースを利用する
+		this._amflow.getTickList(from, from + len, this._onTicks_bound);
+		// TODO: AMFlow@3.0.0 の引数を利用するように変更する
+		// this._amflow.getTickList({ begin: from, end: from + len }, this._onTicks_bound);
 	}
 
 	requestNonIgnorableTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
-		this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags: { ignorable: true } }, this._onTicks_bound);
+		// NOTE: 移行期のため一時的に旧インタフェースを利用する
+		this._amflow.getTickList(from, from + len, this._onTicks_bound);
+		// TODO: AMFlow@3.0.0 の引数を利用するように変更する
+		// this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags: { ignorable: true } }, this._onTicks_bound);
 	}
 
 	addTick(tick: pl.Tick): void {

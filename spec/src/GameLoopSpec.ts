@@ -516,18 +516,11 @@ describe("GameLoop", function () {
 
 						clearInterval(timer);
 						expect(spyOnGetTickList.calls.count()).toBe(2); // 初回の読み込み + 等倍に戻ったタイミングでのティック再取得
-						expect(spyOnGetTickList.calls.argsFor(0)[0]).toEqual({
-							begin: 0,
-							end: TickBuffer.DEFAULT_SIZE_REQUEST_ONCE,
-							excludeEventFlags: {
-								ignorable: true
-							}
-						});
+						expect(spyOnGetTickList.calls.argsFor(0)[0]).toBe(0);
+						expect(spyOnGetTickList.calls.argsFor(0)[1]).toBe(TickBuffer.DEFAULT_SIZE_REQUEST_ONCE);
 						// tick 3 に到達した時点で後続ティックを取得し直しているはず
-						expect(spyOnGetTickList.calls.argsFor(1)[0]).toEqual({
-							begin: 3,
-							end: TickBuffer.DEFAULT_SIZE_REQUEST_ONCE + 3
-						});
+						expect(spyOnGetTickList.calls.argsFor(1)[0]).toBe(3);
+						expect(spyOnGetTickList.calls.argsFor(1)[1]).toBe(TickBuffer.DEFAULT_SIZE_REQUEST_ONCE + 3);
 						expect(passedTestAges).toEqual([4, 6]);
 						expect(timeReachedCount).toBe(3);
 						expect(skippingTestState).toBe(2);
