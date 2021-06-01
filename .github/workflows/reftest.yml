@@ -1,0 +1,64 @@
+name: reftest
+
+on: [push, pull_request]
+
+env:
+  cache-version: v1
+
+jobs:
+  reftest:
+    runs-on: ${{ matrix.os }}
+    name: Node ${{ matrix.node }} / ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node: [12.x, 14.x]
+    steps:
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Use npm@7
+        run: npm i -g npm@7 --registry=https://registry.npmjs.org
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ env.cache-version }}-${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ env.cache-version }}-${{ runner.os }}-build-
+            ${{ env.cache-version }}-${{ runner.os }}-
+      - name: Checkout game-driver repository
+        uses: actions/checkout@v2
+        with:
+          path: game-driver
+      - name: Checkout engine-files repository
+        uses: actions/checkout@v2
+        with:
+          repository: akashic-games/engine-files
+          path: engine-files
+      - name: Pack game-driver
+        working-directory: game-driver
+        id: game_driver
+        run: |
+          npm ci --ignore-scripts
+          echo "::set-output name=pack_name::$(npm pack)"
+      - name: Run engine-files reftest
+        working-directory: engine-files
+        run: |
+          npm ci
+          npm i ../game-driver/${{steps.game_driver.outputs.pack_name}} --no-save
+          npm run build:full:parts
+          npm run build:canvas:parts
+          npm test
+      - name: Archive artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: engine_files_reftest_result
+          path: |
+            ./engine-files/tests/fixtures/**/expected/
+            ./engine-files/tests/fixtures/**/actual/
+            ./engine-files/tests/fixtures/**/diff/
