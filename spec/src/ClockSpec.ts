@@ -279,17 +279,17 @@ describe("Clock", function() {
 		expect(clock.running).toBe(true);
 		expect(target.count).toBe(0);
 
-		expect(l.fun(NaN)).toBe(waitTime); // NaN で 1 フレーム分進む
+		expect(l.fun(NaN)).toBe(waitTime); // NaN で次のフレームまで進む
 		expect(target.count).toBe(1);
 		expect(l.fun(10)).toBe(waitTime - 10);
 		expect(target.count).toBe(1);
-		expect(l.fun(NaN)).toBe(waitTime - 10);
+		expect(l.fun(NaN)).toBe(waitTime);
 		expect(target.count).toBe(2);
-		expect(l.fun(6)).toBe(waitTime -16);
+		expect(l.fun(16)).toBe(waitTime - 16);
 		expect(target.count).toBe(2);
 		expect(l.fun(1)).toBe(waitTime + 3); // 20ms * 0.8(Clock.ANTICIPATE_RATE) = 16ms 経過時点で次のコールをしてしまう。その分次までのwait(戻り値)が延びる
 		expect(target.count).toBe(3);
-		expect(l.fun(NaN)).toBe(waitTime + 3);
+		expect(l.fun(NaN)).toBe(waitTime);
 		expect(target.count).toBe(4);
 
 		clock.stop();
