@@ -251,7 +251,7 @@ describe("Clock", function() {
 		expect(target.count).toBe(100); // maxFramePerOnceは8倍だが100倍にしているので100回fireしてしまう
 	});
 
-	it("If the argument of _onLooperCall() is NaN, advance 1 frame", function () {
+	it("If the argument of _onLooperCall() is NaN, advance next frame", function () {
 		var pf = new mockpf.Platform({});
 		var target = {
 			count: 0,
