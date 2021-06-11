@@ -199,8 +199,7 @@ export class Clock {
 	_onLooperCall(deltaTime: number): number {
 		if (isNaN(deltaTime)) {
 			// NaN が渡された場合 次のフレームまで進行する。
-			deltaTime = this._waitTime;
-			this._totalDeltaTime = 0;
+			deltaTime = this._waitTime - this._totalDeltaTime;
 		}
 		const rawDeltaTime = deltaTime;
 
