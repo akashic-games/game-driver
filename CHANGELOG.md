@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.1.2
+* `Clock#_onLooperCall()` の引数に `NaN` が渡された場合、次のフレームまで進むよう変更
+
 ## 2.1.1
 * `TickBuffer#requestTicks()` で @akashic/amflow@2 以前の `AMFlow#getTickList()` の引数を利用するように差し戻し
 
