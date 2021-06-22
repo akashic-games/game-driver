@@ -301,6 +301,7 @@ export class GameLoop {
 		this._skipping = true;
 		this._updateGamePlaybackRate();
 		this._tickBuffer.startSkipping();
+		this._eventBuffer.startSkipping();
 		this._game.skippingChangedTrigger.fire(true);
 	}
 
@@ -311,6 +312,7 @@ export class GameLoop {
 		this._skipping = false;
 		this._updateGamePlaybackRate();
 		this._tickBuffer.endSkipping();
+		this._eventBuffer.endSkipping();
 		this._game.skippingChangedTrigger.fire(false);
 	}
 

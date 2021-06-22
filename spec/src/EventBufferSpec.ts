@@ -600,4 +600,53 @@ describe("EventBuffer", function () {
 		var invalidEvent: pl.Event = [ -1, 0, "dummyPid" ];
 		expect(() => { EventBuffer.isEventLocal(invalidEvent); }).toThrow();
 	});
+
+	it("should discard events while EventBuffer is skipping", () => {
+		const amflow = new MockAmflow();
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const self = new EventBuffer({ amflow, game });
+
+		const sent: pl.Event[] = [];
+		amflow.onEvent(sent.push.bind(sent));
+
+		self.setMode({ isSender: true, defaultEventPriority: 1 });
+
+		// ローカルイベント
+		// Message: Code, EventFlags, PlayerId, Message, Local
+		const msge: pl.MessageEvent = [ pl.EventCode.Message, 0, "dummyPid", "Message", true];
+
+		self.startSkipping();
+		self.onEvent(msge);
+		self.processEvents();
+		expect(sent.length).toBe(0);
+		expect(self._localBuffer).toEqual([]);
+		expect(self._buffer).toEqual([]);
+		expect(self._joinLeaveBuffer).toEqual([]);
+		self.endSkipping();
+
+		// 非ローカルイベント
+		// Message: Code, EventFlags, PlayerId, Message, Local
+		const msge2: pl.MessageEvent = [ pl.EventCode.Message, null, "dummyPid", "Message"];
+		self.startSkipping();
+		self.onEvent(msge2);
+		self.onEvent(msge2);
+		self.processEvents();
+		self.endSkipping();
+		expect(sent).toEqual([]);
+		expect(self._localBuffer).toEqual([]);
+		expect(self._buffer).toEqual([]);
+		expect(self._joinLeaveBuffer).toEqual([]);
+
+		// Joinイベント
+		// Join: Code, EventFlags, PlayerId, PlayerName, StorageData, Local
+		const je: pl.JoinEvent = [ pl.EventCode.Join, 0, "dummyPid", "dummy-name", null];
+		self.startSkipping();
+		self.onEvent(je);
+		self.processEvents();
+		self.endSkipping();
+		expect(sent).toEqual([]);
+		expect(self._localBuffer).toEqual([]);
+		expect(self._buffer).toEqual([]);
+		expect(self._joinLeaveBuffer).toEqual([]);
+	});
 });
