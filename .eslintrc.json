@@ -1,5 +1,10 @@
 {
+	"root": true,
 	"extends": ["@akashic/eslint-config"],
+	"ignorePatterns": [
+		"**/*.js",
+		"spec/**/*"
+	],
 	"parserOptions": {
 		"project": "./src/tsconfig.json",
 		"sourceType": "module"

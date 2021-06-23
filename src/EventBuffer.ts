@@ -67,6 +67,19 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	_isSender: boolean;
 	_isDiscarder: boolean;
 	_defaultEventPriority: number;
+	_skipping: boolean;
+
+	/**
+	 * スキップ中に発生した非ローカルイベントを破棄するかどうか。
+	 * NOTE: 基本的には `true` で問題ないはずだが念の為メンバ変数として持たせておく
+	 */
+	_discardsEventsDuringSkip: boolean = true;
+
+	/**
+	 * スキップ中に発生したローカルイベントを破棄するかどうか。
+	 * NOTE: 基本的には `true` で問題ないはずだが念の為メンバ変数として持たせておく
+	 */
+	_discardsLocalEventsDuringSkip: boolean = true;
 
 	_buffer: pl.Event[];
 	_joinLeaveBuffer: pl.Event[];
@@ -111,6 +124,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 		this._isReceiver = false;
 		this._isSender = false;
 		this._isDiscarder = false;
+		this._skipping = false;
 		this._defaultEventPriority = 0;
 
 		this._buffer = [];
@@ -182,9 +196,16 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 
 	onEvent(pev: pl.Event): void {
 		if (EventBuffer.isEventLocal(pev)) {
-			if (this._isLocalReceiver && !this._isDiscarder) {
+			if (
+				this._isLocalReceiver &&
+				!this._isDiscarder &&
+				!(this._skipping && this._discardsLocalEventsDuringSkip)
+			) {
 				this._unfilteredLocalEvents.push(pev);
 			}
+			return;
+		}
+		if (this._skipping && this._discardsEventsDuringSkip) {
 			return;
 		}
 		if (this._isReceiver && !this._isDiscarder) {
@@ -300,5 +321,13 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 				this._buffer.push(pev);
 			}
 		}
+	}
+
+	startSkipping(): void {
+		this._skipping = true;
+	}
+
+	endSkipping(): void {
+		this._skipping = false;
 	}
 }
