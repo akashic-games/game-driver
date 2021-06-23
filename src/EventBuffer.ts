@@ -71,11 +71,13 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 
 	/**
 	 * スキップ中に発生した非ローカルイベントを破棄するかどうか。
+	 * NOTE: 基本的には `true` で問題ないはずだが念の為メンバ変数として持たせておく
 	 */
 	_discardsEventsDuringSkip: boolean = true;
 
 	/**
 	 * スキップ中に発生したローカルイベントを破棄するかどうか。
+	 * NOTE: 基本的には `true` で問題ないはずだが念の為メンバ変数として持たせておく
 	 */
 	_discardsLocalEventsDuringSkip: boolean = true;
 
