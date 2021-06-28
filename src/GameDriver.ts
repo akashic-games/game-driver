@@ -553,6 +553,11 @@ export class GameDriver {
 				game._setMuted(true);
 
 			handlerSet.snapshotTrigger.add(startPoint => {
+				if (startPoint.frame === 0) {
+					// 0 フレーム目の startPoint は状態復元の高速化に寄与しない。
+					// またシードの保存など別用途で使っているので無視。(ref. _putZerothStartPoint())
+					return;
+				}
 				this._platform.amflow.putStartPoint(startPoint, err => {
 					const error = this._getCallbackError(err);
 					if (error) {
