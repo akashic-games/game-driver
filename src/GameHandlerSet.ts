@@ -85,7 +85,13 @@ export class GameHandlerSet implements g.GameHandlerSet {
 		return this.shouldSaveSnapshot() ? "active" : "passive";
 	}
 
-	saveSnapshot(frame: number, gameSnapshot: any, randGenSer: any, timestamp: number = this._getCurrentTimeFunc!()): void {
+	saveSnapshot(
+		frame: number,
+		gameSnapshot: any,
+		randGenSer: any,
+		nextEntityId: number,
+		timestamp: number = this._getCurrentTimeFunc!()
+	): void {
 		if (!this.shouldSaveSnapshot())
 			return;
 		this.snapshotTrigger.fire({
@@ -93,6 +99,7 @@ export class GameHandlerSet implements g.GameHandlerSet {
 			timestamp,
 			data: {
 				randGenSer,
+				nextEntityId,
 				gameSnapshot
 			}
 		});

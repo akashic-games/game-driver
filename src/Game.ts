@@ -147,7 +147,7 @@ export class Game extends g.Game {
 			this._reset({ age: snapshot.frame, randSeed: data.seed });
 			this._loadAndStart({ args: this._gameArgs, globalArgs: this._globalGameArgs });
 		} else {
-			this._reset({ age: snapshot.frame, randGenSer: data.randGenSer });
+			this._reset({ age: snapshot.frame, nextEntityId: data.nextEntityId, randGenSer: data.randGenSer });
 			this._loadAndStart({ snapshot: data.gameSnapshot });
 		}
 	}

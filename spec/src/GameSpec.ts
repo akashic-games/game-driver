@@ -167,6 +167,7 @@ describe("Game", function() {
 			frame: 0,
 			timestamp: 42,
 			data: {
+				nextEntityId: 0,
 				randGenSer: game.random.serialize(),
 				gameSnapshot: snapshot
 			}

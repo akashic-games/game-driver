@@ -32,6 +32,12 @@ interface StartPointData {
 	 * 乱数生成器のシリアリゼーション。
 	 * 第0以外のスタートポイントにのみ存在する。
 	 */
+	nextEntityId?: any;
+
+	/**
+	 * 乱数生成器のシリアリゼーション。
+	 * 第0以外のスタートポイントにのみ存在する。
+	 */
 	randGenSer?: any;
 
 	/**
