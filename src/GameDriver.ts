@@ -5,6 +5,7 @@ import { makeLoadConfigurationFunc, LoadConfigurationFunc } from "@akashic/game-
 import * as pdi from "@akashic/pdi-types";
 import * as pl from "@akashic/playlog";
 import { Promise } from "es6-promise";
+import * as constants from "./constants";
 import DriverConfiguration from "./DriverConfiguration";
 import { EventBuffer } from "./EventBuffer";
 import ExecutionMode from "./ExecutionMode";
@@ -15,7 +16,6 @@ import LoopConfiguration from "./LoopConfiguration";
 import LoopMode from "./LoopMode";
 import { Profiler } from "./Profiler";
 import StartPointData from "./StartPointData";
-import * as constants from "./constants";
 
 const GAME_DESTROYED_MESSAGE = "GAME_DESTROYED";
 
@@ -582,7 +582,6 @@ export class GameDriver {
 			this._eventBuffer = eventBuffer;
 			this._gameLoop = gameLoop;
 			this._rendererRequirement = rendererRequirement;
-
 			this.gameCreatedTrigger.fire(game);
 			gameLoop.reset(latestStartPoint);
 		});
