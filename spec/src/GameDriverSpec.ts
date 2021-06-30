@@ -1,6 +1,5 @@
 import * as amf from "@akashic/amflow";
 import { GameDriver } from "../../lib/GameDriver";
-import StartPointData from "../../lib/StartPointData";
 import { Platform } from "../helpers/lib/MockPlatform";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
 
@@ -60,7 +59,7 @@ describe("GameDriver", () => {
 		});
 	});
 
-	describe("_getZerothStartPointData", () => {
+	describe("_getStartPoint", () => {
 		it("should get a StartPointData from amflow", (done: () => void) => {
 			const gameDriver = new GameDriver({platform, player: null});
 			spyOn(platform.amflow, "getStartPoint").and.callFake(
@@ -69,9 +68,9 @@ describe("GameDriver", () => {
 					callback(null, {frame: 0, timestamp: 0, data: {seed, globalArgs, startedAt, fps}});
 				}
 			);
-			gameDriver._getZerothStartPointData()
-				.then((data: StartPointData) => {
-					expect(data).toEqual({seed, globalArgs, startedAt, fps});
+			gameDriver._getStartPoint(0)
+				.then((sp: amf.StartPoint) => {
+					expect(sp.data).toEqual({seed, globalArgs, startedAt, fps});
 					expect(platform.amflow.getStartPoint).toHaveBeenCalled();
 					done();
 				});
@@ -84,7 +83,7 @@ describe("GameDriver", () => {
 					callback(new Error(), null);
 				}
 			);
-			gameDriver._getZerothStartPointData().catch(err => done());
+			gameDriver._getStartPoint(0).catch(err => done());
 		});
 	});
 });

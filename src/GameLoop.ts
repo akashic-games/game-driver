@@ -195,6 +195,24 @@ export class GameLoop {
 		this._updateGamePlaybackRate();
 	}
 
+	reset(startPoint: amf.StartPoint): void {
+		// リセットから `g.Game#_start()` まで(エントリポイント実行まで)の間、processEvents() は起こらないようにする。
+		// すなわちこれ以降 `_onGameStarted()` までの間 EventBuffer からイベントは取得できない。しかしそもそもこの状態では
+		// イベントを処理するシーンがいない = 非ローカルティックは生成されない = 非ローカルティック生成時にのみ行われるイベントの取得もない。
+		this._clock.frameTrigger.remove(this._onEventsProcessed, this);
+
+		if (this._skipping)
+			this._stopSkipping();
+		this._tickBuffer.setCurrentAge(startPoint.frame);
+		this._currentTime = startPoint.timestamp || startPoint.data.timestamp || 0;  // data.timestamp は後方互換性のために存在。現在は使っていない。
+		this._waitingNextTick = false; // 現在ageを変えた後、さらに後続のTickが足りないかどうかは_onFrameで判断する。
+		this._consumedLatestTick = false; // 同上。
+		this._lastRequestedStartPointAge = -1;  // 現在ageを変えた時はリセットしておく(場合によっては不要だが、安全のため)。
+		this._lastRequestedStartPointTime = -1;  // 同上。
+		this._omittedTickDuration = 0;
+		this._game._restartWithSnapshot(startPoint);
+	}
+
 	start(): void {
 		this.running = true;
 		this._clock.start();
@@ -757,21 +775,7 @@ export class GameLoop {
 			}
 		}
 
-		// リセットから `g.Game#_start()` まで(エントリポイント実行まで)の間、processEvents() は起こらないようにする。
-		// すなわちこれ以降 `_onGameStarted()` までの間 EventBuffer からイベントは取得できない。しかしそもそもこの状態では
-		// イベントを処理するシーンがいない = 非ローカルティックは生成されない = 非ローカルティック生成時にのみ行われるイベントの取得もない。
-		this._clock.frameTrigger.remove(this._onEventsProcessed, this);
-
-		if (this._skipping)
-			this._stopSkipping();
-		this._tickBuffer.setCurrentAge(startPoint.frame);
-		this._currentTime = startPoint.timestamp || startPoint.data.timestamp || 0;  // data.timestamp は後方互換性のために存在。現在は使っていない。
-		this._waitingNextTick = false; // 現在ageを変えた後、さらに後続のTickが足りないかどうかは_onFrameで判断する。
-		this._consumedLatestTick = false; // 同上。
-		this._lastRequestedStartPointAge = -1;  // 現在ageを変えた時はリセットしておく(場合によっては不要だが、安全のため)。
-		this._lastRequestedStartPointTime = -1;  // 同上。
-		this._omittedTickDuration = 0;
-		this._game._restartWithSnapshot(startPoint);
+		this.reset(startPoint);
 	}
 
 	_onGameStarted(): void {

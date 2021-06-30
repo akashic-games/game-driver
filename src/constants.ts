@@ -33,3 +33,8 @@ export var DEFAULT_JUMP_IGNORE_THRESHOLD: number = 15000;  // 30FPSの100倍早�
  * 最新ティックをポーリングする間隔(ms)のデフォルト。
  */
 export var DEFAULT_POLLING_TICK_THRESHOLD: number = 10000;
+
+/**
+ * 擬似的に無限未来として扱うage。
+ */
+export var PSEUDO_INFINITE_AGE = 365 * 86400 * 60; // 60FPSで一年分のage。(特に制限ではないが32bit signed intに収まる)

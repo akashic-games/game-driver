@@ -12,8 +12,10 @@ import { Game } from "./Game";
 import { GameHandlerSet } from "./GameHandlerSet";
 import { GameLoop } from "./GameLoop";
 import LoopConfiguration from "./LoopConfiguration";
+import LoopMode from "./LoopMode";
 import { Profiler } from "./Profiler";
 import StartPointData from "./StartPointData";
+import * as constants from "./constants";
 
 const GAME_DESTROYED_MESSAGE = "GAME_DESTROYED";
 
@@ -452,19 +454,15 @@ export class GameDriver {
 		});
 	}
 
-	_getZerothStartPointData(): Promise<StartPointData> {
-		return new Promise<StartPointData>((resolve, reject) => {
-			this._platform.amflow.getStartPoint({ frame: 0 }, (err, startPoint) => {
+	_getStartPoint(frame: number): Promise<amf.StartPoint> {
+		return new Promise<amf.StartPoint>((resolve, reject) => {
+			this._platform.amflow.getStartPoint({ frame }, (err, startPoint) => {
 				const error = this._getCallbackError(err);
 				if (error)
 					return reject(error);
 				if (!startPoint)
-					return reject(new Error("GameDriver#_getZerothStartPointData: No startPoint found"));
-
-				const data = startPoint.data;
-				if (typeof data.seed !== "number") // 型がないので一応確認
-					return reject(new Error("GameDriver#_getZerothStartPointData: No seed found."));
-				resolve(data);
+					return reject(new Error("GameDriver#_getStartPoint: No startPoint found"));
+				resolve(startPoint);
 			});
 		});
 	}
@@ -472,6 +470,11 @@ export class GameDriver {
 	_createGame(conf: g.GameConfiguration, player: g.Player, param: GameDriverInitializeParameterObject): Promise<void> {
 		const writeTick = !!this._permission?.writeTick;
 		const putSeed = !!(param.driverConfiguration?.executionMode === ExecutionMode.Active) && writeTick;
+
+		if (!param.loopConfiguration) // このパス (configurationUrl があって Game を作る) では必須
+			throw new Error("GameDriver#_createGame: No loopConfiguration");
+		const loopConfiguration = param.loopConfiguration;
+
 		let p;
 		if (putSeed) {
 			p = this._putZerothStartPoint({
@@ -483,12 +486,22 @@ export class GameDriver {
 		} else {
 			p = Promise.resolve();
 		}
-		p = p.then<StartPointData>(() => {
+		p = p.then<amf.StartPoint>(() => {
 			this._assertLive();
-			return this._getZerothStartPointData();
+			return this._getStartPoint(0);
+		}).then<[amf.StartPoint, amf.StartPoint]>(zerothSp => {
+			if (!putSeed && loopConfiguration.loopMode === LoopMode.Realtime) {
+				// 明確に最新に追いつきたいので、最新のスナップショットを探す
+				return this._getStartPoint(constants.PSEUDO_INFINITE_AGE).then(latestSp => [zerothSp, latestSp]);
+			}
+			return [zerothSp, zerothSp];
 		});
-		return p.then<void>(zerothData => {
+		return p.then(([zerothStartPoint, latestStartPoint]) => {
 			this._assertLive();
+			const zerothData = zerothStartPoint.data;
+			if (typeof zerothData.seed !== "number") // 型がないので一応確認
+				throw new Error("GameDriver#_createGame: No seed found in the zeroth startpoint.");
+
 			const pf = this._platform;
 			const driverConf = param.driverConfiguration || {
 				eventBufferMode: { isReceiver: true, isSender: false },
@@ -539,8 +552,7 @@ export class GameDriver {
 				platform: pf,
 				executionMode,
 				eventBuffer,
-				// @ts-ignore TODO: param.loopConfiguration === undefined の扱い
-				configuration: param.loopConfiguration,
+				configuration: loopConfiguration,
 				startedAt,
 				profiler: param.profiler
 			});
@@ -570,8 +582,9 @@ export class GameDriver {
 			this._eventBuffer = eventBuffer;
 			this._gameLoop = gameLoop;
 			this._rendererRequirement = rendererRequirement;
+
 			this.gameCreatedTrigger.fire(game);
-			this._game._loadAndStart({ args: param.gameArgs || undefined }); // TODO: Game#_restartWithSnapshot()と統合すべき
+			gameLoop.reset(latestStartPoint);
 		});
 	}
 
@@ -591,7 +604,7 @@ export class GameDriver {
 	}
 
 	// コールバック時にエラーが発生もしくはゲームがdestroy済みの場合はErrorを返す
-	_getCallbackError(err: any): Error|null {
+	_getCallbackError(err: any): Error | null {
 		if (err) {
 			return err as Error;
 		} else if (this._destroyed) {
