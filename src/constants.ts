@@ -37,4 +37,4 @@ export var DEFAULT_POLLING_TICK_THRESHOLD: number = 10000;
 /**
  * 擬似的に無限未来として扱うage。
  */
-export var PSEUDO_INFINITE_AGE = 365 * 86400 * 60; // 60FPSで一年分のage。(特に制限ではないが32bit signed intに収まる)
+export var PSEUDO_INFINITE_AGE = 1892160000; // = 365 * 86400 * 60 = 60FPSで一年分。(特に制限ではないが32bit signed intに収まる)

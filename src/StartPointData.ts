@@ -29,10 +29,10 @@ interface StartPointData {
 	fps?: number;
 
 	/**
-	 * 乱数生成器のシリアリゼーション。
+	 * 次に生成されるエンティティの ID (`Game#_idx`) の値。
 	 * 第0以外のスタートポイントにのみ存在する。
 	 */
-	nextEntityId?: any;
+	nextEntityId?: number;
 
 	/**
 	 * 乱数生成器のシリアリゼーション。
