@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.3.0
+* @akashic/amflow@3.1.0, @akashic/pdi-types@1.2.0 に追従
+
 ## 2.2.0
 * @akashic/akashic-engine@3.1.0 に追従
 * Realtime モードの実行開始時に最新のスタートポイントを取得するように
