@@ -233,6 +233,16 @@ export class ImageAsset extends pci.ImageAsset {
 	}
 }
 
+export class VectorImageAsset extends pci.VectorImageAsset {
+	createSurface(_width: number, _height: number, _sx?: number, _sy?: number, _sWidth?: number, _sHeight?: number): Surface | null {
+		return null;
+	}
+
+	_load(loader: pdi.AssetLoadHandler): void {
+		loader._onAssetLoad(this);
+	}
+}
+
 class AudioAsset extends pci.AudioAsset {
 	_failureController: LoadFailureController;
 
@@ -390,5 +400,8 @@ export class ResourceFactory extends pci.ResourceFactory {
 	                   strokeColor?: string, strokeOnly?: boolean, fontWeight?: pdi.FontWeightString): pci.GlyphFactory {
 		throw new Error("not implemented: mock resourceFactory createGlyphFactory()");
 	}
-}
 
+	createVectorImageAsset(id: string, assetPath: string, width: number, height: number): VectorImageAsset {
+		return new VectorImageAsset(id, assetPath, width, height);
+	}
+}
