@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.3.1
+* v2.1.1 の変更を revert 。`TickBuffer#requestTicks()` で @akashic/amflow@3 の `AMFlow#getTickList()` を利用するように
+
 ## 2.3.0
 * @akashic/amflow@3.1.0, @akashic/pdi-types@1.2.0 に追従
 
