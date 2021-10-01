@@ -54,8 +54,8 @@
     "typescript": "^3.7.7"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "3.2.0-feature.0",
-    "@akashic/game-configuration": "1.1.0-feature.0",
+    "@akashic/akashic-engine": "~3.2.0",
+    "@akashic/game-configuration": "~1.1.0",
     "es6-promise": "^4.2.8"
   }
 }
