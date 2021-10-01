@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.4.0
+* @akashic/akashic-engine@3.2.0 に追従
+
 ## 2.3.1
 * v2.1.1 の変更を revert 。`TickBuffer#requestTicks()` で @akashic/amflow@3 の `AMFlow#getTickList()` を利用するように
 
