@@ -268,7 +268,7 @@ export class TickBuffer {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
 
-		// NOTE: 移行期のため一部特殊な環境では旧インターフェイスを利用する
+		// NOTE: 移行期のため一部特殊な環境では旧インターフェイスを利用する。ignorable には対応しない。
 		// TODO: このパスを削除する
 		if (typeof window !== "undefined" && window.prompt === window.confirm) {
 			this._amflow.getTickList(from, from + len, this._onTicks_bound);

@@ -546,7 +546,7 @@ describe("TickBuffer", function() {
 	});
 
 	// TODO: TickBuffer#requestNonIgnorableTicks(), requestAllTicks() の暫定対応と合わせて削除する
-	it("uses on old getTickList in specific environment", function () {
+	it("uses the old getTickList() on specific environment", function () {
 		/**
 		 * プロパティを一時的に差し替えるユーティリティ。
 		 *
