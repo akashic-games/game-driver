@@ -544,5 +544,68 @@ describe("TickBuffer", function() {
 		t = tb.consume();
 		expect(t).toEqual(tick2);
 	});
-});
 
+	// TODO: TickBuffer#requestNonIgnorableTicks(), requestAllTicks() の暫定対応と合わせて削除する
+	it("uses on old getTickList in specific environment", function () {
+		/**
+		 * プロパティを一時的に差し替えるユーティリティ。
+		 *
+		 * obj[prop] を value に差し替えて fun() を呼ぶ。
+		 * 呼び出しが終わった時、 obj[prop] を復元する。
+		 */
+		function override(obj: any, prop: string, value: any, fun: () => void) {
+			const has = obj.hasOwnProperty(prop);
+			const orig = obj[prop];
+			try {
+				obj[prop] = value;
+				fun();
+			} finally {
+				if (has)
+					obj[prop] = orig;
+				else
+					delete obj[prop];
+			}
+		}
+
+		var amflow = new MockAmflow();
+		var tb = new TickBuffer({
+			amflow: amflow,
+			executionMode: ExecutionMode.Passive,
+			prefetchThreshold: 3,
+			sizeRequestOnce: 2
+		});
+		var spyOnGetTickList = spyOn(amflow, "getTickList").and.callThrough();
+
+		const dummyFun = () => {};
+		override(global, "window", { confirm: dummyFun, prompt: dummyFun }, () => {
+			tb.requestTicks(1, 2);
+			amflow.requestsGetTicks[0].respond(null, null);
+			expect(spyOnGetTickList.calls.argsFor(0)[0]).toBe(1);
+			expect(spyOnGetTickList.calls.argsFor(0)[1]).toBe(1 + 2);
+
+			tb.startSkipping();
+			tb.requestTicks(3, 4);
+			tb.endSkipping();
+			amflow.requestsGetTicks[0].respond(null, null);
+			expect(spyOnGetTickList.calls.argsFor(1)[0]).toBe(3);
+			expect(spyOnGetTickList.calls.argsFor(1)[1]).toBe(3 + 4);
+		});
+
+		tb.requestTicks(5, 6);
+		amflow.requestsGetTicks[0].respond(null, null);
+		expect(spyOnGetTickList.calls.argsFor(2)[0]).toEqual({
+			begin: 5,
+			end: 5 + 6
+		});
+
+		tb.startSkipping();
+		tb.requestTicks(7, 8);
+		amflow.requestsGetTicks[0].respond(null, null);
+		tb.endSkipping();
+		expect(spyOnGetTickList.calls.argsFor(3)[0]).toEqual({
+			begin: 7,
+			end: 7+ 8,
+			excludeEventFlags: { ignorable: true }
+		});
+	});
+});
