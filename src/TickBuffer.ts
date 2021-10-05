@@ -255,7 +255,7 @@ export class TickBuffer {
 			return;
 
 		// NOTE: 移行期のため一部特殊な環境では旧インターフェイスを利用する
-		// TODO: 利用環境このパスを削除する
+		// TODO: このパスを削除する
 		if (typeof window !== "undefined" && window.prompt === window.confirm) {
 			this._amflow.getTickList(from, from + len, this._onTicks_bound);
 			return;
