@@ -7,6 +7,11 @@ import StorageOnTick from "./StorageOnTick";
 
 const EventIndex = g.EventIndex; // eslint-disable-line @typescript-eslint/naming-convention
 
+declare var window: undefined | {
+	prompt: Function;
+	confirm: Function;
+};
+
 export interface TickBufferParameterObject {
 	/**
 	 * この `TickBuffer` がTickを受け取るための `AMFlow` 。
@@ -248,12 +253,28 @@ export class TickBuffer {
 	requestAllTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
+
+		// NOTE: 移行期のため一部特殊な環境では旧インターフェイスを利用する
+		// TODO: このパスを削除する
+		if (typeof window !== "undefined" && window.prompt === window.confirm) {
+			this._amflow.getTickList(from, from + len, this._onTicks_bound);
+			return;
+		}
+
 		this._amflow.getTickList({ begin: from, end: from + len }, this._onTicks_bound);
 	}
 
 	requestNonIgnorableTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._executionMode !== ExecutionMode.Passive)
 			return;
+
+		// NOTE: 移行期のため一部特殊な環境では旧インターフェイスを利用する。ignorable には対応しない。
+		// TODO: このパスを削除する
+		if (typeof window !== "undefined" && window.prompt === window.confirm) {
+			this._amflow.getTickList(from, from + len, this._onTicks_bound);
+			return;
+		}
+
 		this._amflow.getTickList({ begin: from, end: from + len, excludeEventFlags: { ignorable: true } }, this._onTicks_bound);
 	}
 
