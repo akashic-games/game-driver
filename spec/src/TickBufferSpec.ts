@@ -602,7 +602,7 @@ describe("TickBuffer", function() {
 		tb.requestTicks(7, 8);
 		amflow.requestsGetTicks[0].respond(null, null);
 		tb.endSkipping();
-		expect(method.mock.calls[3][0]).toEqual({
+		expect(spyOnGetTickList.mock.calls[3][0]).toEqual({
 			begin: 7,
 			end: 7+ 8,
 			excludeEventFlags: { ignorable: true }
