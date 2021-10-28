@@ -31,7 +31,7 @@ describe("GameDriver", () => {
 	describe("_putZerothStartPoint", () => {
 		it("should write the StartPointData on amflow", (done: () => void) => {
 			const gameDriver = new GameDriver({platform, player: null});
-			spyOn(platform.amflow, "putStartPoint").and.callFake(
+			jest.spyOn(platform.amflow, "putStartPoint").mockImplementation(
 				(startPoint: amf.StartPoint, callback: (error: Error) => void): void => {
 					expect(startPoint).toEqual({
 						frame: 0,
@@ -50,7 +50,7 @@ describe("GameDriver", () => {
 
 		it("should report amflow error", (done: () => void) => {
 			const gameDriver = new GameDriver({platform, player: null});
-			spyOn(platform.amflow, "putStartPoint").and.callFake(
+			jest.spyOn(platform.amflow, "putStartPoint").mockImplementation(
 				(startPoint: amf.StartPoint, callback: (error: Error) => void): void => {
 					callback(new Error());
 				}
@@ -62,7 +62,7 @@ describe("GameDriver", () => {
 	describe("_getStartPoint", () => {
 		it("should get a StartPointData from amflow", (done: () => void) => {
 			const gameDriver = new GameDriver({platform, player: null});
-			spyOn(platform.amflow, "getStartPoint").and.callFake(
+			jest.spyOn(platform.amflow, "getStartPoint").mockImplementation(
 				(opts: amf.GetStartPointOptions, callback: (error: Error, startPoint: amf.StartPoint) => void): void => {
 					expect(opts.frame).toBe(0);
 					callback(null, {frame: 0, timestamp: 0, data: {seed, globalArgs, startedAt, fps}});
@@ -78,7 +78,7 @@ describe("GameDriver", () => {
 
 		it("should report amflow error", (done: () => void) => {
 			const gameDriver = new GameDriver({platform, player: null});
-			spyOn(platform.amflow, "getStartPoint").and.callFake(
+			jest.spyOn(platform.amflow, "getStartPoint").mockImplementation(
 				(opts: amf.GetStartPointOptions, callback: (error: Error, startPoint: amf.StartPoint) => void): void => {
 					callback(new Error(), null);
 				}
