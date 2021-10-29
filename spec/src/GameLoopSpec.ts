@@ -431,7 +431,7 @@ describe("GameLoop", function () {
 				}
 			]
 		});
-		var spyOnGetTickList = spyOn(amflow, "getTickList").and.callThrough();
+		var spyOnGetTickList = jest.spyOn(amflow, "getTickList");
 
 		var platform = new mockpf.Platform({ amflow });
 		var game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
@@ -515,8 +515,8 @@ describe("GameLoop", function () {
 						expect(self.getCurrentTime() < 3000 + startedAt + self._frameTime * 2).toBe(true);
 
 						clearInterval(timer);
-						expect(spyOnGetTickList.calls.count()).toBe(2); // 初回の読み込み + 等倍に戻ったタイミングでのティック再取得
-						expect(spyOnGetTickList.calls.argsFor(0)[0]).toEqual({
+						expect(spyOnGetTickList.mock.calls.length).toBe(2); // 初回の読み込み + 等倍に戻ったタイミングでのティック再取得
+						expect(spyOnGetTickList.mock.calls[0][0]).toEqual({
 							begin: 0,
 							end: TickBuffer.DEFAULT_SIZE_REQUEST_ONCE,
 							excludeEventFlags: {
@@ -524,7 +524,7 @@ describe("GameLoop", function () {
 							}
 						});
 						// tick 3 に到達した時点で後続ティックを取得し直しているはず
-						expect(spyOnGetTickList.calls.argsFor(1)[0]).toEqual({
+						expect(spyOnGetTickList.mock.calls[1][0]).toEqual({
 							begin: 3,
 							end: TickBuffer.DEFAULT_SIZE_REQUEST_ONCE + 3
 						});
@@ -702,7 +702,7 @@ describe("GameLoop", function () {
 				}
 			]
 		});
-		var spyOnGetStartPoint = spyOn(amflow, "getStartPoint").and.callThrough();
+		var spyOnGetStartPoint = jest.spyOn(amflow, "getStartPoint");
 
 		var platform = new mockpf.Platform({ amflow });
 		var game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
@@ -730,12 +730,12 @@ describe("GameLoop", function () {
 			game.vars.onUpdate = () => {  // LocalTickGame が毎 update コールしてくる関数
 				passedTestAges.push(game.age);
 				if (game.age === 6) {
-					expect(spyOnGetStartPoint.calls.count()).toBe(2);
+					expect(spyOnGetStartPoint.mock.calls.length).toBe(2);
 
 					// age 0での一度目の要求がきているはず
-					expect(spyOnGetStartPoint.calls.argsFor(0)[0]).toEqual({ timestamp: 3050 + startedAt });
+					expect(spyOnGetStartPoint.mock.calls[0][0]).toEqual({ timestamp: 3050 + startedAt });
 					// ↑でage 4(2000ms + startedAt)に飛び、まだgapが1050あるのでもう一度要求
-					expect(spyOnGetStartPoint.calls.argsFor(1)[0]).toEqual({ timestamp: 3050 + startedAt });
+					expect(spyOnGetStartPoint.mock.calls[1][0]).toEqual({ timestamp: 3050 + startedAt });
 					// age 6 → ((tick 5のtimestamp) + startedAt + 1tick時間)はすぎているはず。 + 2tick時間はすぎていないはず
 					expect(self.getCurrentTime() > 3000 + startedAt + self._frameTime).toBe(true);
 					expect(self.getCurrentTime() < 3000 + startedAt + self._frameTime * 2).toBe(true);
@@ -780,7 +780,7 @@ describe("GameLoop", function () {
 			tickList: [0, 9, []],
 			startPoints: [zerothSp]
 		});
-		var spyOnGetStartPoint = spyOn(amflow, "getStartPoint").and.callThrough();
+		var spyOnGetStartPoint = jest.spyOn(amflow, "getStartPoint");
 		var platform = new mockpf.Platform({});
 		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
 		var eventBuffer = new EventBuffer({ amflow, game });
@@ -804,8 +804,8 @@ describe("GameLoop", function () {
 		var timer = setInterval(() => {
 			if (game.age > 10) {
 				clearInterval(timer);
-				expect(spyOnGetStartPoint.calls.count()).toBe(1);
-				expect(spyOnGetStartPoint.calls.argsFor(0)[0]).toEqual({ frame: 11 });
+				expect(spyOnGetStartPoint.mock.calls.length).toBe(1);
+				expect(spyOnGetStartPoint.mock.calls[0][0]).toEqual({ frame: 11 });
 
 				// Passive+Realtimeで、最新フレームにいる時、StartPoint受信時に誤って過去に飛ぶ問題の修正確認
 				expect(self._tickBuffer.knownLatestAge).toBe(10);
