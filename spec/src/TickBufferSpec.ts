@@ -574,26 +574,26 @@ describe("TickBuffer", function() {
 			prefetchThreshold: 3,
 			sizeRequestOnce: 2
 		});
-		var spyOnGetTickList = spyOn(amflow, "getTickList").and.callThrough();
+		const spyOnGetTickList = jest.spyOn(amflow, "getTickList");
 
 		const dummyFun = () => {};
 		override(global, "window", { confirm: dummyFun, prompt: dummyFun }, () => {
 			tb.requestTicks(1, 2);
 			amflow.requestsGetTicks[0].respond(null, null);
-			expect(spyOnGetTickList.calls.argsFor(0)[0]).toBe(1);
-			expect(spyOnGetTickList.calls.argsFor(0)[1]).toBe(1 + 2);
+			expect(spyOnGetTickList.mock.calls[0][0]).toBe(1);
+			expect(spyOnGetTickList.mock.calls[0][1]).toBe(1 + 2);
 
 			tb.startSkipping();
 			tb.requestTicks(3, 4);
 			tb.endSkipping();
 			amflow.requestsGetTicks[0].respond(null, null);
-			expect(spyOnGetTickList.calls.argsFor(1)[0]).toBe(3);
-			expect(spyOnGetTickList.calls.argsFor(1)[1]).toBe(3 + 4);
+			expect(spyOnGetTickList.mock.calls[1][0]).toBe(3);
+			expect(spyOnGetTickList.mock.calls[1][1]).toBe(3 + 4);
 		});
 
 		tb.requestTicks(5, 6);
 		amflow.requestsGetTicks[0].respond(null, null);
-		expect(spyOnGetTickList.calls.argsFor(2)[0]).toEqual({
+		expect(spyOnGetTickList.mock.calls[2][0]).toEqual({
 			begin: 5,
 			end: 5 + 6
 		});
@@ -602,7 +602,7 @@ describe("TickBuffer", function() {
 		tb.requestTicks(7, 8);
 		amflow.requestsGetTicks[0].respond(null, null);
 		tb.endSkipping();
-		expect(spyOnGetTickList.calls.argsFor(3)[0]).toEqual({
+		expect(spyOnGetTickList.mock.calls[3][0]).toEqual({
 			begin: 7,
 			end: 7+ 8,
 			excludeEventFlags: { ignorable: true }
