@@ -212,7 +212,7 @@ export class Clock {
 			deltaTime = this._waitTime;
 		}
 
-		var totalDeltaTime = this._totalDeltaTime;
+		let totalDeltaTime = this._totalDeltaTime;
 		totalDeltaTime += deltaTime;
 		if (totalDeltaTime <= this._skipFrameWaitTime) {
 			// 1フレーム分消化するほどの時間が経っていない。
@@ -220,11 +220,11 @@ export class Clock {
 			return this._waitTime - totalDeltaTime;
 		}
 
-		var frameCount = (totalDeltaTime < this._waitTimeDoubled) ? 1
+		const frameCount = (totalDeltaTime < this._waitTimeDoubled) ? 1
 		                   : (totalDeltaTime > this._waitTimeMax) ? this._realMaxFramePerOnce
 		                                                          : (totalDeltaTime / this._waitTime) | 0;
-		var fc = frameCount;
-		var arg: ClockFrameTriggerParameterObject = {
+		let fc = frameCount;
+		const arg: ClockFrameTriggerParameterObject = {
 			deltaTime: rawDeltaTime,
 			interrupt: false
 		};
@@ -240,7 +240,7 @@ export class Clock {
 	}
 
 	private _updateWaitTimes(fps: number, scaleFactor: number): void {
-		var realFps = fps * scaleFactor;
+		const realFps = fps * scaleFactor;
 		this._waitTime = 1000 / realFps;
 		this._waitTimeDoubled = Math.max((2000 / realFps) | 0, 1);
 		this._waitTimeMax = Math.max(scaleFactor * (1000 * this._maxFramePerOnce / realFps) | 0, 1);

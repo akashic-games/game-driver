@@ -124,7 +124,7 @@ export class TickController {
 	}
 
 	_updateGeneratorState(): void {
-		var toGenerate = (this._started && this._executionMode === ExecutionMode.Active);
+		const toGenerate = (this._started && this._executionMode === ExecutionMode.Active);
 		this._generator.startStopGenerate(toGenerate);
 	}
 
