@@ -7,7 +7,7 @@ import StorageOnTick from "./StorageOnTick";
 
 const EventIndex = g.EventIndex; // eslint-disable-line @typescript-eslint/naming-convention
 
-declare var window: undefined | {
+declare let window: undefined | {
 	prompt: Function;
 	confirm: Function;
 };
