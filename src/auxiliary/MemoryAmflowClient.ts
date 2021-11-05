@@ -242,7 +242,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			if (opts.frame != null) {
 				let nearestFrame = this._startPoints[0].frame;
 				for (let i = 1; i < this._startPoints.length; ++i) {
-					var frame = this._startPoints[i].frame;
+					const frame = this._startPoints[i].frame;
 					if (frame <= opts.frame && nearestFrame < frame) {
 						nearestFrame = frame;
 						index = i;
@@ -251,7 +251,7 @@ export class MemoryAmflowClient implements amf.AMFlow {
 			} else {
 				let nearestTimestamp = this._startPoints[0].timestamp;
 				for (let i = 1; i < this._startPoints.length; ++i) {
-					var timestamp = this._startPoints[i].timestamp;
+					const timestamp = this._startPoints[i].timestamp;
 					// NOTE: opts.frame が null の場合は opts.timestamp が non-null であることが仕様上保証されている
 					if (timestamp <= opts.timestamp! && nearestTimestamp < timestamp) {
 						nearestTimestamp = timestamp;

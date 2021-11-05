@@ -34,7 +34,7 @@ export class ProfilerClock extends Clock {
 			deltaTime = this._waitTime;
 		}
 
-		var totalDeltaTime = this._totalDeltaTime;
+		let totalDeltaTime = this._totalDeltaTime;
 		totalDeltaTime += deltaTime;
 		if (totalDeltaTime <= this._skipFrameWaitTime) {
 			// 1フレーム分消化するほどの時間が経っていない。
@@ -45,12 +45,12 @@ export class ProfilerClock extends Clock {
 		this._profiler.timeEnd(ProfilerValueType.RawFrameInterval);
 		this._profiler.time(ProfilerValueType.RawFrameInterval);
 
-		var frameCount = (totalDeltaTime < this._waitTimeDoubled) ? 1
+		const frameCount = (totalDeltaTime < this._waitTimeDoubled) ? 1
 		                   : (totalDeltaTime > this._waitTimeMax) ? this._realMaxFramePerOnce
 		                                                          : (totalDeltaTime / this._waitTime) | 0;
 
-		var fc = frameCount;
-		var arg: ClockFrameTriggerParameterObject = {
+		let fc = frameCount;
+		const arg: ClockFrameTriggerParameterObject = {
 			deltaTime: rawDeltaTime,
 			interrupt: false
 		};

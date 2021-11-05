@@ -375,7 +375,7 @@ export class GameDriver {
 		if (playId === undefined) {
 			return Promise.resolve();
 		}
-		var p = this._doCloseAmflow();
+		const p = this._doCloseAmflow();
 		return p.then<void>(() => {
 			this._assertLive();
 			return new Promise<void>((resolve: () => any, reject: (err: any) => void) => {
@@ -443,7 +443,7 @@ export class GameDriver {
 		return new Promise<void>((resolve: () => void, reject: (err: any) => void) => {
 			// AMFlowは第0スタートポイントに関して「書かれるまで待つ」という動作をするため、「なければ書き込む」ことはできない。
 			// NOTE: 仕様上第0スタートポイントには必ず data.startedAt が存在するとみなせる。
-			var zerothStartPoint = { frame: 0, timestamp: data.startedAt!, data };
+			const zerothStartPoint = { frame: 0, timestamp: data.startedAt!, data };
 			this._platform.amflow.putStartPoint(zerothStartPoint, (err: any | null) => {
 				const error = this._getCallbackError(err);
 				if (error) {
@@ -546,7 +546,7 @@ export class GameDriver {
 			});
 			game.renderers.push(pf.getPrimarySurface().renderer());
 
-			var gameLoop = new GameLoop({
+			const gameLoop = new GameLoop({
 				game: game,
 				amflow: pf.amflow,
 				platform: pf,
