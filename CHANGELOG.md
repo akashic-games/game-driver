@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.4.2
+* `MemoryAmflowClient`, `ReplayAmflowProxy` を削除し @akashic/amflow-util を利用するように
+
 ## 2.4.1
 * 後方互換性のため、一部環境で暫定的に @akashic/amflow@2 以前の `AMFlow#getTickList()` の引数を利用するように差し戻し
 
