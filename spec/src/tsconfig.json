@@ -13,8 +13,6 @@
     "../helpers/lib/MockResourceFactory.d.ts",
     "../helpers/lib/MockGame.d.ts",
     "../helpers/lib/ErrorCollector.d.ts",
-    "./auxiliary/MemoryAmflowClientSpec.ts",
-    "./auxiliary/ReplayAmflowProxySpec.ts",
     "./ClockSpec.ts",
     "./ProfilerClockSpec.ts",
     "./TickBufferSpec.ts",
