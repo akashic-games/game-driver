@@ -2,7 +2,7 @@ import * as pl from "@akashic/playlog";
 import * as amf from "@akashic/amflow";
 import { EventPriority } from "@akashic/akashic-engine";
 import { MockAmflow } from "../../helpers/lib/MockAmflow";
-import { ReplayAmflowProxy } from "../../../lib/auxiliary/ReplayAmflowProxy";
+import { ReplayAmflowProxy } from "@akashic/amflow-util/lib/ReplayAmflowProxy";
 
 describe("ReplayAmflowProxy", function () {
 	it("can be instantiated", function () {
