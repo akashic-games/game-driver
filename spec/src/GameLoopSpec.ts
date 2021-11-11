@@ -11,7 +11,7 @@ import ExecutionMode from "../../lib/ExecutionMode";
 import { EventBuffer } from "../../lib/EventBuffer";
 import { TickBuffer } from "../../lib/TickBuffer";
 import { GameLoop } from "../../lib/GameLoop";
-import { MemoryAmflowClient } from "../../lib/auxiliary/MemoryAmflowClient";
+import { MemoryAmflowClient } from "@akashic/amflow-util/lib/MemoryAmflowClient";
 
 describe("GameLoop", function () {
 	function makeTimestampEvent(timestamp: number): pl.TimestampEvent {
