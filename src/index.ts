@@ -2,7 +2,7 @@
 
 export * from "./constants";
 
-import { MemoryAmflowClient } from "@akashic/amflow-util/lib/MemoryAMFlowClient";
+import { MemoryAmflowClient } from "@akashic/amflow-util/lib/MemoryAmflowClient";
 export { MemoryAmflowClient };
 import { ReplayAmflowProxy, ReplayAmflowProxyParameterObject } from "@akashic/amflow-util/lib/ReplayAmflowProxy";
 export { ReplayAmflowProxy, ReplayAmflowProxyParameterObject };
