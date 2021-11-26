@@ -190,6 +190,7 @@ describe("TickBuffer", function() {
 		// age 7 に飛ぶと age 4 が ticks から消える
 		tb.setCurrentAge(7);
 		expect(tb.currentAge).toBe(7);
+		expect(tb.knownLatestAge).toBe(20);
 		expect(tb._nearestAbsentAge).toBe(21);
 		expect(tb._tickRanges).toEqual([
 			{ start: 7, end: 21, ticks: [[10, [msg0]]] }
@@ -198,10 +199,12 @@ describe("TickBuffer", function() {
 		// 何もないところまで飛ぶと全部消える
 		tb.setCurrentAge(100);
 		expect(tb.currentAge).toBe(100);
+		expect(tb.knownLatestAge).toBe(99);
 		expect(tb._nearestAbsentAge).toBe(100);
 		expect(tb._tickRanges).toEqual([]);
 		tb._onTicks(null, [ 100, 100, null ]);
 		expect(tb.currentAge).toBe(100);
+		expect(tb.knownLatestAge).toBe(100);
 		expect(tb._nearestAbsentAge).toBe(101);
 		expect(tb._tickRanges).toEqual([
 			{ start: 100, end: 101, ticks: [] }
@@ -217,6 +220,7 @@ describe("TickBuffer", function() {
 			45, 60, [[49, [pd0]], [51, [msg0, pd0]], [52, [msg0]]]
 		]);
 		expect(tb.currentAge).toBe(101);
+		expect(tb.knownLatestAge).toBe(100);
 		expect(tb._nearestAbsentAge).toBe(101);
 		expect(tb._tickRanges).toEqual([
 			{ start: 3, end: 21, ticks: [[4, [pd0]], [10, [msg0]]] },
@@ -226,6 +230,7 @@ describe("TickBuffer", function() {
 		// currentAgeを2まで戻すと足したtickを消化できる
 		tb.setCurrentAge(2);
 		expect(tb.currentAge).toBe(2);
+		expect(tb.knownLatestAge).toBe(100); // 上がった knownLatestAge は下がらない
 		expect(tb._nearestAbsentAge).toBe(2);
 		tb.setCurrentAge(19);
 		expect(tb.currentAge).toBe(19);

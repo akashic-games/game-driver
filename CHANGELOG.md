@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## (unreleased changes)
+* スナップショットで外部からリセットした場合に、`TickBuffer#knownLatestAge` が更新されない問題を修正
+
 ## 2.4.2
 * `MemoryAmflowClient`, `ReplayAmflowProxy` を削除し @akashic/amflow-util を利用するように
 
