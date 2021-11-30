@@ -613,4 +613,42 @@ describe("TickBuffer", function() {
 			excludeEventFlags: { ignorable: true }
 		});
 	});
+
+	it("notifies when got no tick", function () {
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({
+			amflow: amflow,
+			executionMode: ExecutionMode.Passive,
+			prefetchThreshold: 3,
+			sizeRequestOnce: 2
+		});
+
+		let noTickCount = 0;
+		tb.gotNoTickTrigger.add(() => { ++noTickCount; });
+
+		tb.requestTicks(0, 3);
+		amflow.requestsGetTicks[0].respond(null, [[0], [1], [2]]);
+		expect(noTickCount).toBe(0);
+
+		tb.requestTicks(3, 3);
+		amflow.requestsGetTicks[0].respond(null, null);
+		expect(noTickCount).toBe(1);
+
+		tb.requestTicks(3, 3);
+		amflow.requestsGetTicks[0].respond(null, [[3, [[pl.EventCode.Message, null, "dummy", {}]]]]);
+		expect(noTickCount).toBe(1);
+
+		tb.requestTicks(4, 3);
+		amflow.requestsGetTicks[0].respond(null, [[4], [5]]);
+		expect(noTickCount).toBe(1);
+
+		tb.requestTicks(6, 3);
+		amflow.requestsGetTicks[0].respond(null, null);
+		expect(noTickCount).toBe(2);
+
+		// このケースは通常ない (取得済みの範囲を再要求することはない) が、カバレッジを上げておく
+		tb.requestTicks(4, 3);
+		amflow.requestsGetTicks[0].respond(null, [[4], [5]]);
+		expect(noTickCount).toBe(3);
+	});
 });
