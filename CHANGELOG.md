@@ -2,6 +2,8 @@
 
 ## (unreleased changes)
 * スナップショットで外部からリセットした場合に、`TickBuffer#knownLatestAge` が更新されない問題を修正
+* スナップショットで外部からリセットした場合に、しばらくゲームが開始されない問題を修正
+* リプレイ再生時、無駄なティック取得を行う場合がある問題を修正
 
 ## 2.4.2
 * `MemoryAmflowClient`, `ReplayAmflowProxy` を削除し @akashic/amflow-util を利用するように

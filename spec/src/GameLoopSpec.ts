@@ -1,5 +1,6 @@
 "use strict";
 import * as pl from "@akashic/playlog";
+import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
 import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
 import { MockAmflow } from "../helpers/lib/MockAmflow";
@@ -252,7 +253,7 @@ describe("GameLoop", function () {
 	it("can detect skip based on deltaTime of the looper arguments", async () => {
 		const amflow = new MemoryAmflowClient({
 			playId: "dummyPlayId",
-			tickList: [0, 9, []],
+			tickList: [0, 10, []],
 			startPoints: [{
 				frame: 0,
 				timestamp: 0,
@@ -279,7 +280,7 @@ describe("GameLoop", function () {
 		});
 		self.start();
 
-		amflow.sendTick([10]); // Realtimeで非Manualなのでtickをpushされないと何も動かない
+		// amflow.sendTick([10]); // Realtimeで非Manualなのでtickをpushされないと何も動かない
 
 		const looper = self._clock._looper as mockpf.Looper;
 		game._reset({ age: 0, randSeed: 0 });
@@ -777,7 +778,7 @@ describe("GameLoop", function () {
 		};
 		var amflow = new MemoryAmflowClient({
 			playId: "dummyPlayId",
-			tickList: [0, 9, []],
+			tickList: [0, 10, []],
 			startPoints: [zerothSp]
 		});
 		var spyOnGetStartPoint = jest.spyOn(amflow, "getStartPoint");
@@ -798,7 +799,6 @@ describe("GameLoop", function () {
 		});
 
 		self.start();
-		amflow.sendTick([10]);  // Realtimeで非Manualなのでtickをpushされないと何も動かない
 
 		var looper = self._clock._looper as mockpf.Looper;
 		var timer = setInterval(() => {
@@ -825,5 +825,208 @@ describe("GameLoop", function () {
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });
+	});
+
+	it("can be started with StartPoint", function (done: Function) {
+		var zerothSp = {
+			frame: 0,
+			timestamp: 0,
+			data: {
+				seed: 42,
+				startedAt: 10000
+			}
+		};
+		var sp5: amf.StartPoint = {
+			frame: 5,
+			timestamp: 20000,
+			data: {
+				snapshotValue: 42
+			}
+		};
+		var amflow = new MemoryAmflowClient({
+			playId: "dummyPlayId",
+			tickList: [0, 10, []],
+			startPoints: [zerothSp, sp5]
+		});
+		var spyOnGetTickList = jest.spyOn(amflow, "getTickList");
+		var platform = new mockpf.Platform({});
+		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		var eventBuffer = new EventBuffer({ amflow, game });
+		var self = new GameLoop({
+			amflow,
+			platform,
+			game,
+			eventBuffer,
+			executionMode: ExecutionMode.Passive,
+			configuration: {
+				loopMode: LoopMode.Realtime
+			},
+			startedAt: 140
+		});
+
+		self.start();
+
+		var looper = self._clock._looper as mockpf.Looper;
+		var timer = setInterval(() => {
+			if (game.age > 10) { // tick がすべて消化されることを確認
+				clearInterval(timer);
+
+				// reset したところからのみ tick 取得されることを確認
+				expect(spyOnGetTickList.mock.calls.length).toBe(1);
+				expect(spyOnGetTickList.mock.calls[0][0]).toEqual({
+					begin: 5,
+					end: 5 + TickBuffer.DEFAULT_SIZE_REQUEST_ONCE,
+					excludeEventFlags: {
+						ignorable: true
+					}
+				});
+
+				self.stop();
+				done();
+				return;
+			}
+
+			looper.fun(self._frameTime);
+		}, 1);
+
+		game.handlerSet.setEventFilterFuncs({ addFilter: (filter: g.EventFilter) => null, removeFilter: (filter?: g.EventFilter) => null });
+		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
+		self.reset(sp5);
+	});
+
+	it("does not request further ticks after it reaches the latest", function (done: Function) {
+		var targetTimeValue = 200000; // tick 消化で絶対に到達しない時点
+		var timeFunc = () => targetTimeValue;
+		var zerothSp: amf.StartPoint = {
+			frame: 0,
+			timestamp: 0,
+			data: {
+				seed: 42,
+				startedAt
+			}
+		};
+		var startedAt = 140;
+		var amflow = new MemoryAmflowClient({
+			playId: "dummyPlayId",
+			tickList: [0, 10, []],
+			startPoints: [zerothSp]
+		});
+		var spyOnGetTickList = jest.spyOn(amflow, "getTickList");
+		var platform = new mockpf.Platform({ amflow });
+		var game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
+		var eventBuffer = new EventBuffer({ amflow, game });
+		var self = new GameLoop({
+			amflow,
+			platform,
+			game,
+			eventBuffer,
+			executionMode: ExecutionMode.Passive,
+			configuration: {
+				loopMode: LoopMode.Replay,
+				targetTimeFunc: timeFunc,
+				omitInterpolatedTickOnReplay: true
+			},
+			startedAt
+		});
+
+		var gotNoTickCount = 0;
+		self._tickBuffer.gotNoTickTrigger.add(() => { ++gotNoTickCount; });
+
+		var timer: any = null;
+		var sentAdditionalTick = false;
+		game.onResetTrigger.add(() => {
+			game.vars.onUpdate = () => {  // LocalTickGame が毎 update コールしてくる関数
+				switch (game.age) {
+					case 1:
+						// age 1 が消化できた時点で最初に設定した 10 までの tick が取得されていることを確認。
+						expect(self._foundLatestTick).toBe(false);
+						expect(spyOnGetTickList.mock.calls.length).toBe(1);
+						expect(spyOnGetTickList.mock.calls[0][0]).toEqual({
+							begin: 0,
+							end: 0 + TickBuffer.DEFAULT_SIZE_REQUEST_ONCE,
+							excludeEventFlags: {
+								ignorable: true
+							}
+						});
+						expect(gotNoTickCount).toBe(0);
+						break;
+
+					case 11:
+						if (game.isLastTickLocal) {
+							// 最初に流し込んだ [0, 10] の tick が終わって local tick の 11 が呼ばれ続ける状況で到達する箇所。
+							// 後続 tick の取得を試みて空が返ってきた後の状況 (gotNoTickCount === 1) を待つ。
+							if (gotNoTickCount === 0) return;
+
+							if (!sentAdditionalTick) {
+								sentAdditionalTick = true;
+
+								// この時点で、後続 tick の取得を試みていて、さらに空が返ったので _foundLatestTick が立っている
+								expect(self._foundLatestTick).toBe(true);
+								expect(spyOnGetTickList.mock.calls.length).toBe(2);
+								expect(spyOnGetTickList.mock.calls[1][0]).toEqual({
+									begin: 11,
+									end: 11 + TickBuffer.DEFAULT_SIZE_REQUEST_ONCE,
+									excludeEventFlags: {
+										ignorable: true
+									}
+								});
+
+								// _foundLatestTick に到達した後に新規 tick を受信する状況をシミュレート
+								setTimeout(() => amflow.sendTick([11]), 1);
+
+								// 暫定: targetTimeFunc 付き Replay は、targetTime に到達してしまうと tick を受信しようが動かない。
+								// 1 フレーム進めることで sendTick した 11 を消化させる。
+								targetTimeValue += Math.ceil(self._frameTime);
+							}
+						} else {
+							// 本題1: 一度立った _foundLatestTick が落ちていないことを確認
+							expect(self._foundLatestTick).toBe(true);  // TODO --!
+
+							// skip 終了時の tick 取得が起きて +1 回増える
+							expect(spyOnGetTickList.mock.calls.length).toBe(3);
+							expect(spyOnGetTickList.mock.calls[2][0]).toEqual({
+								begin: 11,
+								end: 11 + TickBuffer.DEFAULT_SIZE_REQUEST_ONCE
+							});
+
+							// 時間だけ進めて local tick の 12 を消化させる
+							targetTimeValue += Math.ceil(self._frameTime);
+						}
+						break;
+
+					case 12:
+						// 前提: この箇所は local でしか来ない (誰も age 12 の tick は作らない)
+						expect(game.isLastTickLocal).toBe(true);
+
+						// _foundLatestTick は立ったままである
+						expect(self._foundLatestTick).toBe(true);
+						// 本題2: next tick がない状態で local tick を消化しているが、 
+						// 最新 tick は見つけた後 (_foundLatestTick) なので、さらに先を探す getTickList() の呼び出しは起きない。
+						expect(spyOnGetTickList.mock.calls.length).toBe(3);
+
+						clearInterval(timer);
+						self.stop();
+						done();
+						break;
+
+					default:
+						// do nothing
+						break;
+				}
+			};
+		});
+
+		self.start();
+		var looper = self._clock._looper as mockpf.Looper;
+		timer = setInterval(() => {
+			looper.fun(self._frameTime);
+		}, 1);
+
+		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
+		game.handlerSet.setEventFilterFuncs({
+			addFilter: eventBuffer.addFilter.bind(eventBuffer),
+			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
+		});
+		self.reset(zerothSp);
 	});
 });

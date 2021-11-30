@@ -104,7 +104,7 @@ export class GameLoop {
 	_lastRequestedStartPointAge: number = -1;
 	_lastRequestedStartPointTime: number = -1;
 	_waitingNextTick: boolean = false;
-	_consumedLatestTick: boolean = false;
+	_foundLatestTick: boolean = false;
 	_skipping: boolean = false;
 	_lastPollingTickTime: number = 0;
 
@@ -206,7 +206,7 @@ export class GameLoop {
 		this._tickBuffer.setCurrentAge(startPoint.frame);
 		this._currentTime = startPoint.timestamp || startPoint.data.timestamp || 0;  // data.timestamp は後方互換性のために存在。現在は使っていない。
 		this._waitingNextTick = false; // 現在ageを変えた後、さらに後続のTickが足りないかどうかは_onFrameで判断する。
-		this._consumedLatestTick = false; // 同上。
+		this._foundLatestTick = false; // 同上。
 		this._lastRequestedStartPointAge = -1;  // 現在ageを変えた時はリセットしておく(場合によっては不要だが、安全のため)。
 		this._lastRequestedStartPointTime = -1;  // 同上。
 		this._omittedTickDuration = 0;
@@ -448,7 +448,7 @@ export class GameLoop {
 
 		if (!this._skipping) {
 			if ((frameGap > this._skipThreshold || this._tickBuffer.currentAge === 0) &&
-			    (this._tickBuffer.hasNextTick() || (this._omitInterpolatedTickOnReplay && this._consumedLatestTick))) {
+			    (this._tickBuffer.hasNextTick() || (this._omitInterpolatedTickOnReplay && this._foundLatestTick))) {
 				// ここでは常に `frameGap > 0` であることに注意。0の時にskipに入ってもすぐ戻ってしまう
 				this._startSkipping();
 			}
@@ -460,11 +460,11 @@ export class GameLoop {
 			if (!this._tickBuffer.hasNextTick()) {
 				if (!this._waitingNextTick) {
 					this._startWaitingNextTick();
-					if (!this._consumedLatestTick)
+					if (!this._foundLatestTick)
 						this._tickBuffer.requestNonIgnorableTicks();
 				}
 				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === "interpolate-local") {
-					if (this._consumedLatestTick) {
+					if (this._foundLatestTick) {
 						// 最新のティックが存在しない場合は現在時刻を目標時刻に合わせる。
 						// (_doLocalTick() により現在時刻が this._frameTime 進むのでその直前まで進める)
 						this._currentTime = targetTime - this._frameTime;
@@ -625,10 +625,9 @@ export class GameLoop {
 
 		if (ageGap <= 0) {
 			if (ageGap === 0) {
-				if (currentAge === 0) {
-					// NOTE: Manualのシーンでは age=1 のティックが長時間受信できない場合がある。(TickBuffer#addTick()が呼ばれない)
-					// そのケースでは最初のティックの受信にポーリング時間(初期値: 10秒)かかってしまうため、ここで最新ティックを要求する。
-					// (初期シーンがNonLocalであってもティックの進行によりManualのシーンに移行してしまう可能性があるため、常に最新のティックを要求している。)
+				if (!this._foundLatestTick) {
+					// NOTE: Manualのシーンやアクティブインスタンスがポーズしている状況では、後続のティックが長時間受信できない場合がある。(TickBuffer#addTick()が呼ばれない)
+					// そのケースでは後続ティックの受信にポーリングの単位時間(初期値: 10秒)かかってしまうため、ここで最新ティックを要求する。
 					this._tickBuffer.requestNonIgnorableTicks();
 				}
 				// 既知最新ティックに追いついたので、ポーリング処理により後続ティックを要求する。
@@ -724,7 +723,6 @@ export class GameLoop {
 	}
 
 	_onGotNextFrameTick(): void {
-		this._consumedLatestTick = false;
 		if (!this._waitingNextTick)
 			return;
 		if (this._loopMode === LoopMode.FrameByFrame) {
@@ -736,7 +734,7 @@ export class GameLoop {
 
 	_onGotNoTick(): void {
 		if (this._waitingNextTick)
-			this._consumedLatestTick = true;
+			this._foundLatestTick = true;
 	}
 
 	_onGotStartPoint(err: Error | null, startPoint?: amf.StartPoint): void {
