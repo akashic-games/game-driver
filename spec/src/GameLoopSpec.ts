@@ -280,8 +280,6 @@ describe("GameLoop", function () {
 		});
 		self.start();
 
-		// amflow.sendTick([10]); // Realtimeで非Manualなのでtickをpushされないと何も動かない
-
 		const looper = self._clock._looper as mockpf.Looper;
 		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });
@@ -980,7 +978,7 @@ describe("GameLoop", function () {
 							}
 						} else {
 							// 本題1: 一度立った _foundLatestTick が落ちていないことを確認
-							expect(self._foundLatestTick).toBe(true);  // TODO --!
+							expect(self._foundLatestTick).toBe(true);
 
 							// skip 終了時の tick 取得が起きて +1 回増える
 							expect(spyOnGetTickList.mock.calls.length).toBe(3);
