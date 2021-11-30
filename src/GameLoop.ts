@@ -104,7 +104,16 @@ export class GameLoop {
 	_lastRequestedStartPointAge: number = -1;
 	_lastRequestedStartPointTime: number = -1;
 	_waitingNextTick: boolean = false;
+
+	/**
+	 * reset() 後、一度でも最新 (既知最新でなく実際の最新と思われる) tick を見つけたか。
+	 *
+	 * この値が偽である場合、受信できていない後続 tick が存在する可能性がある。
+	 * 真ならば、以降の tick はすべて AMFlow#onTick() で受け取るはずなので、後続を探すための tick リクエストが不要になる。
+	 * (なお一部の異常系ではこの値が真でも後続 tick を見落としている可能性があるが、その場合はポーリング処理で救うことにする)
+	 */
 	_foundLatestTick: boolean = false;
+
 	_skipping: boolean = false;
 	_lastPollingTickTime: number = 0;
 
