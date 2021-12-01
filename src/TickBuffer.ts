@@ -72,7 +72,7 @@ export class TickBuffer {
 
 	/**
 	 * 既知の最新age。
-	 * AMFlow から受け取った限りで最後のage。
+	 * AMFlow から受け取った、または setCurrentAge() で外部から存在を示された最新の age 。
 	 */
 	knownLatestAge: number = -1;
 
@@ -162,10 +162,18 @@ export class TickBuffer {
 		this._updateAmflowReceiveState();
 	}
 
+	/**
+	 * currentAge を設定する。
+	 *
+	 * 引数は存在することがわかっている age でなければならない。
+	 * (Realtime モードの tick/StartPoint 取得の基準となる knownLatestAge も更新するため)
+	 */
 	setCurrentAge(age: number): void {
 		this._dropUntil(age);
 		this._nextTickTimeCache = null;
 		this.currentAge = age;
+		if (this.knownLatestAge < age - 1)
+			this.knownLatestAge = age - 1;
 		this._nearestAbsentAge = this._findNearestAbscentAge(age);
 	}
 
