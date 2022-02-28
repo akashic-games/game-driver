@@ -42,7 +42,7 @@
     "@akashic/playlog": "~3.1.0",
     "@akashic/remark-preset-lint": "~0.1.2",
     "@types/jest": "~25.2.3",
-    "@types/node": "~12.20.46",
+    "@types/node": "~16.11.26",
     "@typescript-eslint/eslint-plugin": "~5.12.1",
     "browserify": "^17.0.0",
     "eslint": "~8.10.0",
