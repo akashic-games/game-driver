@@ -1,9 +1,9 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import { AMFlow } from "@akashic/amflow";
+import type { AMFlow } from "@akashic/amflow";
 import * as pl from "@akashic/playlog";
 import ExecutionMode from "./ExecutionMode";
-import StorageOnTick from "./StorageOnTick";
+import type StorageOnTick from "./StorageOnTick";
 
 const EventIndex = g.EventIndex; // eslint-disable-line @typescript-eslint/naming-convention
 
@@ -193,7 +193,7 @@ export class TickBuffer {
 		if (this.currentAge === this._nearestAbsentAge)
 			return null;
 		const age = this.currentAge;
-		let range = this._tickRanges[0];
+		const range = this._tickRanges[0];
 
 		if (age === range.start) {
 			this._nextTickTimeCache = null;
@@ -313,7 +313,7 @@ export class TickBuffer {
 			this._tickRanges.unshift(this._createTickRangeFromTick(tick));
 
 		} else {
-			let range = this._tickRanges[i];
+			const range = this._tickRanges[i];
 			if (age === range.end) {
 				// 直近の TickRange のすぐ後に続く tick だった。
 				++range.end;
@@ -354,7 +354,7 @@ export class TickBuffer {
 
 		// 今回挿入分の開始ageよりも「後」に開始される最初のrangeを探す
 		let i = 0;
-		let len = this._tickRanges.length;
+		const len = this._tickRanges.length;
 		for (i = 0; i < len; ++i) {
 			const range = this._tickRanges[i];
 			if (start < range.start)
@@ -436,8 +436,8 @@ export class TickBuffer {
 			this.gotNoTickTrigger.fire();
 			return;
 		}
-		let mayGotNext = (this.currentAge === this._nearestAbsentAge);
-		let inserted = this.addTickList(ticks);
+		const mayGotNext = (this.currentAge === this._nearestAbsentAge);
+		const inserted = this.addTickList(ticks);
 		if (mayGotNext && (inserted.start <= this.currentAge && this.currentAge < inserted.end)) {
 			this.gotNextTickTrigger.fire();
 		}
@@ -447,14 +447,15 @@ export class TickBuffer {
 	}
 
 	_findNearestAbscentAge(age: number): number {
-		let i = 0, len = this._tickRanges.length;
+		let i = 0;
+		const len = this._tickRanges.length;
 		for (; i < len; ++i) {
 			if (age <= this._tickRanges[i].end)
 				break;
 		}
 
 		for (; i < len; ++i) {
-			let range = this._tickRanges[i];
+			const range = this._tickRanges[i];
 			if (age < range.start)
 				break;
 			age = range.end;
@@ -474,7 +475,7 @@ export class TickBuffer {
 			return;
 
 		// start を書き換えることで、[start, age) の範囲を削除
-		let range = this._tickRanges[0];
+		const range = this._tickRanges[0];
 		if (age < range.start)
 			return;
 		range.start = age;
@@ -486,8 +487,8 @@ export class TickBuffer {
 	}
 
 	private _createTickRangeFromTick(tick: pl.Tick): TickRange {
-		let age = tick[EventIndex.Tick.Age];
-		let range = {
+		const age = tick[EventIndex.Tick.Age];
+		const range = {
 			start: age,
 			end: age + 1,
 			ticks: <pl.Tick[]>[]

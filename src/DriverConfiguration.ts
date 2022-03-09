@@ -1,6 +1,6 @@
 "use strict";
-import { EventBufferMode } from "./EventBuffer";
-import ExecutionMode from "./ExecutionMode";
+import type { EventBufferMode } from "./EventBuffer";
+import type ExecutionMode from "./ExecutionMode";
 
 interface DriverConfiguration {
 	/**

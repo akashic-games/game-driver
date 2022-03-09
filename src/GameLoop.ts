@@ -1,19 +1,20 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import * as amf from "@akashic/amflow";
-import * as pdi from "@akashic/pdi-types";
-import * as pl from "@akashic/playlog";
-import { Clock, ClockFrameTriggerParameterObject } from "./Clock";
+import type * as amf from "@akashic/amflow";
+import type * as pdi from "@akashic/pdi-types";
+import type * as pl from "@akashic/playlog";
+import type { ClockFrameTriggerParameterObject } from "./Clock";
+import { Clock } from "./Clock";
 import * as constants from "./constants";
-import { EventBuffer } from "./EventBuffer";
+import type { EventBuffer } from "./EventBuffer";
 import ExecutionMode from "./ExecutionMode";
-import { Game } from "./Game";
-import LoopConfiguration from "./LoopConfiguration";
+import type { Game } from "./Game";
+import type LoopConfiguration from "./LoopConfiguration";
 import LoopMode from "./LoopMode";
 import LoopRenderMode from "./LoopRenderMode";
-import { Profiler } from "./Profiler";
+import type { Profiler } from "./Profiler";
 import { ProfilerClock } from "./ProfilerClock";
-import { TickBuffer } from "./TickBuffer";
+import type { TickBuffer } from "./TickBuffer";
 import { TickController } from "./TickController";
 
 const EventIndex = g.EventIndex; // eslint-disable-line @typescript-eslint/naming-convention

@@ -1,6 +1,6 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import * as pdi from "@akashic/pdi-types";
+import type * as pdi from "@akashic/pdi-types";
 
 /**
  * `Clock#frameTrigger` のfire時に渡される値。
