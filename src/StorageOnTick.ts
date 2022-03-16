@@ -1,5 +1,5 @@
 "use strict";
-import * as pl from "@akashic/playlog";
+import type * as pl from "@akashic/playlog";
 
 interface StorageOnTick {
 	age: number;

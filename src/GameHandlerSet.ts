@@ -1,6 +1,6 @@
 import * as g from "@akashic/akashic-engine";
-import * as amf from "@akashic/amflow";
-import * as pl from "@akashic/playlog";
+import type * as amf from "@akashic/amflow";
+import type * as pl from "@akashic/playlog";
 
 export interface GameEventFilterFuncs {
 	addFilter: (filter: g.EventFilter, handleEmpty?: boolean) => void;

@@ -1,6 +1,6 @@
 "use strict";
-import LoopMode from "./LoopMode";
-import LoopRenderMode from "./LoopRenderMode";
+import type LoopMode from "./LoopMode";
+import type LoopRenderMode from "./LoopRenderMode";
 
 interface LoopConfiguration {
 	/**

@@ -1,21 +1,22 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import * as amf from "@akashic/amflow";
-import { makeLoadConfigurationFunc, LoadConfigurationFunc } from "@akashic/game-configuration/lib/utils";
-import * as pdi from "@akashic/pdi-types";
+import type * as amf from "@akashic/amflow";
+import type { LoadConfigurationFunc } from "@akashic/game-configuration/lib/utils";
+import { makeLoadConfigurationFunc } from "@akashic/game-configuration/lib/utils";
+import type * as pdi from "@akashic/pdi-types";
 import * as pl from "@akashic/playlog";
 import { Promise } from "es6-promise";
 import * as constants from "./constants";
-import DriverConfiguration from "./DriverConfiguration";
+import type DriverConfiguration from "./DriverConfiguration";
 import { EventBuffer } from "./EventBuffer";
 import ExecutionMode from "./ExecutionMode";
 import { Game } from "./Game";
 import { GameHandlerSet } from "./GameHandlerSet";
 import { GameLoop } from "./GameLoop";
-import LoopConfiguration from "./LoopConfiguration";
+import type LoopConfiguration from "./LoopConfiguration";
 import LoopMode from "./LoopMode";
-import { Profiler } from "./Profiler";
-import StartPointData from "./StartPointData";
+import type { Profiler } from "./Profiler";
+import type StartPointData from "./StartPointData";
 
 const GAME_DESTROYED_MESSAGE = "GAME_DESTROYED";
 

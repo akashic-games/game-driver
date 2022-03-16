@@ -1,12 +1,12 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import * as amf from "@akashic/amflow";
-import * as pl from "@akashic/playlog";
-import { Clock } from "./Clock";
-import { EventBuffer } from "./EventBuffer";
+import type * as amf from "@akashic/amflow";
+import type * as pl from "@akashic/playlog";
+import type { Clock } from "./Clock";
+import type { EventBuffer } from "./EventBuffer";
 import ExecutionMode from "./ExecutionMode";
-import { Game } from "./Game";
-import { StorageFunc } from "./StorageFunc";
+import type { Game } from "./Game";
+import type { StorageFunc } from "./StorageFunc";
 import * as sr from "./StorageResolver";
 import { TickBuffer } from "./TickBuffer";
 import { TickGenerator } from "./TickGenerator";

@@ -1,6 +1,8 @@
 "use strict";
-import { Clock, ClockParameterObject, ClockFrameTriggerParameterObject } from "./Clock";
-import { Profiler, ProfilerValueType } from "./Profiler";
+import type { ClockParameterObject, ClockFrameTriggerParameterObject } from "./Clock";
+import { Clock } from "./Clock";
+import type { Profiler} from "./Profiler";
+import { ProfilerValueType } from "./Profiler";
 
 export interface ProfileClockParameterObject extends ClockParameterObject {
 	/**

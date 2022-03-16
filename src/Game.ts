@@ -1,8 +1,8 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import { GameHandlerSet } from "./GameHandlerSet";
-import StartPointData from "./StartPointData";
-import { StorageFunc } from "./StorageFunc";
+import type { GameHandlerSet } from "./GameHandlerSet";
+import type StartPointData from "./StartPointData";
+import type { StorageFunc } from "./StorageFunc";
 
 export interface GameParameterObject extends g.GameParameterObject {
 	player: g.Player;
@@ -99,7 +99,7 @@ export class Game extends g.Game {
 	}
 
 	fireAgePassedIfNeeded(): boolean {
-		let age = this.age - 1;  // 通過済みのageを確認するため -1 する。
+		const age = this.age - 1;  // 通過済みのageを確認するため -1 する。
 		if (this._notifyPassedAgeTable[age]) {
 			delete this._notifyPassedAgeTable[age];
 			this.agePassedTrigger.fire(age);

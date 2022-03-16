@@ -1,9 +1,9 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import { AMFlow } from "@akashic/amflow";
-import * as pdi from "@akashic/pdi-types";
+import type { AMFlow } from "@akashic/amflow";
+import type * as pdi from "@akashic/pdi-types";
 import * as pl from "@akashic/playlog";
-import { Game } from "./Game";
+import type { Game } from "./Game";
 
 export interface EventBufferMode {
 	/**
@@ -250,7 +250,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	}
 
 	readEvents(): pl.Event[] | null {
-		let ret = this._buffer;
+		const ret = this._buffer;
 		if (ret.length === 0)
 			return null;
 		this._buffer = [];
@@ -258,7 +258,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	}
 
 	readJoinLeaves(): pl.Event[] | null {
-		let ret = this._joinLeaveBuffer;
+		const ret = this._joinLeaveBuffer;
 		if (ret.length === 0)
 			return null;
 		this._joinLeaveBuffer = [];
@@ -266,7 +266,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 	}
 
 	readLocalEvents(): pl.Event[] | null {
-		let ret = this._localBuffer;
+		const ret = this._localBuffer;
 		if (ret.length === 0)
 			return null;
 		this._localBuffer = [];
