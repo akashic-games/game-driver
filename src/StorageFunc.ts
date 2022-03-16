@@ -1,5 +1,5 @@
 "use strict";
-import * as g from "@akashic/akashic-engine";
+import type * as g from "@akashic/akashic-engine";
 
 // TODO: この定義を akashic-engine に移管
 export type StorageGetFunc = (keys: g.StorageKey[], loader: g.StorageLoader, serialization?: g.StorageValueStoreSerialization) => void;

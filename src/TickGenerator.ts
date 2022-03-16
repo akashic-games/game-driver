@@ -1,10 +1,10 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import * as amf from "@akashic/amflow";
-import * as pl from "@akashic/playlog";
-import { EventBuffer } from "./EventBuffer";
+import type * as amf from "@akashic/amflow";
+import type * as pl from "@akashic/playlog";
+import type { EventBuffer } from "./EventBuffer";
 import { JoinResolver } from "./JoinResolver";
-import StorageOnTick from "./StorageOnTick";
+import type StorageOnTick from "./StorageOnTick";
 
 export interface TickGeneratorParameterObject {
 	amflow: amf.AMFlow;

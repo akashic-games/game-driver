@@ -1,6 +1,7 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import { Profiler, ProfilerValueType } from "../Profiler";
+import type { Profiler} from "../Profiler";
+import { ProfilerValueType } from "../Profiler";
 
 export interface SimpleProfilerParameterObject {
 	/**
@@ -107,7 +108,7 @@ export class SimpleProfiler implements Profiler {
 		}
 
 		if (this._values[ProfilerValueType.RawFrameInterval].length > this._limit) {
-			for (let i in this._values) {
+			for (const i in this._values) {
 				if (this._values.hasOwnProperty(i))
 					this._values[i] = this._values[i].slice(-SimpleProfiler.BACKUP_MARGIN);
 			}
