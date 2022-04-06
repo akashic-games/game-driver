@@ -325,9 +325,10 @@ export class GameLoop {
 	 * 早送り状態は、暗黙の早回しでは吸収しきれない規模の早回しの開始時に通知される。
 	 * 具体的な値との関連は `skipThreshold` など `LoopConfiguration` のメンバを参照のこと。
 	 */
-	_startSkipping(): void {
+	_startSkipping(isNear: boolean): void {
 		this._skipping = true;
-		this._updateGamePlaybackRate();
+		if (!isNear)
+			this._updateGamePlaybackRate();
 		this._tickBuffer.startSkipping();
 		this._eventBuffer.startSkipping();
 		this._game.skippingChangedTrigger.fire(true);
@@ -460,7 +461,8 @@ export class GameLoop {
 			if ((frameGap > this._skipThreshold || this._tickBuffer.currentAge === 0) &&
 			    (this._tickBuffer.hasNextTick() || (this._omitInterpolatedTickOnReplay && this._foundLatestTick))) {
 				// ここでは常に `frameGap > 0` であることに注意。0の時にskipに入ってもすぐ戻ってしまう
-				this._startSkipping();
+				const isTargetNear = frameGap <= this._skipThreshold; // (currentAge === 0) の時のみ真になりうることに注意
+				this._startSkipping(isTargetNear);
 			}
 		}
 
@@ -579,7 +581,7 @@ export class GameLoop {
 		// NOTE: ブラウザが長時間非アクティブ状態 (裏タブに遷移していたなど) であったとき、長時間ゲームループが呼ばれないケースがある。
 		// もしその期間がスキップの閾値を超えていたら、即座にスキップに入る。
 		if (!this._skipping && frameArg.deltaTime > this._skipThresholdTime) {
-			this._startSkipping();
+			this._startSkipping(false);
 			// ただしティック待ちが無ければすぐにスキップを抜ける。
 			if (this._waitingNextTick)
 				this._stopSkipping();
@@ -659,7 +661,10 @@ export class GameLoop {
 
 		if (!this._skipping && (ageGap > this._skipThreshold || currentAge === 0) && this._tickBuffer.hasNextTick()) {
 			// ここでは常に (ageGap > 0) であることに注意。(0の時にskipに入ってもすぐ戻ってしまう)
-			this._startSkipping();
+			const isTargetNear =
+				(currentAge === 0) && // 余計な関数呼び出しを避けるためにチェック
+				this._tickBuffer.isKnownLatestTickTimeNear(this._skipThreshold, this._currentTime, this._frameTime);
+			this._startSkipping(isTargetNear);
 		}
 
 		const loopCount = (!this._skipping && ageGap <= this._delayIgnoreThreshold) ? 1 : Math.min(ageGap, this._skipTicksAtOnce);

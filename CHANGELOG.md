@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.7.1
+* 実行開始直後のごく短い早送りに限り、音声再生速度を変更しないように
+
 ## 2.7.0
 * @akashic/akashic-engine@3.4.0 に追従
 * @akashic/game-configuration@1.3.0 に追従
