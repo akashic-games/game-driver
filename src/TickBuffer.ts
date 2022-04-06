@@ -258,7 +258,7 @@ export class TickBuffer {
 	isKnownLatestTickTimeNear(timeThreshold: number, baseTime: number, frameTime: number): boolean {
 		// TODO コード整理して baseTime と frameTime の引数をなくす。
 		// 両者は GameLoop#_frameTime, _currentTime にそれぞれ対応している。このクラスがそれらを管理する方が自然。
-		return this._calcKnownLatestTickTimeDelta(timeThreshold, baseTime, frameTime) >= timeThreshold;
+		return this._calcKnownLatestTickTimeDelta(timeThreshold, baseTime, frameTime) < timeThreshold;
 	}
 
 	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
@@ -536,8 +536,8 @@ export class TickBuffer {
 				for (let k = 0; k < pevs.length; ++k) {
 					if (pevs[k][EventIndex.General.Code] === pl.EventCode.Timestamp) {
 						const timestamp = pevs[k][EventIndex.Timestamp.Timestamp];
-						const latestTickTime = timestamp + timeDelta;
-						return Math.min(latestTickTime - baseTime, timeThreshold);
+						const duration = (timestamp - baseTime) + timeDelta; // 計算順に注意。先に時刻を減算して値を小さくする(小数部の誤差を軽減する)
+						return Math.min(duration, timeThreshold);
 					}
 				}
 			}

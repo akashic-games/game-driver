@@ -663,7 +663,7 @@ export class GameLoop {
 			// ここでは常に (ageGap > 0) であることに注意。(0の時にskipに入ってもすぐ戻ってしまう)
 			const isTargetNear =
 				(currentAge === 0) && // 余計な関数呼び出しを避けるためにチェック
-				this._tickBuffer.isKnownLatestTickTimeNear(this._skipThreshold, this._currentTime, this._frameTime);
+				this._tickBuffer.isKnownLatestTickTimeNear(this._skipThresholdTime, this._currentTime, this._frameTime);
 			this._startSkipping(isTargetNear);
 		}
 
