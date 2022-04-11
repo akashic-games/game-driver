@@ -324,6 +324,8 @@ export class GameLoop {
 	 * 少々の遅れはこのクラスが暗黙に早回しして吸収する。
 	 * 早送り状態は、暗黙の早回しでは吸収しきれない規模の早回しの開始時に通知される。
 	 * 具体的な値との関連は `skipThreshold` など `LoopConfiguration` のメンバを参照のこと。
+	 *
+	 * @param isNear 真の場合、ゲームの再生速度設定を変えない (実質 "効果音をミュートしない")。ゲームへのスキッピング通知は行うことに注意。
 	 */
 	_startSkipping(isNear: boolean): void {
 		this._skipping = true;

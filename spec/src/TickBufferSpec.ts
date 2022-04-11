@@ -763,7 +763,7 @@ describe("TickBuffer", function() {
 		});
 
 		tb.requestTicks(3, 3);
-		amflow.requestsGetTicks[0].respond(null, [[3], [4], [5, [trap]]]);
+		amflow.requestsGetTicks[0].respond(null, [[3], [4, null, []], [5, [trap]]]);
 		expect(accessCount).toBe(0);
 		expect(tb._calcKnownLatestTickTimeDelta(500 + 3 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 3 * frameTime, 3);
 		expect(tb._calcKnownLatestTickTimeDelta(500 + 4 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 4 * frameTime, 3);
@@ -771,7 +771,7 @@ describe("TickBuffer", function() {
 		expect(tb._calcKnownLatestTickTimeDelta(500 + 6 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 5 * frameTime, 3);
 		expect(accessCount).toBe(4);
 
-		tb.requestTicks(6, 2);
+		tb.requestTicks(6, 3);
 		amflow.requestsGetTicks[0].respond(null, [[6], [7, [trap]], [8, [makeTimestampEvent(1000)]]]);
 		expect(tb._calcKnownLatestTickTimeDelta(1000 + 0 * frameTime, baseTime, frameTime)).toBeCloseTo(1000 + 0 * frameTime, 3);
 		expect(tb._calcKnownLatestTickTimeDelta(1000 + 1 * frameTime, baseTime, frameTime)).toBeCloseTo(1000 + 1 * frameTime, 3);
