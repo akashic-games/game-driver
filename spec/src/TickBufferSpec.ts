@@ -651,4 +651,131 @@ describe("TickBuffer", function() {
 		amflow.requestsGetTicks[0].respond(null, [[4], [5]]);
 		expect(noTickCount).toBe(3);
 	});
+
+	it("can calculate duration to consume the latest tick - no events", function () {
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({
+			amflow: amflow,
+			executionMode: ExecutionMode.Passive,
+			prefetchThreshold: 3,
+			sizeRequestOnce: 2
+		});
+
+		const frameTime = 1000 / 60;
+		expect(tb._calcKnownLatestTickTimeDelta(1, 0, frameTime)).toBe(0);
+
+		tb.requestTicks(0, 3);
+		amflow.requestsGetTicks[0].respond(null, [[0], [1], [2]]);
+		expect(tb._calcKnownLatestTickTimeDelta(2 * frameTime, 0, frameTime)).toBeCloseTo(2 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(3 * frameTime, 0, frameTime)).toBeCloseTo(3 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(4 * frameTime, 0, frameTime)).toBeCloseTo(3 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(5 * frameTime, 0, frameTime)).toBeCloseTo(3 * frameTime, 3);
+
+		tb.requestTicks(4, 1);
+		amflow.requestsGetTicks[0].respond(null, [[4]]);
+		// age 3 がない (間隙がある) があるので Infinity
+		expect(tb._calcKnownLatestTickTimeDelta(3 * frameTime, 0, frameTime)).toBeCloseTo(Infinity);
+
+		tb.requestTicks(3, 3);
+		amflow.requestsGetTicks[0].respond(null, [[3], [4], [5]]);
+		expect(tb._calcKnownLatestTickTimeDelta(5 * frameTime, 0, frameTime)).toBeCloseTo(5 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(6 * frameTime, 0, frameTime)).toBeCloseTo(6 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(7 * frameTime, 0, frameTime)).toBeCloseTo(6 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(8 * frameTime, 0, frameTime)).toBeCloseTo(6 * frameTime, 3);
+	});
+
+	it("can calculate duration to consume the latest tick - no timestamp", function () {
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({
+			amflow: amflow,
+			executionMode: ExecutionMode.Passive,
+			prefetchThreshold: 3,
+			sizeRequestOnce: 2
+		});
+
+		const frameTime = 1000 / 30;
+		const nonTimestampEvent = [pl.EventCode.Message, 0, "dummy", {}] as pl.Event;
+
+		tb.requestTicks(0, 3);
+		amflow.requestsGetTicks[0].respond(null, [[0], [1, [nonTimestampEvent]], [2]]);
+		expect(tb._calcKnownLatestTickTimeDelta(2 * frameTime, 0, frameTime)).toBeCloseTo(2 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(3 * frameTime, 0, frameTime)).toBeCloseTo(3 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(4 * frameTime, 0, frameTime)).toBeCloseTo(3 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(5 * frameTime, 0, frameTime)).toBeCloseTo(3 * frameTime, 3);
+
+		tb.requestTicks(3, 3);
+		amflow.requestsGetTicks[0].respond(null, [[3], [4], [5]]);
+		expect(tb._calcKnownLatestTickTimeDelta(4 * frameTime, 0, frameTime)).toBeCloseTo(4 * frameTime, 3); // 途中 (age 1) でtimeThresholdを超えるケース
+		expect(tb._calcKnownLatestTickTimeDelta(5 * frameTime, 0, frameTime)).toBeCloseTo(5 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(6 * frameTime, 0, frameTime)).toBeCloseTo(6 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(7 * frameTime, 0, frameTime)).toBeCloseTo(6 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(8 * frameTime, 0, frameTime)).toBeCloseTo(6 * frameTime, 3);
+
+		tb.requestTicks(6, 3);
+		amflow.requestsGetTicks[0].respond(null, [[6, [nonTimestampEvent]], [7], [8]]);
+		expect(tb._calcKnownLatestTickTimeDelta(7 * frameTime, 0, frameTime)).toBeCloseTo(7 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(8 * frameTime, 0, frameTime)).toBeCloseTo(8 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(9 * frameTime, 0, frameTime)).toBeCloseTo(9 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(10 * frameTime, 0, frameTime)).toBeCloseTo(9 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(11 * frameTime, 0, frameTime)).toBeCloseTo(9 * frameTime, 3);
+
+		expect(tb.consume()).toBe(0); // イベントがある age 1 が先頭になるケースを確認するためにage 0を消化
+		expect(tb._calcKnownLatestTickTimeDelta(2 * frameTime, 0, frameTime)).toBeCloseTo(2 * frameTime, 3); // 途中 (age 6) で超えるケース
+		expect(tb._calcKnownLatestTickTimeDelta(6 * frameTime, 0, frameTime)).toBeCloseTo(6 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(7 * frameTime, 0, frameTime)).toBeCloseTo(7 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(8 * frameTime, 0, frameTime)).toBeCloseTo(8 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(9 * frameTime, 0, frameTime)).toBeCloseTo(8 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(10 * frameTime, 0, frameTime)).toBeCloseTo(8 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(11 * frameTime, 0, frameTime)).toBeCloseTo(8 * frameTime, 3);
+	});
+
+	it("can calculate duration to consume the latest tick - with timestamp", function () {
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({
+			amflow: amflow,
+			executionMode: ExecutionMode.Passive,
+			prefetchThreshold: 3,
+			sizeRequestOnce: 2
+		});
+
+		const frameTime = 1000 / 60;
+		const nonTimestampEvent = [pl.EventCode.Message, 0, "dummy", {}] as pl.Event;
+
+		const baseTime = Date.parse("2022-04-01T08:00:00.000");
+		function makeTimestampEvent(t: number): pl.Event {
+			return [pl.EventCode.Timestamp, 0, "dummy", baseTime + t];
+		}
+
+		tb.requestTicks(0, 3);
+		amflow.requestsGetTicks[0].respond(null, [[0], [1, [nonTimestampEvent, makeTimestampEvent(500)]], [2]]);
+		expect(tb._calcKnownLatestTickTimeDelta(500, baseTime, frameTime)).toBeCloseTo(500, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(500 + 1 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 1 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(500 + 2 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 2 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(500 + 3 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 2 * frameTime, 3);
+
+		let accessCount = 0;
+		const trap = [pl.EventCode.Message, 0, "dummy", {}] as pl.Event;
+		Object.defineProperty(trap, 0, {
+			get: () => {
+				++accessCount;
+				return pl.EventCode.Message;
+			}
+		});
+
+		tb.requestTicks(3, 3);
+		amflow.requestsGetTicks[0].respond(null, [[3], [4, null, []], [5, [trap]]]);
+		expect(accessCount).toBe(0);
+		expect(tb._calcKnownLatestTickTimeDelta(500 + 3 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 3 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(500 + 4 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 4 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(500 + 5 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 5 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(500 + 6 * frameTime, baseTime, frameTime)).toBeCloseTo(500 + 5 * frameTime, 3);
+		expect(accessCount).toBe(4);
+
+		tb.requestTicks(6, 3);
+		amflow.requestsGetTicks[0].respond(null, [[6], [7, [trap]], [8, [makeTimestampEvent(1000)]]]);
+		expect(tb._calcKnownLatestTickTimeDelta(1000 + 0 * frameTime, baseTime, frameTime)).toBeCloseTo(1000 + 0 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(1000 + 1 * frameTime, baseTime, frameTime)).toBeCloseTo(1000 + 1 * frameTime, 3);
+		expect(tb._calcKnownLatestTickTimeDelta(1000 + 2 * frameTime, baseTime, frameTime)).toBeCloseTo(1000 + 1 * frameTime, 3);
+		expect(accessCount).toBe(4); // 後続 tick に timestamp がある場合、それ以前のイベントが参照されることはない
+	});
 });

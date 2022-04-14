@@ -250,6 +250,17 @@ export class TickBuffer {
 		return this.readNextTickTime();
 	}
 
+	/**
+	 * 既知の最新tickが「近い」かどうか判定する。
+	 * ここで「近い」とは、既知最新 tick の消化までに必要なゲーム内時間が timeThreshold より短いことである。
+	 * tick をトラバースするので最悪の場合の実行時間は timeThreshold に比例する点に注意。
+	 */
+	isKnownLatestTickTimeNear(timeThreshold: number, baseTime: number, frameTime: number): boolean {
+		// TODO コード整理して baseTime と frameTime の引数をなくす。
+		// 両者は GameLoop#_frameTime, _currentTime にそれぞれ対応している。このクラスがそれらを管理する方が自然。
+		return this._calcKnownLatestTickTimeDelta(timeThreshold, baseTime, frameTime) < timeThreshold;
+	}
+
 	requestTicks(from: number = this.currentAge, len: number = this._sizeRequestOnce): void {
 		if (this._skipping) {
 			this.requestNonIgnorableTicks(from, len);
@@ -484,6 +495,55 @@ export class TickBuffer {
 				break;
 		}
 		range.ticks = range.ticks.slice(i);
+	}
+
+	/**
+	 * 既知最新 Tick の時刻までの所要時間を求める。
+	 * ただし timeThreshold を超える場合、処理を打ち切って timeThreshold を返す。
+	 * また間隙がある (途中に欠けた Tick がある) 場合、Infinity を返す。
+	 *
+	 * _tickRanges をトラバースするので、最悪の場合の実行時間は timeThreshold に比例する。
+	 */
+	_calcKnownLatestTickTimeDelta(timeThreshold: number, baseTime: number, frameTime: number): number {
+		const tickRanges = this._tickRanges;
+		if (tickRanges.length === 0)
+			return 0;
+
+		let timeDelta = 0;
+		let lastRangeStart = tickRanges[tickRanges.length - 1].end;
+		let lastAgeWithEvents = lastRangeStart;
+		for (let i = tickRanges.length - 1; i >= 0; --i) {
+			const range = tickRanges[i];
+			if (range.end !== lastRangeStart) // 既知tickに間隙がある場合
+				return Infinity;
+			lastRangeStart = range.start;
+
+			const ticksWithEvents = range.ticks;
+			for (let j = ticksWithEvents.length - 1; j >= 0; --j) {
+				const tick = ticksWithEvents[j];
+				const pevs = tick[EventIndex.Tick.Events];
+				if (!pevs) // ticksWithEvents は「ストレージまたはイベントを持つtick」なのでイベントはない場合もある
+					continue;
+
+				// この tick までの時間を加算
+				const age = tick[EventIndex.Tick.Age];
+				timeDelta += (lastAgeWithEvents - age) * frameTime;
+				if (timeDelta > timeThreshold) // timestamp なしの tick だけで timeThreshold 分の時間を超過した
+					return timeThreshold;
+				lastAgeWithEvents = age;
+
+				// timestamp が見つかれば時間が確定する
+				for (let k = 0; k < pevs.length; ++k) {
+					if (pevs[k][EventIndex.General.Code] === pl.EventCode.Timestamp) {
+						const timestamp = pevs[k][EventIndex.Timestamp.Timestamp];
+						const duration = (timestamp - baseTime) + timeDelta; // 計算順に注意。先に時刻を減算して値を小さくする(小数部の誤差を軽減する)
+						return Math.min(duration, timeThreshold);
+					}
+				}
+			}
+		}
+		timeDelta += (lastAgeWithEvents - tickRanges[0].start) * frameTime;
+		return Math.min(timeDelta, timeThreshold);
 	}
 
 	private _createTickRangeFromTick(tick: pl.Tick): TickRange {
