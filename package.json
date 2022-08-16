@@ -8,15 +8,14 @@
     "prepare": "npm run clean && npm run build",
     "ver": "tsc --version",
     "clean": "rm -rf lib/ && rm -rf spec/lib/ spec/helpers/lib/",
-    "build": "tsc -p ./src/ && npm run browserify",
+    "build": "tsc -p . && npm run browserify",
     "browserify": "shx mkdir -p build && browserify -r ./lib/index.js:@akashic/game-driver -x @akashic/akashic-engine -o build/game-driver.js && npm run browserify:ae",
     "browserify:ae": "browserify -r ./node_modules/@akashic/akashic-engine/index.js:@akashic/akashic-engine -o build/akashic-engine.js",
-    "lint": "npm run lint:ts && npm run lint:md",
-    "lint:ts": "eslint \"src/**/*.ts\" --fix",
-    "lint:md": "remark ./*.md --frail --no-stdout --quiet --rc-path ./.remarkrc",
-    "test": "npm run build && npm run test:compile && npm run test:jest && npm run lint",
-    "test:compile": "tsc -p spec/helpers/src/ && tsc -p spec/src/",
-    "test:jest": "jest"
+    "test": "run-s test:*",
+    "test:jest": "jest",
+    "test:lint": "run-s test:lint:*",
+    "test:lint:ts": "eslint \"src/**/*.ts\" --fix",
+    "test:lint:md": "remark ./*.md --frail --no-stdout --quiet --rc-path ./.remarkrc"
   },
   "author": "DWANGO Co., Ltd.",
   "license": "MIT",
@@ -50,8 +49,10 @@
     "eslint-plugin-import": "~2.26.0",
     "eslint-plugin-jest": "~26.6.0",
     "jest": "~28.1.2",
+    "npm-run-all": "^4.1.5",
     "remark-cli": "~11.0.0",
     "shx": "~0.3.4",
+    "ts-jest": "^28.0.8",
     "typescript": "^4.7.4"
   },
   "dependencies": {

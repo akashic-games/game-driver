@@ -1,10 +1,10 @@
-import * as path from "path";
 import * as fs from "fs";
+import * as path from "path";
 import * as g from "@akashic/akashic-engine";
 import * as utils from "@akashic/game-configuration/lib/utils";
-import * as mockrf from "./MockResourceFactory";
+import { GameHandlerSet } from "../../GameHandlerSet";
 import { MockGame } from "./MockGame";
-import { GameHandlerSet } from "../../../lib/GameHandlerSet";
+import * as mockrf from "./MockResourceFactory";
 
 export enum FixtureGame {
 	/**
@@ -17,9 +17,9 @@ export enum FixtureGame {
 	LocalTickGame
 }
 
-var gameTitleTable: { [key: number]: string } = {};
-gameTitleTable[FixtureGame.SimpleGame] = "../../fixtures/simple_game/";
-gameTitleTable[FixtureGame.LocalTickGame] = "../../fixtures/local_tick_game/";
+const gameTitleTable: { [key: number]: string } = {};
+gameTitleTable[FixtureGame.SimpleGame] = "../fixtures/simple_game/";
+gameTitleTable[FixtureGame.LocalTickGame] = "../fixtures/local_tick_game/";
 
 export interface PrepareGameParameterObject {
 	title: FixtureGame;
@@ -43,7 +43,7 @@ export function prepareGame(param: PrepareGameParameterObject): MockGame {
 		configuration = conf;
 	});
 
-	var game = new MockGame({
+	const game = new MockGame({
 		engineModule: g,
 		configuration: configuration,
 		handlerSet: new GameHandlerSet({ isSnapshotSaver: false }),

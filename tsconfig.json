@@ -6,13 +6,12 @@
     "noImplicitAny": true,
     "strict": true,
     "module": "commonjs",
-    "outDir": "../lib"
+    "outDir": "./lib"
   },
-  "filesGlob": [
-    "../typings/**/*.ts",
-    "./**/*.ts"
+  "include": [
+    "src/**/*.ts"
   ],
-  "files": [
-    "./index.ts"
+  "exclude": [
+    "src/__tests__/**/*.ts"
   ]
 }

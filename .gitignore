@@ -1,11 +1,9 @@
 node_modules
 .DS_Store*
-npm-debug.log
-*.iml
 coverage
-junitresults.xml
 build
 lib
 tmp
-.idea
+*.log
+*.iml
 *.tgz

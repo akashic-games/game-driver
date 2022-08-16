@@ -1,18 +1,18 @@
 "use strict";
-import * as pl from "@akashic/playlog";
-import * as amf from "@akashic/amflow";
 import * as g from "@akashic/akashic-engine";
-import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
-import * as mockpf from "../helpers/lib/MockPlatform";
-import * as constants from "../../lib/constants";
-import LoopMode from "../../lib/LoopMode";
-import LoopRenderMode from "../../lib/LoopRenderMode";
-import ExecutionMode from "../../lib/ExecutionMode";
-import { EventBuffer } from "../../lib/EventBuffer";
-import { TickBuffer } from "../../lib/TickBuffer";
-import { GameLoop } from "../../lib/GameLoop";
+import type * as amf from "@akashic/amflow";
 import { MemoryAmflowClient } from "@akashic/amflow-util/lib/MemoryAmflowClient";
+import * as pl from "@akashic/playlog";
+import * as constants from "../constants";
+import { EventBuffer } from "../EventBuffer";
+import ExecutionMode from "../ExecutionMode";
+import { GameLoop } from "../GameLoop";
+import LoopMode from "../LoopMode";
+import LoopRenderMode from "../LoopRenderMode";
+import { TickBuffer } from "../TickBuffer";
+import { MockAmflow } from "./helpers/MockAmflow";
+import * as mockpf from "./helpers/MockPlatform";
+import { prepareGame, FixtureGame } from "./helpers/prepareGame";
 
 describe("GameLoop", function () {
 	function makeTimestampEvent(timestamp: number): pl.TimestampEvent {
@@ -25,17 +25,17 @@ describe("GameLoop", function () {
 	}
 
 	it("can be instantiated", function () {
-		var amflow = new MockAmflow();
-		var platform = new mockpf.Platform({});
-		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var errorHandlerObject = {
+		const amflow = new MockAmflow();
+		const platform = new mockpf.Platform({});
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const errorHandlerObject = {
 			errors: [] as any[],
 			onError: function (e: any) {
 				this.errors.push(e);
 			}
 		};
-		var self = new GameLoop({
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -81,11 +81,11 @@ describe("GameLoop", function () {
 	});
 
 	it("provides the accessors for its properties", function () {
-		var amflow = new MockAmflow();
-		var platform = new mockpf.Platform({});
-		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const amflow = new MockAmflow();
+		const platform = new mockpf.Platform({});
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -121,7 +121,7 @@ describe("GameLoop", function () {
 			omitInterpolatedTickOnReplay: true,
 			targetAge: undefined
 		});
-		var loopConf = {
+		const loopConf = {
 			loopMode: LoopMode.Replay,
 			delayIgnoreThreshold: 1,
 			skipTicksAtOnce: 20,
@@ -136,7 +136,7 @@ describe("GameLoop", function () {
 			targetTimeOffset: 20
 		};
 		self.setLoopConfiguration(loopConf);
-		var obtainedConf = self.getLoopConfiguration();
+		let obtainedConf = self.getLoopConfiguration();
 		expect(obtainedConf.loopMode).toBe(loopConf.loopMode);
 		expect(obtainedConf.delayIgnoreThreshold).toBe(loopConf.delayIgnoreThreshold);
 		expect(obtainedConf.skipTicksAtOnce).toBe(loopConf.skipTicksAtOnce);
@@ -153,7 +153,7 @@ describe("GameLoop", function () {
 		expect(obtainedConf.targetAge).toBeUndefined();
 
 		self.setLoopConfiguration({
-			loopMode: undefined,
+			loopMode: undefined!,
 			targetAge: 42,
 			loopRenderMode: LoopRenderMode.None
 		});
@@ -174,11 +174,11 @@ describe("GameLoop", function () {
 	});
 
 	it("can notifies the content of skip", function (done: any) {
-		var amflow = new MockAmflow();
-		var platform = new mockpf.Platform({});
-		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const amflow = new MockAmflow();
+		const platform = new mockpf.Platform({});
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -195,28 +195,28 @@ describe("GameLoop", function () {
 		expect(self.running).toBe(true);
 		expect(self._clock.running).toBe(true);
 
-		var contentSkippingTestState = 0;
-		var skippingTestState = 0;
+		let contentSkippingTestState = 0;
+		let skippingTestState = 0;
 		game.skippingChangedTrigger.add((skipping) => {
 			switch (skippingTestState) {
-			case 0:
-				expect(skipping).toBe(true);
-				expect(game.age).toBe(0);  // age 0 で必ずskipに入る
-				expect(contentSkippingTestState).toBe(1);  // 実装上の理由でコンテンツへの通知が先行する
-				break;
-			case 1:
-				expect(skipping).toBe(false);
-				expect(game.age).toBe(1);  // Activeなので第0tickを消化した時点で追いついた
-				expect(contentSkippingTestState).toBe(2);
-				break;
-			default:
-				done.fail();
+				case 0:
+					expect(skipping).toBe(true);
+					expect(game.age).toBe(0);  // age 0 で必ずskipに入る
+					expect(contentSkippingTestState).toBe(1);  // 実装上の理由でコンテンツへの通知が先行する
+					break;
+				case 1:
+					expect(skipping).toBe(false);
+					expect(game.age).toBe(1);  // Activeなので第0tickを消化した時点で追いついた
+					expect(contentSkippingTestState).toBe(2);
+					break;
+				default:
+					done.fail();
 			}
 			++skippingTestState;
 		});
 
-		var looper = self._clock._looper as mockpf.Looper;
-		var timer = setInterval(() => {
+		const looper = self._clock._looper as mockpf.Looper;
+		const timer = setInterval(() => {
 			if (game.age > 0) {
 				clearInterval(timer);
 				self.stop();
@@ -237,14 +237,14 @@ describe("GameLoop", function () {
 		// コンテンツ向けの `skippingChanged` (`skippingChangedTrigger` でない) は `_reset()` で初期化された後に設定する必要がある
 		game.skippingChanged.add((skipping) => {
 			switch (contentSkippingTestState) {
-			case 0:
-				expect(skipping).toBe(true);
-				break;
-			case 1:
-				expect(skipping).toBe(false);
-				break;
-			default:
-				done.fail();
+				case 0:
+					expect(skipping).toBe(true);
+					break;
+				case 1:
+					expect(skipping).toBe(false);
+					break;
+				default:
+					done.fail();
 			}
 			++contentSkippingTestState;
 		});
@@ -285,7 +285,7 @@ describe("GameLoop", function () {
 		game._loadAndStart({ args: undefined });
 
 		// 最新の状態まで追いつく
-		await new Promise<void>((resolve, reject) => {
+		await new Promise<void>((resolve, _reject) => {
 			const timer = setInterval(() => {
 				if (game.age > 10) {
 					clearInterval(timer);
@@ -299,7 +299,7 @@ describe("GameLoop", function () {
 		amflow.sendTick([11]); // 新しいtickを送信
 
 		// 最新の状態まで追いつく
-		await new Promise<void>((resolve, reject) => {
+		await new Promise<void>((resolve, _reject) => {
 			let skipCalled = false;
 			game.skippingChangedTrigger.add(() => {
 				skipCalled = true;
@@ -318,7 +318,7 @@ describe("GameLoop", function () {
 		amflow.sendTick([12]); // 新しいtickを送信
 
 		// 最新の状態まで追いつく
-		await new Promise<void>((resolve, reject) => {
+		await new Promise<void>((resolve, _reject) => {
 			let skipCalled = false;
 			game.skippingChangedTrigger.add(() => {
 				skipCalled = true;
@@ -336,11 +336,11 @@ describe("GameLoop", function () {
 	});
 
 	it("can start/stop", function (done: any) {
-		var amflow = new MockAmflow();
-		var platform = new mockpf.Platform({});
-		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const amflow = new MockAmflow();
+		const platform = new mockpf.Platform({});
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -359,25 +359,25 @@ describe("GameLoop", function () {
 		expect(self.running).toBe(true);
 		expect(self._clock.running).toBe(true);
 
-		var skippingTestState = 0;
+		let skippingTestState = 0;
 		game.skippingChangedTrigger.add((skipping) => {
 			switch (skippingTestState) {
-			case 0:
-				expect(skipping).toBe(true);
-				expect(game.age).toBe(0);  // age 0 で必ずskipに入る
-				break;
-			case 1:
-				expect(skipping).toBe(false);
-				expect(game.age).toBe(1);  // Activeなので第0tickを消化した時点で追いついた
-				break;
-			default:
-				done.fail();
+				case 0:
+					expect(skipping).toBe(true);
+					expect(game.age).toBe(0);  // age 0 で必ずskipに入る
+					break;
+				case 1:
+					expect(skipping).toBe(false);
+					expect(game.age).toBe(1);  // Activeなので第0tickを消化した時点で追いついた
+					break;
+				default:
+					done.fail();
 			}
 			++skippingTestState;
 		});
 
-		var looper = self._clock._looper as mockpf.Looper;
-		var timer = setInterval(() => {
+		const looper = self._clock._looper as mockpf.Looper;
+		const timer = setInterval(() => {
 			if (game.age > 0) {
 				clearInterval(timer);
 				self.stop();
@@ -403,13 +403,13 @@ describe("GameLoop", function () {
 	});
 
 	it("replays game in syncrhonization with the target time function", function (done: any) {
-		var timeFuncCount = 0;
-		var timeTable = [1000, 1001, 1030, 3070]; // 最後の3070は、age 5(3000ms)の通過タイミング次第でage 6消化が3066.66ms(の直前)になるため。
-		var timeFunc = () => {
+		let timeFuncCount = 0;
+		const timeTable = [1000, 1001, 1030, 3070]; // 最後の3070は、age 5(3000ms)の通過タイミング次第でage 6消化が3066.66ms(の直前)になるため。
+		const timeFunc = (): number => {
 			return (timeFuncCount in timeTable) ? timeTable[timeFuncCount] : timeTable[timeTable.length - 1];
 		};
-		var startedAt = 140;
-		var amflow = new MemoryAmflowClient({
+		const startedAt = 140;
+		const amflow = new MemoryAmflowClient({
 			playId: "dummyPlayId",
 			tickList: [
 				0,
@@ -430,12 +430,12 @@ describe("GameLoop", function () {
 				}
 			]
 		});
-		var spyOnGetTickList = jest.spyOn(amflow, "getTickList");
+		const spyOnGetTickList = jest.spyOn(amflow, "getTickList");
 
-		var platform = new mockpf.Platform({ amflow });
-		var game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const platform = new mockpf.Platform({ amflow });
+		const game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -449,7 +449,7 @@ describe("GameLoop", function () {
 			startedAt
 		});
 
-		var timeReachedCount = 0;
+		let timeReachedCount = 0;
 		game.requestNotifyTargetTimeReached();
 		game.targetTimeReachedTrigger.add((t) => {
 			expect(t).toBe(timeTable[timeReachedCount]);
@@ -464,32 +464,32 @@ describe("GameLoop", function () {
 		game.requestNotifyTargetTimeReached();
 		expect(game._notifiesTargetTimeReached).toBe(true);
 
-		var skippingTestState = 0;
+		let skippingTestState = 0;
 		game.skippingChangedTrigger.add((skipping) => {
 			switch (skippingTestState) {
-			case 0:
-				expect(skipping).toBe(true);
-				expect(game.age).toBe(0);  // age 0 で必ずskipに入る
-				break;
-			case 1:
-				expect(skipping).toBe(false);
-				expect(game.age).toBe(3);  // 最初の目標時刻1000に到達できる＝skipから戻れるのはage 3を消化したあと
-				break;
-			default:
-				done.fail();
+				case 0:
+					expect(skipping).toBe(true);
+					expect(game.age).toBe(0);  // age 0 で必ずskipに入る
+					break;
+				case 1:
+					expect(skipping).toBe(false);
+					expect(game.age).toBe(3);  // 最初の目標時刻1000に到達できる＝skipから戻れるのはage 3を消化したあと
+					break;
+				default:
+					done.fail();
 			}
 			++skippingTestState;
 		});
 
-		var tickCount = 0;
-		var origTick = game.tick;
+		let tickCount = 0;
+		const origTick = game.tick;
 		game.tick = function (advanceAge?: boolean) {
 			tickCount++;
-			return origTick.call(this, advanceAge);
+			return origTick.call(this, !!advanceAge);
 		};
 
-		var timer: any = null;
-		var passedTestAges: number[] = [];
+		let timer: any = null;
+		const passedTestAges: number[] = [];
 		game.onResetTrigger.add(() => {
 			game.vars.onUpdate = () => {  // LocalTickGame が毎 update コールしてくる関数
 				switch (game.age) {
@@ -540,7 +540,7 @@ describe("GameLoop", function () {
 		});
 
 		self.start();
-		var looper = self._clock._looper as mockpf.Looper;
+		const looper = self._clock._looper as mockpf.Looper;
 		timer = setInterval(() => {
 			looper.fun(self._frameTime);
 		}, 1);
@@ -556,13 +556,13 @@ describe("GameLoop", function () {
 	});
 
 	it("replays game in syncrhonization with the target time function - omit interpolated ticks", function (done: any) {
-		var timeFuncCount = 0;
-		var timeTable = [1000, 1001, 1030, 3500]; // 最後の3500は、age 5(3000ms)の通過タイミング次第でage 6消化が3066.66ms(の直前)になるため、それより大きい値。
-		var timeFunc = () => {
+		let timeFuncCount = 0;
+		const timeTable = [1000, 1001, 1030, 3500]; // 最後の3500は、age 5(3000ms)の通過タイミング次第でage 6消化が3066.66ms(の直前)になるため、それより大きい値。
+		const timeFunc = (): number => {
 			return (timeFuncCount in timeTable) ? timeTable[timeFuncCount] : timeTable[timeTable.length - 1];
 		};
-		var startedAt = 140;
-		var amflow = new MemoryAmflowClient({
+		const startedAt = 140;
+		const amflow = new MemoryAmflowClient({
 			playId: "dummyPlayId",
 			tickList: [
 				0,
@@ -584,10 +584,10 @@ describe("GameLoop", function () {
 			]
 		});
 
-		var platform = new mockpf.Platform({ amflow });
-		var game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const platform = new mockpf.Platform({ amflow });
+		const game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -602,20 +602,20 @@ describe("GameLoop", function () {
 		});
 
 		game.requestNotifyTargetTimeReached();
-		game.targetTimeReachedTrigger.add((t) => {
+		game.targetTimeReachedTrigger.add(() => {
 			++timeFuncCount;
 			game.requestNotifyTargetTimeReached();
 		});
 
-		var timer: any = null;
-		var passedTestAges: number[] = [];
-		var origTick = game.tick;
+		let timer: any = null;
+		const passedTestAges: number[] = [];
+		const origTick = game.tick;
 		game.tick = function (advanceAge?: boolean, omittedTickCount?: number) {
-			if (!game.scene().local) {
+			if (!game.scene()!.local) {
 				// omitInterpolatedTickOnReplayなのでskip中は非ローカルティックはこない
 				expect(!!advanceAge).not.toBe(self._skipping);
 			}
-			var ret = origTick.call(this, advanceAge, omittedTickCount);
+			const ret = origTick.call(this, !!advanceAge, omittedTickCount);
 
 			if (game.age === 4 && !this.isLastTickLocal) {
 				// tick 3 を消化した時点: 最初の目標時刻1000msが必ずskipを起こさせているので、ここでomitされるティックが出る。
@@ -658,7 +658,7 @@ describe("GameLoop", function () {
 		});
 
 		self.start();
-		var looper = self._clock._looper as mockpf.Looper;
+		const looper = self._clock._looper as mockpf.Looper;
 		timer = setInterval(() => {
 			looper.fun(self._frameTime);
 		}, 1);
@@ -674,8 +674,8 @@ describe("GameLoop", function () {
 	});
 
 	it("replays game with snapshot, in syncrhonization with the target time function", function (done: Function) {
-		var startedAt = 10000;
-		var amflow = new MemoryAmflowClient({
+		const startedAt = 10000;
+		const amflow = new MemoryAmflowClient({
 			playId: "dummyPlayId",
 			tickList: [
 				0,
@@ -701,12 +701,12 @@ describe("GameLoop", function () {
 				}
 			]
 		});
-		var spyOnGetStartPoint = jest.spyOn(amflow, "getStartPoint");
+		const spyOnGetStartPoint = jest.spyOn(amflow, "getStartPoint");
 
-		var platform = new mockpf.Platform({ amflow });
-		var game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const platform = new mockpf.Platform({ amflow });
+		const game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -723,8 +723,8 @@ describe("GameLoop", function () {
 			startedAt
 		});
 
-		var timer: any = null;
-		var passedTestAges: number[] = [];
+		let timer: any = null;
+		const passedTestAges: number[] = [];
 		game.onResetTrigger.add(() => {
 			game.vars.onUpdate = () => {  // LocalTickGame が毎 update コールしてくる関数
 				passedTestAges.push(game.age);
@@ -751,7 +751,7 @@ describe("GameLoop", function () {
 		});
 
 		self.start();
-		var looper = self._clock._looper as mockpf.Looper;
+		const looper = self._clock._looper as mockpf.Looper;
 		timer = setInterval(() => {
 			looper.fun(self._frameTime);
 		}, 1);
@@ -766,7 +766,7 @@ describe("GameLoop", function () {
 	});
 
 	it("ignores an unnecessary startpoint in Realtime", function (done: Function) {
-		var zerothSp = {
+		const zerothSp = {
 			frame: 0,
 			timestamp: 0,
 			data: {
@@ -774,16 +774,16 @@ describe("GameLoop", function () {
 				startedAt: 10000
 			}
 		};
-		var amflow = new MemoryAmflowClient({
+		const amflow = new MemoryAmflowClient({
 			playId: "dummyPlayId",
 			tickList: [0, 10, []],
 			startPoints: [zerothSp]
 		});
-		var spyOnGetStartPoint = jest.spyOn(amflow, "getStartPoint");
-		var platform = new mockpf.Platform({});
-		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const spyOnGetStartPoint = jest.spyOn(amflow, "getStartPoint");
+		const platform = new mockpf.Platform({});
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -798,8 +798,8 @@ describe("GameLoop", function () {
 
 		self.start();
 
-		var looper = self._clock._looper as mockpf.Looper;
-		var timer = setInterval(() => {
+		const looper = self._clock._looper as mockpf.Looper;
+		const timer = setInterval(() => {
 			if (game.age > 10) {
 				clearInterval(timer);
 				expect(spyOnGetStartPoint.mock.calls.length).toBe(1);
@@ -819,14 +819,17 @@ describe("GameLoop", function () {
 			looper.fun(self._frameTime);
 		}, 1);
 
-		game.handlerSet.setEventFilterFuncs({ addFilter: (filter: g.EventFilter) => null, removeFilter: (filter?: g.EventFilter) => null });
+		game.handlerSet.setEventFilterFuncs({
+			addFilter: (_filter: g.EventFilter) => null,
+			removeFilter: (_filter?: g.EventFilter) => null
+		});
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 0 });
 		game._loadAndStart({ args: undefined });
 	});
 
 	it("can be started with StartPoint", function (done: Function) {
-		var zerothSp = {
+		const zerothSp = {
 			frame: 0,
 			timestamp: 0,
 			data: {
@@ -834,23 +837,23 @@ describe("GameLoop", function () {
 				startedAt: 10000
 			}
 		};
-		var sp5: amf.StartPoint = {
+		const sp5: amf.StartPoint = {
 			frame: 5,
 			timestamp: 20000,
 			data: {
 				snapshotValue: 42
 			}
 		};
-		var amflow = new MemoryAmflowClient({
+		const amflow = new MemoryAmflowClient({
 			playId: "dummyPlayId",
 			tickList: [0, 10, []],
 			startPoints: [zerothSp, sp5]
 		});
-		var spyOnGetTickList = jest.spyOn(amflow, "getTickList");
-		var platform = new mockpf.Platform({});
-		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const spyOnGetTickList = jest.spyOn(amflow, "getTickList");
+		const platform = new mockpf.Platform({});
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -864,8 +867,8 @@ describe("GameLoop", function () {
 
 		self.start();
 
-		var looper = self._clock._looper as mockpf.Looper;
-		var timer = setInterval(() => {
+		const looper = self._clock._looper as mockpf.Looper;
+		const timer = setInterval(() => {
 			if (game.age > 10) { // tick がすべて消化されることを確認
 				clearInterval(timer);
 
@@ -887,15 +890,19 @@ describe("GameLoop", function () {
 			looper.fun(self._frameTime);
 		}, 1);
 
-		game.handlerSet.setEventFilterFuncs({ addFilter: (filter: g.EventFilter) => null, removeFilter: (filter?: g.EventFilter) => null });
+		game.handlerSet.setEventFilterFuncs({
+			addFilter: (_filter: g.EventFilter) => null,
+			removeFilter: (_filter?: g.EventFilter) => null
+		});
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		self.reset(sp5);
 	});
 
 	it("does not request further ticks after it reaches the latest", function (done: Function) {
-		var targetTimeValue = 200000; // tick 消化で絶対に到達しない時点
-		var timeFunc = () => targetTimeValue;
-		var zerothSp: amf.StartPoint = {
+		let targetTimeValue = 200000; // tick 消化で絶対に到達しない時点
+		const timeFunc = (): number => targetTimeValue;
+		const startedAt = 140;
+		const zerothSp: amf.StartPoint = {
 			frame: 0,
 			timestamp: 0,
 			data: {
@@ -903,17 +910,16 @@ describe("GameLoop", function () {
 				startedAt
 			}
 		};
-		var startedAt = 140;
-		var amflow = new MemoryAmflowClient({
+		const amflow = new MemoryAmflowClient({
 			playId: "dummyPlayId",
 			tickList: [0, 10, []],
 			startPoints: [zerothSp]
 		});
-		var spyOnGetTickList = jest.spyOn(amflow, "getTickList");
-		var platform = new mockpf.Platform({ amflow });
-		var game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var self = new GameLoop({
+		const spyOnGetTickList = jest.spyOn(amflow, "getTickList");
+		const platform = new mockpf.Platform({ amflow });
+		const game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
 			amflow,
 			platform,
 			game,
@@ -927,11 +933,13 @@ describe("GameLoop", function () {
 			startedAt
 		});
 
-		var gotNoTickCount = 0;
-		self._tickBuffer.gotNoTickTrigger.add(() => { ++gotNoTickCount; });
+		let gotNoTickCount = 0;
+		self._tickBuffer.gotNoTickTrigger.add(() => {
+			++gotNoTickCount;
+		});
 
-		var timer: any = null;
-		var sentAdditionalTick = false;
+		let timer: any = null;
+		let sentAdditionalTick = false;
 		game.onResetTrigger.add(() => {
 			game.vars.onUpdate = () => {  // LocalTickGame が毎 update コールしてくる関数
 				switch (game.age) {
@@ -998,7 +1006,7 @@ describe("GameLoop", function () {
 
 						// _foundLatestTick は立ったままである
 						expect(self._foundLatestTick).toBe(true);
-						// 本題2: next tick がない状態で local tick を消化しているが、 
+						// 本題2: next tick がない状態で local tick を消化しているが、
 						// 最新 tick は見つけた後 (_foundLatestTick) なので、さらに先を探す getTickList() の呼び出しは起きない。
 						expect(spyOnGetTickList.mock.calls.length).toBe(3);
 
@@ -1015,7 +1023,7 @@ describe("GameLoop", function () {
 		});
 
 		self.start();
-		var looper = self._clock._looper as mockpf.Looper;
+		const looper = self._clock._looper as mockpf.Looper;
 		timer = setInterval(() => {
 			looper.fun(self._frameTime);
 		}, 1);
