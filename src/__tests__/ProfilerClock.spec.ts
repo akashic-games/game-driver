@@ -1,6 +1,7 @@
-import { SimpleProfiler, SimpleProfilerValue } from "../../lib/auxiliary/SimpleProfiler";
-import { ProfilerClock } from "../../lib/ProfilerClock";
-import * as mockpf from "../helpers/lib/MockPlatform";
+import type { SimpleProfilerValue } from "../auxiliary/SimpleProfiler";
+import { SimpleProfiler } from "../auxiliary/SimpleProfiler";
+import { ProfilerClock } from "../ProfilerClock";
+import * as mockpf from "./helpers/MockPlatform";
 
 describe("ProfilerClock", () => {
 

@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as pdi from "@akashic/pdi-types";
 import * as pci from "@akashic/pdi-common-impl";
+import type * as pdi from "@akashic/pdi-types";
 
 export interface MethodCallParam {
 	methodName: string;
@@ -26,17 +26,17 @@ export class Renderer extends pci.Renderer {
 		});
 	}
 
-	get methodCallHistory() {
-		var ret: string[] = [];
-		for (var i = 0; i < this.methodCallHistoryWithParams.length; ++i)
+	get methodCallHistory(): string[] {
+		const ret: string[] = [];
+		for (let i = 0; i < this.methodCallHistoryWithParams.length; ++i)
 			ret.push(this.methodCallHistoryWithParams[i].methodName);
 		return ret;
 	}
 
 	// 指定したメソッド名のパラメータを配列にして返す
 	methodCallParamsHistory(name: string): any[] {
-		var params: any[] = [];
-		for (var i = 0; i < this.methodCallHistoryWithParams.length; ++i) {
+		const params: any[] = [];
+		for (let i = 0; i < this.methodCallHistoryWithParams.length; ++i) {
 			if (this.methodCallHistoryWithParams[i].methodName === name) params.push(this.methodCallHistoryWithParams[i].params);
 		}
 		return params;
@@ -144,36 +144,36 @@ export class Renderer extends pci.Renderer {
 		throw new Error("not implemented: mock renderer isSupportedShaderProgram()");
 	}
 
-	setOpacity(opacity: number): void {
+	setOpacity(_opacity: number): void {
 		throw new Error("not implemented: mock renderer setOpacity()");
 	}
 
-	setShaderProgram(shaderProgram: pdi.ShaderProgram | null): void {
+	setShaderProgram(_shaderProgram: pdi.ShaderProgram | null): void {
 		throw new Error("not implemented: mock renderer setShaderProgram()");
 	}
 
-	setTransform(matrix: number[]): void {
+	setTransform(_matrix: number[]): void {
 		throw new Error("not implemented: mock renderer setTransform()");
 	}
 
-	_getImageData(sx: number, sy: number, sw: number, sh: number): pdi.ImageData {
+	_getImageData(_sx: number, _sy: number, _sw: number, _sh: number): pdi.ImageData {
 		throw new Error("not implemented: mock renderer _getImageData()");
 	}
 
-	_putImageData(imageData: pdi.ImageData, dx: number, dy: number, dw: number, dh: number): void {
+	_putImageData(_imageData: pdi.ImageData, _dx: number, _dy: number, _dw: number, _dh: number): void {
 		throw new Error("not implemented: mock renderer _putImageData()");
 	}
 }
 
 class Surface extends pci.Surface {
-	createdRenderer: pdi.Renderer;
+	createdRenderer!: pdi.Renderer;
 
 	constructor(width: number, height: number, drawable?: any) {
 		super(width, height, drawable);
 	}
 
 	renderer(): pdi.Renderer {
-		var r = new Renderer();
+		const r = new Renderer();
 		this.createdRenderer = r;
 		return r;
 	}
@@ -290,7 +290,7 @@ class TextAsset extends pci.TextAsset {
 class ScriptAsset extends pci.ScriptAsset {
 	resourceFactory: ResourceFactory;
 	_failureController: LoadFailureController;
-	_content: string;
+	_content: string | null;
 
 	constructor(resourceFactory: ResourceFactory, necessaryRetryCount: number, id: string, assetPath: string) {
 		super(id, assetPath);
@@ -314,9 +314,9 @@ class ScriptAsset extends pci.ScriptAsset {
 	}
 
 	execute(env: pdi.ScriptAssetRuntimeValue): any {
-		var prefix = "(function(exports, require, module, __filename, __dirname) {";
-		var suffix = "})(g.module.exports, g.module.require, g.module, g.filename, g.dirname);";
-		var f = new Function("g", prefix + this._content + suffix);
+		const prefix = "(function(exports, require, module, __filename, __dirname) {";
+		const suffix = "})(g.module.exports, g.module.require, g.module, g.filename, g.dirname);";
+		const f = new Function("g", prefix + this._content + suffix);
 		f(env);
 		return env.module.exports;
 	}
@@ -355,8 +355,8 @@ export class ResourceFactory extends pci.ResourceFactory {
 	// func が呼び出されている間だけ this._necessaryRetryCount を変更する。
 	// func() とその呼び出し先で生成されたアセットは、指定回数だけロードに失敗したのち成功する。
 	// -1を指定した場合、ロードは retriable が偽に設定された AssetLoadFatalError で失敗する。
-	withNecessaryRetryCount(necessaryRetryCount: number, func: () => void) {
-		var originalValue = this._necessaryRetryCount;
+	withNecessaryRetryCount(necessaryRetryCount: number, func: () => void): void {
+		const originalValue = this._necessaryRetryCount;
 		try {
 			this._necessaryRetryCount = necessaryRetryCount;
 			func();
@@ -390,14 +390,28 @@ export class ResourceFactory extends pci.ResourceFactory {
 		return new AudioPlayer(system);
 	}
 
-	createVideoAsset(id: string, assetPath: string, width: number, height: number,
-	                 system: pdi.VideoSystem, loop: boolean, useRealSize: boolean): pci.VideoAsset {
+	createVideoAsset(
+		_id: string,
+		_assetPath: string,
+		_width: number,
+		_height: number,
+		_system: pdi.VideoSystem,
+		_loop: boolean,
+		_useRealSize: boolean
+	): pci.VideoAsset {
 		throw new Error("not implemented: mock resourceFactory createVideoAsset()");
 	}
 
-	createGlyphFactory(fontFamily: string | string[], fontSize: number,
-	                   baselineHeight?: number, fontColor?: string, strokeWidth?: number,
-	                   strokeColor?: string, strokeOnly?: boolean, fontWeight?: pdi.FontWeightString): pci.GlyphFactory {
+	createGlyphFactory(
+		_fontFamily: string | string[],
+		_fontSize: number,
+		_baselineHeight?: number,
+		_fontColor?: string,
+		_strokeWidth?: number,
+		_strokeColor?: string,
+		_strokeOnly?: boolean,
+		_fontWeight?: pdi.FontWeightString
+	): pci.GlyphFactory {
 		throw new Error("not implemented: mock resourceFactory createGlyphFactory()");
 	}
 

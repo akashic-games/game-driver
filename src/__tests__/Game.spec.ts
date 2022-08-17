@@ -1,13 +1,14 @@
 import * as g from "@akashic/akashic-engine";
-import * as pl from "@akashic/playlog";
-import * as mockrf from "../helpers/lib/MockResourceFactory";
-import { Game } from "../../lib/Game";
-import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
-import { GameHandlerSet } from "../../lib/GameHandlerSet";
+import type { StartPoint } from "@akashic/amflow";
+import type * as pl from "@akashic/playlog";
+import { Game } from "../Game";
+import { GameHandlerSet } from "../GameHandlerSet";
+import * as mockrf from "./helpers/MockResourceFactory";
+import { prepareGame, FixtureGame } from "./helpers/prepareGame";
 
 describe("Game", function() {
 
-	var dummyConfiguration: g.GameConfiguration = {
+	const dummyConfiguration: g.GameConfiguration = {
 		width: 320,
 		height: 240,
 		fps: 30,
@@ -94,7 +95,7 @@ describe("Game", function() {
 		});
 
 		game.raiseEvent(new g.MessageEvent("data", { id: "foo" }, true));
-		game.raiseEvent(new g.PointDownEvent(0, null, { x: 0, y: 10 }, { id: "foo" }));
+		game.raiseEvent(new g.PointDownEvent(0, undefined, { x: 0, y: 10 }, { id: "foo" }));
 
 		// playlog.Eventへの変換時に player 情報が強制で上書きされる。
 		expect(raisedEvents).toEqual([
@@ -104,7 +105,7 @@ describe("Game", function() {
 	});
 
 	it("manages age-passed notification", function (done: any) {
-		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
 
 		game.loadAndDo(() => {
 			game.requestNotifyAgePassed(1);
@@ -114,8 +115,10 @@ describe("Game", function() {
 			game.requestNotifyAgePassed(2);
 			expect(game._notifyPassedAgeTable[2]).toBe(true);
 
-			var notifiedAge: number[] = [];
-			game.agePassedTrigger.add((age: number) => { notifiedAge.push(age); });
+			const notifiedAge: number[] = [];
+			game.agePassedTrigger.add((age: number) => {
+				notifiedAge.push(age);
+			});
 			game.tick(true);
 			game.fireAgePassedIfNeeded();
 			game.tick(true);
@@ -148,7 +151,7 @@ describe("Game", function() {
 		});
 
 		let fired = 0;
-		let startPoint = null;
+		let startPoint: StartPoint | null = null;
 		handlerSet.snapshotTrigger.add(sp => {
 			++fired;
 			startPoint = sp;

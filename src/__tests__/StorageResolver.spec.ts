@@ -1,20 +1,26 @@
 "use strict";
 import * as g from "@akashic/akashic-engine";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
-import { prepareGame, FixtureGame } from "../helpers/lib/prepareGame";
-import ExecutionMode from "../../lib/ExecutionMode";
-import { Game } from "../../lib/Game";
-import { EventBuffer } from "../../lib/EventBuffer";
-import { TickGenerator } from "../../lib/TickGenerator";
-import { TickBuffer } from "../../lib/TickBuffer";
-import { StorageResolver } from "../../lib/StorageResolver";
+import { EventBuffer } from "../EventBuffer";
+import ExecutionMode from "../ExecutionMode";
+import type { Game } from "../Game";
+import { StorageResolver } from "../StorageResolver";
+import { TickBuffer } from "../TickBuffer";
+import { TickGenerator } from "../TickGenerator";
+import { MockAmflow } from "./helpers/MockAmflow";
+import { prepareGame, FixtureGame } from "./helpers/prepareGame";
 
 describe("StorageResolver", function () {
 	class ErrorCollector {
-		errors: any[];
-		constructor() { this.reset(); }
-		add(e: any): void { this.errors.push(e); }
-		reset(): void { this.errors = []; }
+		errors: any[] = [];
+		constructor() {
+			this.reset();
+		}
+		add(e: any): void {
+			this.errors.push(e);
+		}
+		reset(): void {
+			this.errors = [];
+		}
 	}
 
 	interface PrepareStorageResolverResult {
@@ -28,16 +34,18 @@ describe("StorageResolver", function () {
 	}
 
 	function prepareStorageResolver(active: boolean): PrepareStorageResolverResult {
-		var executionMode = active ? ExecutionMode.Active : ExecutionMode.Passive;
-		var errorCollector = new ErrorCollector();
-		var errorHandler = errorCollector.add;
-		var errorHandlerOwner = errorCollector;
-		var game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
-		var amflow = new MockAmflow();
-		var eventBuffer = new EventBuffer({ amflow, game });
-		var tickGenerator = new TickGenerator({ amflow, eventBuffer, errorHandler, errorHandlerOwner });
-		var tickBuffer = new TickBuffer({ amflow, executionMode });
-		var storageResolver = new StorageResolver({ game, amflow, tickGenerator, tickBuffer, executionMode, errorHandler, errorHandlerOwner });
+		const executionMode = active ? ExecutionMode.Active : ExecutionMode.Passive;
+		const errorCollector = new ErrorCollector();
+		const errorHandler = errorCollector.add;
+		const errorHandlerOwner = errorCollector;
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const amflow = new MockAmflow();
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const tickGenerator = new TickGenerator({ amflow, eventBuffer, errorHandler, errorHandlerOwner });
+		const tickBuffer = new TickBuffer({ amflow, executionMode });
+		const storageResolver = new StorageResolver({
+			game, amflow, tickGenerator, tickBuffer, executionMode, errorHandler, errorHandlerOwner
+		});
 		game.setStorageFunc({
 			storageGetFunc: storageResolver.getStorageFunc,
 			storagePutFunc: storageResolver.putStorageFunc,
@@ -47,8 +55,8 @@ describe("StorageResolver", function () {
 	}
 
 	it("can be instantiated", function () {
-		var prepared = prepareStorageResolver(true);
-		var self = prepared.storageResolver;
+		const prepared = prepareStorageResolver(true);
+		const self = prepared.storageResolver;
 
 		expect(self.errorTrigger.contains(prepared.errorCollector.add, prepared.errorCollector)).toBe(true);
 		expect(typeof self.getStorageFunc).toBe("function");
@@ -65,8 +73,8 @@ describe("StorageResolver", function () {
 	});
 
 	it("can switch execution mode", function () {
-		var prepared = prepareStorageResolver(true);
-		var self = prepared.storageResolver;
+		const prepared = prepareStorageResolver(true);
+		const self = prepared.storageResolver;
 
 		expect(self._executionMode).toBe(ExecutionMode.Active);
 		expect(self._tickGenerator.gotStorageTrigger.contains(self._onGotStorageOnTick, self)).toBe(true);
@@ -86,16 +94,16 @@ describe("StorageResolver", function () {
 	});
 
 	it("holds given storage data until requested", function (done: any) {
-		var prepared = prepareStorageResolver(true);
-		var self = prepared.storageResolver;
-		var storageData = [{
+		const prepared = prepareStorageResolver(true);
+		const self = prepared.storageResolver;
+		const storageData = [{
 			readKey: { region: g.StorageRegion.Counts, regionKey: "dummy" },
 			values: [{ data: "dummyData0", tag: "dummyTag" }, { data: "dummyData1" }]
 		}];
 		self._tickGenerator.gotStorageTrigger.fire({ age: 1, storageData: storageData });
 		expect(self._unresolvedStorages[1]).toBe(storageData);
 
-		var loader = prepared.game.storage._createLoader([storageData[0].readKey], 1);
+		const loader = prepared.game.storage._createLoader([storageData[0].readKey], 1);
 		loader._load({
 			_onStorageLoadError: done.fail,
 			_onStorageLoaded: function () {
@@ -108,14 +116,14 @@ describe("StorageResolver", function () {
 	});
 
 	it("reports the requested storage data", function (done: any) {
-		var prepared = prepareStorageResolver(true);
-		var self = prepared.storageResolver;
-		var storageData = [{
+		const prepared = prepareStorageResolver(true);
+		const self = prepared.storageResolver;
+		const storageData = [{
 			readKey: { region: g.StorageRegion.Counts, regionKey: "dummy" },
 			values: [{ data: "dummyData0", tag: "dummyTag" }, { data: "dummyData1" }]
 		}];
 
-		var loader = prepared.game.storage._createLoader([storageData[0].readKey]);
+		const loader = prepared.game.storage._createLoader([storageData[0].readKey]);
 		loader._load({
 			_onStorageLoadError: done.fail,
 			_onStorageLoaded: function () {
@@ -130,18 +138,18 @@ describe("StorageResolver", function () {
 	});
 
 	it("puts storage through amflow", function () {
-		var prepared = prepareStorageResolver(true);
-		var self = prepared.storageResolver;
-		self.putStorageFunc({ region: 0, regionKey: "foostoragekey" }, { data: 42 }, null);
+		const prepared = prepareStorageResolver(true);
+		const self = prepared.storageResolver;
+		self.putStorageFunc({ region: 0, regionKey: "foostoragekey" }, { data: 42 });
 		prepared.amflow.requestsPutStorageData[0]();
-		expect(prepared.amflow.storage["foostoragekey"]).toEqual({ data: 42 });
+		expect(prepared.amflow.storage.foostoragekey).toEqual({ data: 42 });
 	});
 
 	it("handles storage writing failure", function () {
-		var err = new Error("Test Error");
-		var prepared = prepareStorageResolver(true);
-		var self = prepared.storageResolver;
-		self.putStorageFunc({ region: 0, regionKey: "foostoragekey" }, { data: 42 }, null);
+		const err = new Error("Test Error");
+		const prepared = prepareStorageResolver(true);
+		const self = prepared.storageResolver;
+		self.putStorageFunc({ region: 0, regionKey: "foostoragekey" }, { data: 42 });
 		prepared.amflow.requestsPutStorageData[0](err);
 		expect(prepared.errorCollector.errors[0]).toBe(err);
 	});

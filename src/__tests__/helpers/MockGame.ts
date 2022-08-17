@@ -1,10 +1,11 @@
 import * as g from "@akashic/akashic-engine";
-import { Game, GameParameterObject } from "../../../lib/Game";
+import type { GameParameterObject } from "../../Game";
+import { Game } from "../../Game";
 
 export class MockGame extends Game {
 	_timerId: any;
 	autoTickForSceneChange: boolean;
-	onResetTrigger: g.Trigger<void>;
+	onResetTrigger!: g.Trigger<void>;
 
 	constructor(param: GameParameterObject) {
 		super(param);
@@ -43,7 +44,9 @@ export class MockGame extends Game {
 	_pushPostTickTask(fun: () => void, owner: any): void {
 		super._pushPostTickTask(fun, owner);
 		if (this.autoTickForSceneChange) {
-			setTimeout(() => { this.tick(false); }, 0);
+			setTimeout(() => {
+				this.tick(false);
+			}, 0);
 		}
 	}
 }
