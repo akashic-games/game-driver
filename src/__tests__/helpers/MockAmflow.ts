@@ -99,7 +99,7 @@ export class MockAmflow implements AMFlow {
 				begin: optsOrBegin,
 				end: endOrCallback as number
 			};
-			callback = callbackOrUndefined as any;
+			callback = callbackOrUndefined!;
 		} else {
 			// NOTE: optsOrBegin !== "number" であれば必ず amflow@3 以降の引数だとみなしてキャストする
 			opts = optsOrBegin;
