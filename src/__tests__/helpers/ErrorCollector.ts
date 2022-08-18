@@ -1,5 +1,5 @@
 export class ErrorCollector {
-	errors: any[];
+	errors: any[] = [];
 
 	constructor() {
 		this.reset();

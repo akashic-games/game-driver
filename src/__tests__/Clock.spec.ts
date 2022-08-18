@@ -1,18 +1,19 @@
-import { Clock, ClockFrameTriggerParameterObject } from "../../lib/Clock";
-import * as mockpf from "../helpers/lib/MockPlatform";
+import type { ClockFrameTriggerParameterObject } from "../Clock";
+import { Clock } from "../Clock";
+import * as mockpf from "./helpers/MockPlatform";
 
 describe("Clock", function() {
 
 	it("can be instantiated", function() {
-		var pf = new mockpf.Platform({});
-		var target = {
+		const pf = new mockpf.Platform({});
+		const target = {
 			count: 0,
 			inc: function () {
 				++this.count;
 			}
 		};
 
-		var clock = new Clock({
+		const clock = new Clock({
 			fps: 35,
 			platform: pf,
 			maxFramePerOnce: 8,
@@ -31,15 +32,15 @@ describe("Clock", function() {
 	});
 
 	it("can change frameHandler", function() {
-		var pf = new mockpf.Platform({});
-		var target = {
+		const pf = new mockpf.Platform({});
+		const target = {
 			count: 0,
 			inc: function () {
 				++this.count;
 			}
 		};
 
-		var clock = new Clock({
+		const clock = new Clock({
 			fps: 30,
 			platform: pf,
 			maxFramePerOnce: 10
@@ -50,17 +51,17 @@ describe("Clock", function() {
 	});
 
 	it("calls frameHandler after start()", function() {
-		var pf = new mockpf.Platform({});
-		var target = {
+		const pf = new mockpf.Platform({});
+		const target = {
 			count: 0,
 			inc: function () {
 				++this.count;
 			}
 		};
 
-		var fps = 50;
-		var waitTime = 1000 / 50;
-		var clock = new Clock({
+		const fps = 50;
+		const waitTime = 1000 / 50;
+		const clock = new Clock({
 			fps: fps,
 			platform: pf,
 			maxFramePerOnce: 8,
@@ -69,7 +70,7 @@ describe("Clock", function() {
 			deltaTimeBrokenThreshold: (1000 / fps) * 100
 		});
 
-		var l = pf.loopers[0];
+		const l = pf.loopers[0];
 		expect(l.fun).toBe(clock._onLooperCall_bound);
 		expect(target.count).toBe(0);
 		expect(clock.running).toBe(false);
@@ -93,27 +94,34 @@ describe("Clock", function() {
 		expect(l.fun(waitTime * 5 + 1)).toBe(waitTime - 2);
 		expect(target.count).toBe(6);
 
+		// eslint-disable-next-line max-len
 		expect(l.fun(waitTime * 10 + 1)).toBe((waitTime - 2) - (2 * waitTime) - 1); // (waitTime - 2):前回の値, (2 * waitTime):maxFramePerOnceを超過する分
 		expect(target.count).toBe(14);  // waitTimeの10倍進めても8(=== maxFramePerOnce)しか呼ばれない
 
 		// 複数回呼んでもクラッシュなどしないことを確認
-		expect(() => { clock.start(); }).not.toThrow();
-		expect(() => { clock.stop(); }).not.toThrow();
-		expect(() => { clock.stop(); }).not.toThrow();
+		expect(() => {
+			clock.start();
+		}).not.toThrow();
+		expect(() => {
+			clock.stop();
+		}).not.toThrow();
+		expect(() => {
+			clock.stop();
+		}).not.toThrow();
 	});
 
 	it("ignores deltaTime greater than _deltaTimeBrokenThreshold", function() {
-		var pf = new mockpf.Platform({});
-		var target = {
+		const pf = new mockpf.Platform({});
+		const target = {
 			count: 0,
 			inc: function () {
 				++this.count;
 			}
 		};
 
-		var fps = 50;
-		var waitTime = 1000 / 50;
-		var clock = new Clock({
+		const fps = 50;
+		const waitTime = 1000 / 50;
+		const clock = new Clock({
 			fps: fps,
 			platform: pf,
 			maxFramePerOnce: 8,
@@ -121,7 +129,7 @@ describe("Clock", function() {
 			frameHandlerOwner: target
 		});
 
-		var l = pf.loopers[0];
+		const l = pf.loopers[0];
 		expect(l.fun).toBe(clock._onLooperCall_bound);
 		expect(target.count).toBe(0);
 		expect(clock.running).toBe(false);
@@ -138,9 +146,8 @@ describe("Clock", function() {
 	});
 
 	it("stops immediately after stop() is called", function() {
-		var clock: Clock;
-		var pf = new mockpf.Platform({});
-		var target = {
+		const pf = new mockpf.Platform({});
+		const target = {
 			count: 0,
 			inc: function () {
 				++this.count;
@@ -148,9 +155,9 @@ describe("Clock", function() {
 			}
 		};
 
-		var fps = 50;
-		var waitTime = 1000 / 50;
-		clock = new Clock({
+		const fps = 50;
+		const waitTime = 1000 / 50;
+		const clock = new Clock({
 			fps: fps,
 			platform: pf,
 			maxFramePerOnce: 10,
@@ -159,7 +166,7 @@ describe("Clock", function() {
 			deltaTimeBrokenThreshold: (1000 / fps) * 100
 		});
 
-		var l = pf.loopers[0];
+		const l = pf.loopers[0];
 		expect(l.fun).toBe(clock._onLooperCall_bound);
 		expect(target.count).toBe(0);
 		expect(clock.running).toBe(false);
@@ -174,9 +181,8 @@ describe("Clock", function() {
 	});
 
 	it("stops immediately after interrupted", function() {
-		var clock: Clock;
-		var pf = new mockpf.Platform({});
-		var target = {
+		const pf = new mockpf.Platform({});
+		const target = {
 			count: 0,
 			inc: function (arg: ClockFrameTriggerParameterObject) {
 				++this.count;
@@ -184,9 +190,9 @@ describe("Clock", function() {
 			}
 		};
 
-		var fps = 50;
-		var waitTime = 1000 / 50;
-		clock = new Clock({
+		const fps = 50;
+		const waitTime = 1000 / 50;
+		const clock = new Clock({
 			fps: fps,
 			platform: pf,
 			maxFramePerOnce: 10,
@@ -195,7 +201,7 @@ describe("Clock", function() {
 			deltaTimeBrokenThreshold: (1000 / fps) * 100
 		});
 
-		var l = pf.loopers[0];
+		const l = pf.loopers[0];
 		clock.start();
 		expect(l.fun(0)).toBe(waitTime);
 		expect(target.count).toBe(0);
@@ -206,22 +212,22 @@ describe("Clock", function() {
 
 
 	it("can change scaleFactor", function() {
-		var pf = new mockpf.Platform({});
-		var target = {
+		const pf = new mockpf.Platform({});
+		const target = {
 			count: 0,
 			inc: function () {
 				++this.count;
 			}
 		};
 
-		var clock = new Clock({
+		const clock = new Clock({
 			fps: 10,
 			platform: pf,
 			maxFramePerOnce: 8,
 			frameHandler: target.inc,
 			frameHandlerOwner: target
 		});
-		var l = pf.loopers[0];
+		const l = pf.loopers[0];
 
 		expect(clock.fps).toBe(10);
 		expect(clock.scaleFactor).toBe(1);
@@ -252,17 +258,17 @@ describe("Clock", function() {
 	});
 
 	it("If the argument of _onLooperCall() is NaN, advance next frame", function () {
-		var pf = new mockpf.Platform({});
-		var target = {
+		const pf = new mockpf.Platform({});
+		const target = {
 			count: 0,
 			inc: function () {
 				++this.count;
 			}
 		};
 
-		var fps = 50;
-		var waitTime = 1000 / 50;
-		var clock = new Clock({
+		const fps = 50;
+		const waitTime = 1000 / 50;
+		const clock = new Clock({
 			fps: fps,
 			platform: pf,
 			maxFramePerOnce: 8,
@@ -271,7 +277,7 @@ describe("Clock", function() {
 			deltaTimeBrokenThreshold: (1000 / fps) * 100
 		});
 
-		var l = pf.loopers[0];
+		const l = pf.loopers[0];
 		expect(target.count).toBe(0);
 		expect(clock.running).toBe(false);
 

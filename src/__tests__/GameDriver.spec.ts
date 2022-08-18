@@ -1,7 +1,7 @@
-import * as amf from "@akashic/amflow";
-import { GameDriver } from "../../lib/GameDriver";
-import { Platform } from "../helpers/lib/MockPlatform";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
+import type * as amf from "@akashic/amflow";
+import { GameDriver } from "../GameDriver";
+import { MockAmflow } from "./helpers/MockAmflow";
+import { Platform } from "./helpers/MockPlatform";
 
 describe("GameDriver", () => {
 	const seed = 100;
@@ -16,11 +16,11 @@ describe("GameDriver", () => {
 	});
 
 	afterEach(() => {
-		platform = undefined;
+		platform = undefined!;
 	});
 
 	it("can be destroyed", (done: () => void) => {
-		const gameDriver = new GameDriver({platform, player: null});
+		const gameDriver = new GameDriver({platform, player: null!});
 		gameDriver.destroy().then(() => {
 			// TODO game生成後の破棄テスト
 			expect(gameDriver.errorTrigger).toBe(null);
@@ -30,9 +30,9 @@ describe("GameDriver", () => {
 
 	describe("_putZerothStartPoint", () => {
 		it("should write the StartPointData on amflow", (done: () => void) => {
-			const gameDriver = new GameDriver({platform, player: null});
+			const gameDriver = new GameDriver({platform, player: null!});
 			jest.spyOn(platform.amflow, "putStartPoint").mockImplementation(
-				(startPoint: amf.StartPoint, callback: (error: Error) => void): void => {
+				(startPoint: amf.StartPoint, callback: (error: Error | null) => void): void => {
 					expect(startPoint).toEqual({
 						frame: 0,
 						timestamp: startedAt,
@@ -49,21 +49,21 @@ describe("GameDriver", () => {
 		});
 
 		it("should report amflow error", (done: () => void) => {
-			const gameDriver = new GameDriver({platform, player: null});
+			const gameDriver = new GameDriver({platform, player: null!});
 			jest.spyOn(platform.amflow, "putStartPoint").mockImplementation(
-				(startPoint: amf.StartPoint, callback: (error: Error) => void): void => {
+				(_startPoint: amf.StartPoint, callback: (error: Error) => void): void => {
 					callback(new Error());
 				}
 			);
-			gameDriver._putZerothStartPoint({seed, globalArgs, startedAt, fps}).catch(err => done());
+			gameDriver._putZerothStartPoint({seed, globalArgs, startedAt, fps}).catch(_err => done());
 		});
 	});
 
 	describe("_getStartPoint", () => {
 		it("should get a StartPointData from amflow", (done: () => void) => {
-			const gameDriver = new GameDriver({platform, player: null});
+			const gameDriver = new GameDriver({platform, player: null!});
 			jest.spyOn(platform.amflow, "getStartPoint").mockImplementation(
-				(opts: amf.GetStartPointOptions, callback: (error: Error, startPoint: amf.StartPoint) => void): void => {
+				(opts: amf.GetStartPointOptions, callback: (error: Error | null, startPoint: amf.StartPoint) => void): void => {
 					expect(opts.frame).toBe(0);
 					callback(null, {frame: 0, timestamp: 0, data: {seed, globalArgs, startedAt, fps}});
 				}
@@ -77,13 +77,13 @@ describe("GameDriver", () => {
 		});
 
 		it("should report amflow error", (done: () => void) => {
-			const gameDriver = new GameDriver({platform, player: null});
+			const gameDriver = new GameDriver({platform, player: null!});
 			jest.spyOn(platform.amflow, "getStartPoint").mockImplementation(
-				(opts: amf.GetStartPointOptions, callback: (error: Error, startPoint: amf.StartPoint) => void): void => {
-					callback(new Error(), null);
+				(_opts: amf.GetStartPointOptions, callback: (error: Error, startPoint?: amf.StartPoint) => void): void => {
+					callback(new Error());
 				}
 			);
-			gameDriver._getStartPoint(0).catch(err => done());
+			gameDriver._getStartPoint(0).catch(_err => done());
 		});
 	});
 });

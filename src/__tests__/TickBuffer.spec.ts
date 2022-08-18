@@ -1,25 +1,25 @@
 import * as pl from "@akashic/playlog";
-import { TickBuffer } from "../../lib/TickBuffer";
-import ExecutionMode from "../../lib/ExecutionMode";
-import { MockAmflow } from "../helpers/lib/MockAmflow";
+import ExecutionMode from "../ExecutionMode";
+import { TickBuffer } from "../TickBuffer";
+import { MockAmflow } from "./helpers/MockAmflow";
 
 describe("TickBuffer", function() {
-	var pd0: pl.PointDownEvent = [
+	const pd0: pl.PointDownEvent = [
 		pl.EventCode.PointDown, // 0: EventCode
 		0,                      // 1: プライオリティ
 		"dummyPlayerId",        // 2: プレイヤーID
 		0,                      // 3: ポインターID
 		10,                     // 4: X座標
 		100                     // 5: Y座標
-														// 6?: エンティティID
+		// 6?: エンティティID
 	];
-	var msg0: pl.MessageEvent = [
+	const msg0: pl.MessageEvent = [
 		pl.EventCode.Message,   // 0: EventCode
 		0,                      // 1: プライオリティ
 		"dummyPlayerId",        // 2: プレイヤーID
 		42                      // 3: 汎用的なデータ
 	];
-	var timestamp0: pl.TimestampEvent = [
+	const timestamp0: pl.TimestampEvent = [
 		pl.EventCode.Timestamp, // 0: EventCode
 		0,                      // 1: プライオリティ
 		"dummyPlayerId",        // 2: プレイヤーID
@@ -27,8 +27,8 @@ describe("TickBuffer", function() {
 	];
 
 	it("can be instantiated", function() {
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
 
 		expect(tb._amflow).toBe(amflow);
 		expect(tb.knownLatestAge).toBe(-1);
@@ -40,8 +40,8 @@ describe("TickBuffer", function() {
 	});
 
 	it("drops ticks when changing ExecutionMode", function() {
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
 
 		tb.addTick([0]);
 		tb.addTick([2]);
@@ -55,11 +55,11 @@ describe("TickBuffer", function() {
 	});
 
 	it("manages _tickRanges for addTick()", function () {
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
 
-		var gotNextTickCount = 0;
-		function gotNextTick() {
+		let gotNextTickCount = 0;
+		function gotNextTick(): void {
 			++gotNextTickCount;
 		}
 		tb.gotNextTickTrigger.add(gotNextTick, null);
@@ -171,14 +171,8 @@ describe("TickBuffer", function() {
 	});
 
 	it("manages _tickRanges for _onTicks()", function () {
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
-
-		var gotNextTickCount = 0;
-		function gotNextTick() {
-			++gotNextTickCount;
-		}
-		tb.gotNextTickTrigger.add(gotNextTick, null);
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
 
 		tb._onTicks(null, [ 3, 20, [[4, [pd0]], [10, [msg0]]] ]);
 		expect(tb.currentAge).toBe(0);
@@ -202,7 +196,7 @@ describe("TickBuffer", function() {
 		expect(tb.knownLatestAge).toBe(99);
 		expect(tb._nearestAbsentAge).toBe(100);
 		expect(tb._tickRanges).toEqual([]);
-		tb._onTicks(null, [ 100, 100, null ]);
+		tb._onTicks(null, [ 100, 100 ]);
 		expect(tb.currentAge).toBe(100);
 		expect(tb.knownLatestAge).toBe(100);
 		expect(tb._nearestAbsentAge).toBe(101);
@@ -300,13 +294,13 @@ describe("TickBuffer", function() {
 	});
 
 	it("can subscribe ticks", function () {
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
 
 		tb.start();
 		expect(tb._receiving).toBe(true);
 
-		var onTick = amflow.tickHandlers[0];
+		const onTick = amflow.tickHandlers[0];
 		expect(onTick).toBe(tb._addTick_bound);
 
 		onTick([0]);
@@ -357,8 +351,8 @@ describe("TickBuffer", function() {
 	});
 
 	it("provides accumulated ticks", function () {
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({
 			amflow: amflow,
 			executionMode: ExecutionMode.Passive,
 			prefetchThreshold: 3,
@@ -367,15 +361,15 @@ describe("TickBuffer", function() {
 		expect(tb._prefetchThreshold).toBe(3);
 		expect(tb._sizeRequestOnce).toBe(2);
 
-		var gotNextTickCount = 0;
-		function gotNextTick() {
+		let gotNextTickCount = 0;
+		function gotNextTick(): void {
 			++gotNextTickCount;
 		}
 		tb.gotNextTickTrigger.add(gotNextTick, null);
 
 		tb.start();
 		expect(tb._receiving).toBe(true);
-		var onTick = amflow.tickHandlers[0];
+		const onTick = amflow.tickHandlers[0];
 		expect(onTick).toBe(tb._addTick_bound);
 
 		onTick([0]);
@@ -420,7 +414,7 @@ describe("TickBuffer", function() {
 
 		// ついでに長さ0のエッジケースも通過のみテスト
 		tb.requestTicks(tb.currentAge, 0);
-		amflow.requestsGetTicks[0].respond(null, null);
+		amflow.requestsGetTicks[0].respond(null, []);
 
 		tb.requestTicks();
 		expect(amflow.requestsGetTicks.length).toBe(1);
@@ -438,11 +432,11 @@ describe("TickBuffer", function() {
 	});
 
 	it("drops ticks until the current", function () {
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({ amflow: amflow, executionMode: ExecutionMode.Passive });
 
-		tb._onTicks(null, [ 10, 25, null ]);
-		tb._onTicks(null, [ 52, 55, null ]);
+		tb._onTicks(null, [ 10, 25 ]);
+		tb._onTicks(null, [ 52, 55 ]);
 		expect(tb._tickRanges).toEqual([
 			{ start: 10, end: 26, ticks: [] },
 			{ start: 52, end: 56, ticks: [] }
@@ -466,15 +460,15 @@ describe("TickBuffer", function() {
 	});
 
 	it("can peek the next tick time", function () {
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({
 			amflow: amflow,
 			executionMode: ExecutionMode.Passive,
 			prefetchThreshold: 3,
 			sizeRequestOnce: 2
 		});
 
-		var read = tb.readNextTickTime();
+		let read = tb.readNextTickTime();
 		expect(read).toBe(null);  // tickがないときはnull
 
 		tb._onTicks(null, [ 0, 5, [[1, [timestamp0]], [2, null, []]] ]);
@@ -486,7 +480,7 @@ describe("TickBuffer", function() {
 		expect(tb.currentAge).toBe(0);
 		expect(tb._nextTickTimeCache).toBe(null);  // キャッシュもなし
 
-		var tick = tb.consume();
+		let tick = tb.consume();
 		expect(tick).toBe(0);
 		expect(tb.currentAge).toBe(1);
 		expect(tb._nextTickTimeCache).toBe(null);  // age 1 にはtimestampがあるがまだキャッシュされていない
@@ -512,9 +506,9 @@ describe("TickBuffer", function() {
 	});
 
 	it("has workaround for old (relative) timestamps", function () {
-		var startedAt = +(new Date(2000, 0, 1));
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({
+		const startedAt = +(new Date(2000, 0, 1));
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({
 			amflow: amflow,
 			executionMode: ExecutionMode.Passive,
 			prefetchThreshold: 3,
@@ -522,22 +516,22 @@ describe("TickBuffer", function() {
 			startedAt: startedAt
 		});
 
-		var absTimestamp: pl.TimestampEvent = [
+		const absTimestamp: pl.TimestampEvent = [
 			pl.EventCode.Timestamp, // 0: EventCode
 			0,                      // 1: プライオリティ
 			"dummyPlayerId",        // 2: プレイヤーID
 			startedAt + 1000        // 3: タイムスタンプ
 		];
 
-		var tick0: pl.Tick = [0, [absTimestamp]];
-		var tick2: pl.Tick = [2, [timestamp0]];
+		const tick0: pl.Tick = [0, [absTimestamp]];
+		const tick2: pl.Tick = [2, [timestamp0]];
 		tb.addTick(tick0);
 		tb.addTick([1]);
 		tb.addTick(tick2);
 
 		expect(tb.readNextTickTime()).toBe(absTimestamp[pl.TimestampEventIndex.Timestamp]);
 		expect(tb.readNextTickTime()).toBe(absTimestamp[pl.TimestampEventIndex.Timestamp]);
-		var t = tb.consume();
+		let t = tb.consume();
 		expect(t).toEqual(tick0);
 
 		expect(tb.readNextTickTime()).toBe(null);
@@ -558,7 +552,7 @@ describe("TickBuffer", function() {
 		 * obj[prop] を value に差し替えて fun() を呼ぶ。
 		 * 呼び出しが終わった時、 obj[prop] を復元する。
 		 */
-		function override(obj: any, prop: string, value: any, fun: () => void) {
+		function override(obj: any, prop: string, value: any, fun: () => void): void {
 			const has = obj.hasOwnProperty(prop);
 			const orig = obj[prop];
 			try {
@@ -572,8 +566,8 @@ describe("TickBuffer", function() {
 			}
 		}
 
-		var amflow = new MockAmflow();
-		var tb = new TickBuffer({
+		const amflow = new MockAmflow();
+		const tb = new TickBuffer({
 			amflow: amflow,
 			executionMode: ExecutionMode.Passive,
 			prefetchThreshold: 3,
@@ -581,23 +575,25 @@ describe("TickBuffer", function() {
 		});
 		const spyOnGetTickList = jest.spyOn(amflow, "getTickList");
 
-		const dummyFun = () => {};
+		const dummyFun = (): void => {
+			// do nothing
+		};
 		override(global, "window", { confirm: dummyFun, prompt: dummyFun }, () => {
 			tb.requestTicks(1, 2);
-			amflow.requestsGetTicks[0].respond(null, null);
+			amflow.requestsGetTicks[0].respond(null, []);
 			expect(spyOnGetTickList.mock.calls[0][0]).toBe(1);
 			expect(spyOnGetTickList.mock.calls[0][1]).toBe(1 + 2);
 
 			tb.startSkipping();
 			tb.requestTicks(3, 4);
 			tb.endSkipping();
-			amflow.requestsGetTicks[0].respond(null, null);
+			amflow.requestsGetTicks[0].respond(null, []);
 			expect(spyOnGetTickList.mock.calls[1][0]).toBe(3);
 			expect(spyOnGetTickList.mock.calls[1][1]).toBe(3 + 4);
 		});
 
 		tb.requestTicks(5, 6);
-		amflow.requestsGetTicks[0].respond(null, null);
+		amflow.requestsGetTicks[0].respond(null, []);
 		expect(spyOnGetTickList.mock.calls[2][0]).toEqual({
 			begin: 5,
 			end: 5 + 6
@@ -605,7 +601,7 @@ describe("TickBuffer", function() {
 
 		tb.startSkipping();
 		tb.requestTicks(7, 8);
-		amflow.requestsGetTicks[0].respond(null, null);
+		amflow.requestsGetTicks[0].respond(null, []);
 		tb.endSkipping();
 		expect(spyOnGetTickList.mock.calls[3][0]).toEqual({
 			begin: 7,
@@ -624,18 +620,20 @@ describe("TickBuffer", function() {
 		});
 
 		let noTickCount = 0;
-		tb.gotNoTickTrigger.add(() => { ++noTickCount; });
+		tb.gotNoTickTrigger.add(() => {
+			++noTickCount;
+		});
 
 		tb.requestTicks(0, 3);
 		amflow.requestsGetTicks[0].respond(null, [[0], [1], [2]]);
 		expect(noTickCount).toBe(0);
 
 		tb.requestTicks(3, 3);
-		amflow.requestsGetTicks[0].respond(null, null);
+		amflow.requestsGetTicks[0].respond(null, []);
 		expect(noTickCount).toBe(1);
 
 		tb.requestTicks(3, 3);
-		amflow.requestsGetTicks[0].respond(null, [[3, [[pl.EventCode.Message, null, "dummy", {}]]]]);
+		amflow.requestsGetTicks[0].respond(null, [[3, [[pl.EventCode.Message, null!, "dummy", {}]]]]);
 		expect(noTickCount).toBe(1);
 
 		tb.requestTicks(4, 3);
@@ -643,7 +641,7 @@ describe("TickBuffer", function() {
 		expect(noTickCount).toBe(1);
 
 		tb.requestTicks(6, 3);
-		amflow.requestsGetTicks[0].respond(null, null);
+		amflow.requestsGetTicks[0].respond(null, []);
 		expect(noTickCount).toBe(2);
 
 		// このケースは通常ない (取得済みの範囲を再要求することはない) が、カバレッジを上げておく
@@ -705,6 +703,7 @@ describe("TickBuffer", function() {
 
 		tb.requestTicks(3, 3);
 		amflow.requestsGetTicks[0].respond(null, [[3], [4], [5]]);
+		// eslint-disable-next-line max-len
 		expect(tb._calcKnownLatestTickTimeDelta(4 * frameTime, 0, frameTime)).toBeCloseTo(4 * frameTime, 3); // 途中 (age 1) でtimeThresholdを超えるケース
 		expect(tb._calcKnownLatestTickTimeDelta(5 * frameTime, 0, frameTime)).toBeCloseTo(5 * frameTime, 3);
 		expect(tb._calcKnownLatestTickTimeDelta(6 * frameTime, 0, frameTime)).toBeCloseTo(6 * frameTime, 3);

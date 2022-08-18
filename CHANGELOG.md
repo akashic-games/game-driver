@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2.8.0
+* @akashic/akashic-engine@3.5.0 に追従
+* @akashic/pdi-types@1.4.0 に追従
+* @akashic/pdi-common-impl@1.0.0 に追従
+
+## 2.8.0-beta.1
+* @akashic/akashic-engine@3.5.0-beta.2 に追従
+
+## 2.8.0-beta.0
+* @akashic/akashic-engine@3.5.0-beta.1 に追従
+* @akashic/pdi-types@1.4.0-beta.1 に追従
+* @akashic/pdi-common-impl@1.0.0 に追従
+
 ## 2.7.1
 * 実行開始直後のごく短い早送りに限り、音声再生速度を変更しないように
 

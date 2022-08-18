@@ -1,6 +1,5 @@
-import * as amf from "@akashic/amflow";
-import * as pdi from "@akashic/pdi-types";
-import * as g from "@akashic/akashic-engine";
+import type * as amf from "@akashic/amflow";
+import type * as pdi from "@akashic/pdi-types";
 
 export class Looper implements pdi.Looper {
 	fun: (deltaTime: number) => number;
@@ -40,7 +39,7 @@ export class Platform {
 		this.configurations = param.configurations || {};
 	}
 
-	setPlatformEventHandler(handler: pdi.PlatformEventHandler): void {
+	setPlatformEventHandler(_handler: pdi.PlatformEventHandler): void {
 		// TODO implement
 	}
 
@@ -54,29 +53,30 @@ export class Platform {
 		});
 	}
 
-	setRendererRequirement(requirement?: pdi.RendererRequirement): void {
+	setRendererRequirement(_requirement?: pdi.RendererRequirement): void {
 		// do nothing
 	}
 
 	getPrimarySurface(): pdi.Surface {
-		return null;
+		return null!;
 	}
 
 	getResourceFactory(): pdi.ResourceFactory {
-		return null;
+		return null!;
 	}
 
 	createLooper(fun: (deltaTime: number) => number): pdi.Looper {
-		var ret: Looper;
-		var detach = () => {
-			this.loopers = this.loopers.filter((l: Looper) => { return l !== ret; });
+		const detach = (): void => {
+			this.loopers = this.loopers.filter((l: Looper) => {
+				return l !== ret;
+			});
 		};
-		ret = new Looper(fun, detach);
+		const ret = new Looper(fun, detach);
 		this.loopers.push(ret);
 		return ret;
 	}
 
-	sendToExternal(playId: string, data: any): void {
+	sendToExternal(_playId: string, _data: any): void {
 		// do nothing
 	}
 
