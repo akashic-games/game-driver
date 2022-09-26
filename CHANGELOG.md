@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.9.0
+* @akashic/akashic-engine@3.6.0 に追従
+
 ## 2.8.0
 * @akashic/akashic-engine@3.5.0 に追従
 * @akashic/pdi-types@1.4.0 に追従

@@ -1,6 +1,6 @@
 {
   "name": "@akashic/game-driver",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "The driver module for the games using Akashic Engine",
   "main": "index.js",
   "typings": "lib/index.d.ts",
@@ -55,7 +55,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~3.5.0",
+    "@akashic/akashic-engine": "~3.6.0",
     "@akashic/amflow-util": "~1.1.0",
     "@akashic/game-configuration": "~1.5.0",
     "es6-promise": "^4.2.8"
