@@ -42,7 +42,7 @@
     "@akashic/remark-preset-lint": "~0.1.2",
     "@types/jest": "~29.2.0",
     "@types/node": "~18.11.0",
-    "@typescript-eslint/eslint-plugin": "~5.42.0",
+    "@typescript-eslint/eslint-plugin": "~5.43.0",
     "browserify": "^17.0.0",
     "eslint": "~8.27.0",
     "eslint-plugin-import": "~2.26.0",
