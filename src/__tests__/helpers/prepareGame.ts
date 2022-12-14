@@ -25,6 +25,7 @@ export interface PrepareGameParameterObject {
 	title: FixtureGame;
 	playerId?: string;
 	player?: g.Player;
+	scriptLoadDelay?: number;
 }
 
 export function prepareGame(param: PrepareGameParameterObject): MockGame {
@@ -47,7 +48,7 @@ export function prepareGame(param: PrepareGameParameterObject): MockGame {
 		engineModule: g,
 		configuration: configuration,
 		handlerSet: new GameHandlerSet({ isSnapshotSaver: false }),
-		resourceFactory: new mockrf.ResourceFactory(),
+		resourceFactory: new mockrf.ResourceFactory({ scriptLoadDelay: param.scriptLoadDelay }),
 		assetBase: assetBase,
 		selfId: param.playerId,
 		player: param.player ? param.player : { id: param.playerId }

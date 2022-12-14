@@ -307,8 +307,10 @@ class ScriptAsset extends pci.ScriptAsset {
 					return;
 				}
 				this._content = data;
-				if (!this.destroyed())
-					loader._onAssetLoad(this);
+				setTimeout(() => {
+					if (!this.destroyed())
+						loader._onAssetLoad(this);
+				}, this.resourceFactory._scriptLoadDelay);
 			});
 		}
 	}
@@ -341,15 +343,24 @@ export class AudioPlayer extends pci.AudioPlayer {
 	}
 }
 
+export interface ResourceFactoryParameterObject {
+	/**
+	 * スクリプトアセットの読み込みを遅延する時間。ミリ秒。(ロード待ち時間関係の動作確認用)
+	 */
+	scriptLoadDelay?: number;
+}
+
 export class ResourceFactory extends pci.ResourceFactory {
 	scriptContents: {[key: string]: string};
 
 	_necessaryRetryCount: number;
+	_scriptLoadDelay: number;
 
-	constructor() {
+	constructor(param?: ResourceFactoryParameterObject) {
 		super();
 		this.scriptContents = {};
 		this._necessaryRetryCount = 0;
+		this._scriptLoadDelay = param?.scriptLoadDelay ?? 0;
 	}
 
 	// func が呼び出されている間だけ this._necessaryRetryCount を変更する。
