@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - fix-long-load
 
 env:
   NODE_VERSION: 16
