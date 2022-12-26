@@ -202,7 +202,7 @@ export class GameLoop {
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
 		this._tickBuffer.gotNoTickTrigger.add(this._onGotNoTick, this);
 		this._tickBuffer.start();
-		this._updateGamePlaybackRate();
+		this._updateGameAudioSuppression();
 	}
 
 	reset(startPoint: amf.StartPoint): void {
@@ -285,7 +285,7 @@ export class GameLoop {
 		if (conf.playbackRate != null) {
 			this._playbackRate = conf.playbackRate;
 			this._clock.changeScaleFactor(this._playbackRate);
-			this._updateGamePlaybackRate();
+			this._updateGameAudioSuppression();
 		}
 		if (conf.loopRenderMode != null)
 			this._setLoopRenderMode(conf.loopRenderMode);
@@ -330,7 +330,7 @@ export class GameLoop {
 	_startSkipping(isNear: boolean): void {
 		this._skipping = true;
 		if (!isNear)
-			this._updateGamePlaybackRate();
+			this._updateGameAudioSuppression();
 		this._tickBuffer.startSkipping();
 		this._eventBuffer.startSkipping();
 		this._game.skippingChangedTrigger.fire(true);
@@ -341,19 +341,22 @@ export class GameLoop {
 	 */
 	_stopSkipping(): void {
 		this._skipping = false;
-		this._updateGamePlaybackRate();
+		this._updateGameAudioSuppression();
 		this._tickBuffer.endSkipping();
 		this._eventBuffer.endSkipping();
 		this._game.skippingChangedTrigger.fire(false);
 	}
 
 	/**
-	 * Gameの再生速度設定を変える。
-	 * 実際に再生速度(ティックの消費速度)を決めているのはこのクラスである点に注意。
+	 * Gameの音量抑制設定を更新する。
 	 */
-	_updateGamePlaybackRate(): void {
+	_updateGameAudioSuppression(): void {
 		const realPlaybackRate = this._skipping ? (this._playbackRate * this._skipTicksAtOnce) : this._playbackRate;
-		this._game._setAudioPlaybackRate(realPlaybackRate);
+		if (realPlaybackRate !== 1.0) {
+			this._game._startSuppressAudio();
+		} else {
+			this._game._endSuppressAudio();
+		}
 	}
 
 	_handleSceneChange(mode: g.SceneMode): void {

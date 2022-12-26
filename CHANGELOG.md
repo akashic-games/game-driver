@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.11.0
+* @akashic/akashic-engine@3.9.0 に追従
+
 ## 2.10.0
 * @akashic/akashic-engine@3.7.0 に追従
 * @akashic/game-configuration@1.6.0 に追従
