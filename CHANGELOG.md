@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## unreleased changes
+## 2.11.0
 * @akashic/akashic-engine@3.9.0 に追従
 
 ## 2.10.0
