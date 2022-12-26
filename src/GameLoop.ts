@@ -873,6 +873,9 @@ export class GameLoop {
 	}
 
 	_isImmediateBeforeOf(targetTime: number): boolean {
+		// 目標時刻への到達判定。次ティックがない場合は _foundLatestTick に委ねる、
+		// すなわち既存全ティックを消化した時は到達とみなす点に注意。あまり直観的でないが、こうでないと永久に
+		// rawTargetTimeReachedTrigger を fire できない可能性があり、後方互換性に影響がありうる。
 		return this._tickBuffer.hasNextTick() ?
 			(targetTime < (this._tickBuffer.readNextTickTime() ?? (this._currentTickTime + this._frameTime))) :
 			this._foundLatestTick;
