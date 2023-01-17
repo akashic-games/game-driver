@@ -257,7 +257,7 @@ export class TickBuffer {
 	 */
 	isKnownLatestTickTimeNear(timeThreshold: number, baseTime: number, frameTime: number): boolean {
 		// TODO コード整理して baseTime と frameTime の引数をなくす。
-		// 両者は GameLoop#_frameTime, _currentTime にそれぞれ対応している。このクラスがそれらを管理する方が自然。
+		// 両者は GameLoop#_frameTime, _currentTickTime にそれぞれ対応している。このクラスがそれらを管理する方が自然。
 		return this._calcKnownLatestTickTimeDelta(timeThreshold, baseTime, frameTime) < timeThreshold;
 	}
 

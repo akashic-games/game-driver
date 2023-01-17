@@ -1035,4 +1035,72 @@ describe("GameLoop", function () {
 		});
 		self.reset(zerothSp);
 	});
+
+	it("does not count loading time for target time handling", function (done: jest.DoneCallback) {
+		const startedAt = 100;
+
+		// 30FPS の 6 フレーム分 + 1。age 5 のティック時間ぴったり + 1。
+		// 目標時刻はその直前まで進む (直前までしか進まない) ので、+1 しないと age 5 は消化できないことに注意。
+		const targetTime = 201;
+
+		const zerothSp: amf.StartPoint = {
+			frame: 0,
+			timestamp: startedAt,
+			data: {
+				seed: 42,
+				startedAt
+			}
+		};
+		const amflow = new MemoryAmflowClient({
+			playId: "dummyPlayId",
+			tickList: [0, 10, []],
+			startPoints: [zerothSp]
+		});
+		const platform = new mockpf.Platform({ amflow });
+		const game = prepareGame({
+			title: FixtureGame.LocalTickGame,
+			playerId: "dummyPlayerId",
+			scriptLoadDelay: 2000
+		});
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
+			amflow,
+			platform,
+			game,
+			eventBuffer,
+			executionMode: ExecutionMode.Passive,
+			configuration: {
+				loopMode: LoopMode.Replay,
+				targetTimeFunc: () => targetTime,
+				omitInterpolatedTickOnReplay: true
+			},
+			startedAt
+		});
+
+		let timer: any = null;
+		game.onResetTrigger.add(() => {
+			game.vars.onUpdate = () => {  // LocalTickGame が毎 update コールしてくる関数
+				if (game.age === 5) {
+					// 本題: ここに到達できれば OK 。このテストではスクリプト (main.js) のロードを 2000ms 遅延させているので、
+					// ロード時間を含めて時間を測っていた場合 1 tick も消化しないまま目標時刻到達扱いになりここに来れない。
+					clearInterval(timer);
+					self.stop();
+					done();
+				}
+			};
+		});
+
+		self.start();
+		const looper = self._clock._looper as mockpf.Looper;
+		timer = setInterval(() => {
+			looper.fun(self._frameTime);
+		}, 1);
+
+		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
+		game.handlerSet.setEventFilterFuncs({
+			addFilter: eventBuffer.addFilter.bind(eventBuffer),
+			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
+		});
+		self.reset(zerothSp);
+	}, 7000); // scriptLoadDelay が実時間で遅らせるのでデフォルトに加えて 2 秒猶予
 });

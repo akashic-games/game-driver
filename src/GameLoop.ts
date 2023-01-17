@@ -47,14 +47,25 @@ export class GameLoop {
 
 	/**
 	 * 時刻。
-	 * 実時間ではなく、プレイ開始日時と経過フレーム数から計算される仮想的な時間であることに注意。
+	 * 実時間ではなく、プレイ開始日時と経過フレーム数から計算される仮想的な時間である。
 	 * この時間情報を元にタイムスタンプイベントの消化待ちを行う。
+	 *
+	 * _crrentTickTime と異なり、ローカルティックを消化している間も進行する。
 	 */
 	_currentTime: number;
 
 	/**
+	 * ゲーム内時刻。
+	 * 実時間ではなく、プレイ開始日時と非ローカルティックの消化状況から計算される仮想的な時間である。
+	 * この時間情報を元に目標時刻への到達判定を行う。
+	 *
+	 * _currentTime と異なり、ローカルティックを消化している間は進行しない。
+	 */
+	_currentTickTime: number;
+
+	/**
 	 * 1フレーム分の時間。FPSの逆数。
-	 * _currentTime の計算に用いる。
+	 * _currentTime, _currentTickTime の計算に用いる。
 	 */
 	_frameTime: number;
 
@@ -127,6 +138,7 @@ export class GameLoop {
 
 	constructor(param: GameLoopParameterObejct) {
 		this._currentTime = param.startedAt;
+		this._currentTickTime = this._currentTime;
 		this._frameTime = 1000 / param.game.fps;
 
 		if (param.errorHandler) {
@@ -215,6 +227,7 @@ export class GameLoop {
 			this._stopSkipping();
 		this._tickBuffer.setCurrentAge(startPoint.frame);
 		this._currentTime = startPoint.timestamp || startPoint.data.timestamp || 0;  // data.timestamp は後方互換性のために存在。現在は使っていない。
+		this._currentTickTime = this._currentTime;
 		this._waitingNextTick = false; // 現在ageを変えた後、さらに後続のTickが足りないかどうかは_onFrameで判断する。
 		this._foundLatestTick = false; // 同上。
 		this._lastRequestedStartPointAge = -1;  // 現在ageを変えた時はリセットしておく(場合によっては不要だが、安全のため)。
@@ -403,7 +416,7 @@ export class GameLoop {
 	_doLocalTick(): void {
 		const game = this._game;
 		const pevs = this._eventBuffer.readLocalEvents();
-		this._currentTime += this._frameTime;
+		this._currentTime += this._frameTime; // ここでは _currenTickTime は進まないことに注意 (ローカルティック消化では進まない)
 		if (pevs) {
 			game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime), pevs);
 		} else {
@@ -423,12 +436,12 @@ export class GameLoop {
 		} else {
 			const givenTargetTime = this._targetTimeFunc();
 			const targetTime = givenTargetTime + this._realTargetTimeOffset;
-			const prevTime = this._currentTime;
+			const prevTickTime = this._currentTickTime;
 			this._onFrameForTimedReplay(targetTime, frameArg);
 			// 目標時刻到達判定: 進めなくなり、あと1フレームで目標時刻を過ぎるタイミングを到達として通知する。
 			// 時間進行を進めていっても目標時刻 "以上" に進むことはないので「過ぎた」タイミングは使えない点に注意。
 			// (また、それでもなお (prevTime <= targetTime) の条件はなくせない点にも注意。巻き戻す時は (prevTime > targetTime) になる)
-			if ((prevTime === this._currentTime) && (prevTime <= targetTime) && (targetTime <= prevTime + this._frameTime))
+			if ((prevTickTime === this._currentTickTime) && (prevTickTime <= targetTime) && this._isImmediateBeforeOf(targetTime))
 				this.rawTargetTimeReachedTrigger.fire(givenTargetTime);
 		}
 	}
@@ -444,12 +457,12 @@ export class GameLoop {
 	_onFrameForTimedReplay(targetTime: number, frameArg: ClockFrameTriggerParameterObject): void {
 		let sceneChanged = false;
 		const game = this._game;
-		const timeGap = targetTime - this._currentTime;
+		const timeGap = targetTime - this._currentTickTime;
 		const frameGap = (timeGap / this._frameTime);
 
 		if ((frameGap > this._jumpTryThreshold || frameGap < 0) &&
 		    (!this._waitingStartPoint) &&
-		    (this._lastRequestedStartPointTime < this._currentTime)) {
+		    (this._lastRequestedStartPointTime < this._currentTickTime)) {
 			// スナップショットを要求だけして続行する(スナップショットが来るまで進める限りは進む)。
 			this._waitingStartPoint = true;
 			this._lastRequestedStartPointTime = targetTime;
@@ -482,7 +495,7 @@ export class GameLoop {
 				}
 				if (this._omitInterpolatedTickOnReplay && this._sceneLocalMode === "interpolate-local") {
 					if (this._foundLatestTick) {
-						// 最新のティックが存在しない場合は現在時刻を目標時刻に合わせる。
+						// これ以上新しいティックが存在しない場合は現在時刻を目標時刻に合わせる。
 						// (_doLocalTick() により現在時刻が this._frameTime 進むのでその直前まで進める)
 						this._currentTime = targetTime - this._frameTime;
 					}
@@ -494,42 +507,37 @@ export class GameLoop {
 				break;
 			}
 
-			let nextTickTime = this._tickBuffer.readNextTickTime();
-			if (nextTickTime == null)
-				nextTickTime = nextFrameTime;
-			if (targetTime < nextFrameTime) {
-				// 次フレームに進むと目標時刻を超過する＝次フレーム時刻までは進めない＝補間ティックは必要ない。
-				if (nextTickTime <= targetTime) {
-					// 特殊ケース: 目標時刻より手前に次ティックがあるので、目標時刻までは進んで次ティックは消化してしまう。
-					// (この処理がないと、特にリプレイで「最後のティックの0.1フレーム時間前」などに来たときに進めなくなってしまう。)
-					nextFrameTime = targetTime;
-				} else {
-					break;
-				}
-			} else {
-				if (nextFrameTime < nextTickTime) {
-					if (this._omitInterpolatedTickOnReplay && this._skipping) {
-						// スキップ中、ティック補間不要なら即座に次ティック時刻(かその手前の目標時刻)まで進める。
-						// (_onFrameNormal()の対応箇所と異なり、ここでは「次ティック時刻の "次フレーム時刻"」に切り上げないことに注意。
-						//  時間ベースリプレイでは目標時刻 "以後" には進めないという制約がある。これを単純な実装で守るべく切り上げを断念している)
-						if (targetTime <= nextTickTime) {
-							// 次ティック時刻まで進めると目標時刻を超えてしまう: 目標時刻直前まで動いて抜ける(目標時刻直前までは来ないと目標時刻到達通知が永久にできない)
-							this._omittedTickDuration += targetTime - this._currentTime;
-							this._currentTime = Math.floor(targetTime / this._frameTime) * this._frameTime;
-							break;
-						}
-						nextFrameTime = nextTickTime;
-						this._omittedTickDuration += nextTickTime - this._currentTime;
-					} else {
-						if (this._sceneLocalMode === "interpolate-local") {
-							this._doLocalTick();
-						}
-						continue;
+			const nextTickTime = this._tickBuffer.readNextTickTime() ?? (this._currentTickTime + this._frameTime);
+
+			if (targetTime <= nextTickTime && targetTime <= nextFrameTime) {
+				// 次ティックを消化すると目標時刻に到達・超過する: 次ティックは消化できない
+				// 次フレーム時刻も目標時刻に到達・超過する: ローカルティック補完も要らない
+				break;
+
+			} else if (nextFrameTime < nextTickTime) {
+				// 次フレーム時刻ではまだ次ティックを消化できない: ローカルティック補完するか、次ティック時刻まで一気に進む
+				if (this._omitInterpolatedTickOnReplay && this._skipping) {
+					// スキップ中、ティック補間不要なら即座に次ティック時刻(かその手前の目標時刻)まで進める。
+					// (_onFrameNormal()の対応箇所と異なり、ここでは「次ティック時刻の "次フレーム時刻"」に切り上げないことに注意。
+					//  時間ベースリプレイでは目標時刻 "以後" には進めないという制約がある。これを単純な実装で守るべく切り上げを断念している)
+					if (targetTime <= nextTickTime) {
+						// 次ティック時刻まで進めると目標時刻を超えてしまう: 目標時刻直前まで動いて抜ける(目標時刻直前までは来ないと目標時刻到達通知が永久にできない)
+						this._omittedTickDuration += targetTime - this._currentTickTime;
+						this._currentTime = Math.floor(targetTime / this._frameTime) * this._frameTime;
+						break;
 					}
+					nextFrameTime = nextTickTime;
+					this._omittedTickDuration += nextTickTime - this._currentTickTime;
+				} else {
+					if (this._sceneLocalMode === "interpolate-local") {
+						this._doLocalTick();
+					}
+					continue;
 				}
 			}
 
 			this._currentTime = nextFrameTime;
+			this._currentTickTime = nextTickTime;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
 			this._events.length = 0;
@@ -567,7 +575,7 @@ export class GameLoop {
 			}
 		}
 
-		if (this._skipping && (targetTime - this._currentTime < this._frameTime)) {
+		if (this._skipping && (targetTime - this._currentTime < this._frameTime) && this._isImmediateBeforeOf(targetTime)) {
 			this._stopSkipping();
 			// スキップ状態が解除された (≒等倍に戻った) タイミングで改めてすべてのティックを取得し直す
 			this._tickBuffer.dropAll();
@@ -668,7 +676,7 @@ export class GameLoop {
 			// ここでは常に (ageGap > 0) であることに注意。(0の時にskipに入ってもすぐ戻ってしまう)
 			const isTargetNear =
 				(currentAge === 0) && // 余計な関数呼び出しを避けるためにチェック
-				this._tickBuffer.isKnownLatestTickTimeNear(this._skipThresholdTime, this._currentTime, this._frameTime);
+				this._tickBuffer.isKnownLatestTickTimeNear(this._skipThresholdTime, this._currentTickTime, this._frameTime);
 			this._startSkipping(isTargetNear);
 		}
 
@@ -678,13 +686,13 @@ export class GameLoop {
 		for (; consumedFrame < loopCount; ++consumedFrame) {
 			// ティック時刻確認
 			let nextFrameTime = this._currentTime + this._frameTime;
-			const nextTickTime = this._tickBuffer.readNextTickTime();
-			if (nextTickTime != null && nextFrameTime < nextTickTime) {
+			const explicitNextTickTime = this._tickBuffer.readNextTickTime();
+			if (explicitNextTickTime != null && nextFrameTime < explicitNextTickTime) {
 				if (this._loopMode === LoopMode.Realtime || (this._omitInterpolatedTickOnReplay && this._skipping)) {
 					// リアルタイムモード(と早送り中のリプレイでティック補間しない場合)ではティック時刻を気にせず続行するが、
 					// リプレイモードに切り替えた時に矛盾しないよう時刻を補正する(当該ティック時刻まで待った扱いにする)。
-					nextFrameTime = Math.ceil(nextTickTime / this._frameTime) * this._frameTime;
-					this._omittedTickDuration += nextFrameTime - this._currentTime;
+					nextFrameTime = Math.ceil(explicitNextTickTime / this._frameTime) * this._frameTime;
+					this._omittedTickDuration += nextFrameTime - this._currentTickTime;
 				} else {
 					if (this._sceneLocalMode === "interpolate-local") {
 						this._doLocalTick();
@@ -695,6 +703,7 @@ export class GameLoop {
 			}
 
 			this._currentTime = nextFrameTime;
+			this._currentTickTime = explicitNextTickTime ?? (this._currentTickTime + this._frameTime);
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
 			this._events.length = 0;
@@ -786,8 +795,8 @@ export class GameLoop {
 				// 要求した時点と今で目標時刻(targetTime)が変わっている。得られたStartPointでは目標時刻より未来に飛んでしまう。
 				return;
 			}
-			const currentTime = this._currentTime;
-			if (currentTime <= targetTime && startPoint.timestamp < currentTime + (this._jumpIgnoreThreshold * this._frameTime)) {
+			const currentTickTime = this._currentTickTime;
+			if (currentTickTime <= targetTime && startPoint.timestamp < currentTickTime + (this._jumpIgnoreThreshold * this._frameTime)) {
 				// 今の目標時刻(targetTime)は過去でない一方、得られたStartPointは至近未来または過去のもの → 飛ぶ価値なし。
 				return;
 			}
@@ -864,6 +873,15 @@ export class GameLoop {
 	_stopWaitingNextTick(): void {
 		this._waitingNextTick = false;
 		this._clock.rawFrameTrigger.remove(this._onPollingTick, this);
+	}
+
+	_isImmediateBeforeOf(targetTime: number): boolean {
+		// 目標時刻への到達判定。次ティックがない場合は _foundLatestTick に委ねる、
+		// すなわち既存全ティックを消化した時は到達とみなす点に注意。あまり直観的でないが、こうでないと永久に
+		// rawTargetTimeReachedTrigger を fire できない可能性があり、後方互換性に影響がありうる。
+		return this._tickBuffer.hasNextTick() ?
+			(targetTime < (this._tickBuffer.readNextTickTime() ?? (this._currentTickTime + this._frameTime))) :
+			this._foundLatestTick;
 	}
 }
 
