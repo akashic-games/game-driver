@@ -72,7 +72,7 @@ export class GameHandlerSet implements g.GameHandlerSet {
 	}
 
 	removeEventFilter(filter: g.EventFilter): void {
-		if (this._eventFilterFuncs)
+		if (this._eventFilterFuncs && filter) // `filter` のチェックは念のため。(undefined で呼ぶと removeFilter() が全削除になってしまう)
 			this._eventFilterFuncs.removeFilter(filter);
 	}
 
