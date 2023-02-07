@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.12.0
+* @akashic/akashic-engine@3.10.0 に追従
+* @akashic/game-configuration@1.9.0 に追従
+
 ## 2.11.2
 * g.game.removeEventFilter() に undefined を与えた時、何もしないように (異常系の挙動変更)
 
