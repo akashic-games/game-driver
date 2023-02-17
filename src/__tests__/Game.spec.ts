@@ -176,4 +176,27 @@ describe("Game", function() {
 			}
 		});
 	});
+
+	it("passes gameArgs - without snapshot", function (done: any) {
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId", gameArgs: { foo: 1 } });
+		game.loadAndDo(() => {
+			expect(game.vars.args.foo).toBe(1);
+			done();
+		}, {
+			frame: 0,
+			data: { seed: 0 }
+		});
+	});
+
+	it("passes gameArgs - with snapshot", function (done: any) {
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId", gameArgs: { foo: 2 } });
+		const randGenSer = (new g.XorshiftRandomGenerator(0)).serialize();
+		game.loadAndDo(() => {
+			expect(game.vars.args.foo).toBe(2);
+			done();
+		}, {
+			frame: 10,
+			data: { nextEntityId: 3, randGenSer, gameSnapshot: { bar: 1 } }
+		});
+	});
 });

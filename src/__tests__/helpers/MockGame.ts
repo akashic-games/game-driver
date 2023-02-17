@@ -21,9 +21,8 @@ export class MockGame extends Game {
 		this.onResetTrigger.fire();
 	}
 
-	loadAndDo(func: () => void): void {
+	loadAndDo(func: () => void, snapshot?: any): void {
 		this.autoTickForSceneChange = true;
-		this._reset();
 		this._sceneChanged.handle((scene: g.Scene) => {
 			if (scene.local === "non-local") {
 				if (scene._loadingState === "loaded-fired") {
@@ -38,7 +37,12 @@ export class MockGame extends Game {
 				return true;
 			}
 		});
-		this._loadAndStart();
+		if (!snapshot) {
+			this._reset();
+			this._loadAndStart();
+		} else {
+			this._restartWithSnapshot(snapshot);
+		}
 	}
 
 	_pushPostTickTask(fun: () => void, owner: any): void {
