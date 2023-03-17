@@ -1,5 +1,7 @@
 var game = g.game;
-module.exports = function() {
+module.exports = function(param) {
+	g.game.vars.args = param.args;
+
 	var scene = new g.Scene({ game: game });
 	scene.onLoad.add(function() {
 		var r1 = new g.FilledRect({

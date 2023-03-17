@@ -3,6 +3,9 @@
 ## 2.13.0
 * @akashic/akashic-engine@3.11.0 に追従
 
+## 2.12.1
+* スナップショットからの復元時、エントリポイントの引数 `args` が渡されていなかった問題を修正
+
 ## 2.12.0
 * @akashic/akashic-engine@3.10.0 に追従
 * @akashic/game-configuration@1.9.0 に追従
