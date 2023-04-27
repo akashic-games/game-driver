@@ -600,7 +600,7 @@ describe("EventBuffer", function () {
 		ope.push(true);
 		expect(!!EventBuffer.isEventLocal(ope)).toBe(true);
 
-		const invalidEvent: pl.Event = [ -1, 0, "dummyPid" ];
+		const invalidEvent: any = [ -1, 0, "dummyPid" ];
 		expect(() => {
 			EventBuffer.isEventLocal(invalidEvent);
 		}).toThrow();
