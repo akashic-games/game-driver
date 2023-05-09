@@ -140,7 +140,7 @@ describe("StorageResolver", function () {
 	it("puts storage through amflow", function () {
 		const prepared = prepareStorageResolver(true);
 		const self = prepared.storageResolver;
-		self.putStorageFunc({ region: 1, regionKey: "foostoragekey" }, { data: 42 });
+		self.putStorageFunc({ region: g.StorageRegion.Slots, regionKey: "foostoragekey" }, { data: 42 });
 		prepared.amflow.requestsPutStorageData[0]();
 		expect(prepared.amflow.storage.foostoragekey).toEqual({ data: 42 });
 	});
@@ -149,7 +149,7 @@ describe("StorageResolver", function () {
 		const err = new Error("Test Error");
 		const prepared = prepareStorageResolver(true);
 		const self = prepared.storageResolver;
-		self.putStorageFunc({ region: 1, regionKey: "foostoragekey" }, { data: 42 });
+		self.putStorageFunc({ region: g.StorageRegion.Slots, regionKey: "foostoragekey" }, { data: 42 });
 		prepared.amflow.requestsPutStorageData[0](err);
 		expect(prepared.errorCollector.errors[0]).toBe(err);
 	});
