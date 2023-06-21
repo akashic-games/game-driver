@@ -577,7 +577,7 @@ describe("EventBuffer", function () {
 		expect(!!EventBuffer.isEventLocal(msge)).toBe(true);
 
 		// PointDown: Code, Priority, PlayerId, PointerId, X, Y, EntityId, Local
-		const pde: pl.PointDownEvent = [ pl.EventCode.PointDown, 0, "dummyPid", 1, 100, 10, undefined];
+		const pde: pl.PointDownEvent = [ pl.EventCode.PointDown, 0, "dummyPid", 1, 100, 10, undefined, 0];
 		expect(!!EventBuffer.isEventLocal(pde)).toBe(false);
 		pde.push(true);
 		expect(!!EventBuffer.isEventLocal(pde)).toBe(true);

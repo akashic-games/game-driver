@@ -100,7 +100,7 @@ describe("Game", function() {
 		// playlog.Eventへの変換時に player 情報が強制で上書きされる。
 		expect(raisedEvents).toEqual([
 			[32, undefined, "dummyPlayerId", "data", true],
-			[33, undefined, "dummyPlayerId", 0, 0, 10, null, false]
+			[33, undefined, "dummyPlayerId", 0, 0, 10, null, 0, false]
 		]);
 	});
 
