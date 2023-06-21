@@ -500,7 +500,7 @@ describe("EventBuffer", function () {
 		ope.push(true);
 		expect(!!EventBuffer.isEventLocal(ope)).toBe(true);
 
-		var invalidEvent: pl.Event = [ -1, 0, "dummyPid" ];
+		var invalidEvent: pl.Event = [ -1 as pl.EventCode, 0, "dummyPid" ];
 		expect(() => { EventBuffer.isEventLocal(invalidEvent); }).toThrow();
 	});
 });
