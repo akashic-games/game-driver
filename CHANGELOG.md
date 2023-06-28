@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.16.0
+* @akashic/akashic-engine@3.14.0 に追従
+
 ## 2.15.0
 * @akashic/akashic-engine@3.13.0 に追従
 
