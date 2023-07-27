@@ -5,7 +5,6 @@ import type { LoadConfigurationFunc } from "@akashic/game-configuration/lib/util
 import { makeLoadConfigurationFunc } from "@akashic/game-configuration/lib/utils";
 import type * as pdi from "@akashic/pdi-types";
 import * as pl from "@akashic/playlog";
-import { Promise } from "es6-promise";
 import * as constants from "./constants";
 import type DriverConfiguration from "./DriverConfiguration";
 import { EventBuffer } from "./EventBuffer";
