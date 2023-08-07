@@ -12,7 +12,7 @@ export class MockGame extends Game {
 		this.autoTickForSceneChange = false;
 	}
 
-	_reset(param?: g.GameResetParameterObject): void {
+	override _reset(param?: g.GameResetParameterObject): void {
 		super._reset(param);
 		if (!this.onResetTrigger) {
 			// _reset() は g.Game のコンストラクタから呼ばれ、 MockGameのコンストラクタで初期化するのでは間に合わないのでここで初期化
@@ -45,7 +45,7 @@ export class MockGame extends Game {
 		}
 	}
 
-	_pushPostTickTask(fun: () => void, owner: any): void {
+	override _pushPostTickTask(fun: () => void, owner: any): void {
 		super._pushPostTickTask(fun, owner);
 		if (this.autoTickForSceneChange) {
 			setTimeout(() => {
