@@ -334,7 +334,7 @@ export class AudioPlayer extends pci.AudioPlayer {
 		this.canHandleStoppedValue = true;
 	}
 
-	canHandleStopped(): boolean {
+	override canHandleStopped(): boolean {
 		return this.canHandleStoppedValue;
 	}
 
