@@ -548,7 +548,7 @@ describe("GameLoop", function () {
 		expect(self._frameTime).toBe(1000 / 30);   // 30 は fps. LocalTickGame の game.json 参照。
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 0 });
-		game.handlerSet.setEventFilterFuncs({
+		game.rawHandlerSet.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 		});
@@ -666,7 +666,7 @@ describe("GameLoop", function () {
 		expect(self._frameTime).toBe(1000 / 30);   // 30 は fps. LocalTickGame の game.json 参照。
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 0 });
-		game.handlerSet.setEventFilterFuncs({
+		game.rawHandlerSet.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 		});
@@ -758,7 +758,7 @@ describe("GameLoop", function () {
 
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
 		game._reset({ age: 0, randSeed: 42 });
-		game.handlerSet.setEventFilterFuncs({
+		game.rawHandlerSet.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 		});
@@ -819,7 +819,7 @@ describe("GameLoop", function () {
 			looper.fun(self._frameTime);
 		}, 1);
 
-		game.handlerSet.setEventFilterFuncs({
+		game.rawHandlerSet.setEventFilterFuncs({
 			addFilter: (_filter: g.EventFilter) => null,
 			removeFilter: (_filter?: g.EventFilter) => null
 		});
@@ -890,7 +890,7 @@ describe("GameLoop", function () {
 			looper.fun(self._frameTime);
 		}, 1);
 
-		game.handlerSet.setEventFilterFuncs({
+		game.rawHandlerSet.setEventFilterFuncs({
 			addFilter: (_filter: g.EventFilter) => null,
 			removeFilter: (_filter?: g.EventFilter) => null
 		});
@@ -1029,7 +1029,7 @@ describe("GameLoop", function () {
 		}, 1);
 
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-		game.handlerSet.setEventFilterFuncs({
+		game.rawHandlerSet.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 		});
@@ -1097,7 +1097,7 @@ describe("GameLoop", function () {
 		}, 1);
 
 		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
-		game.handlerSet.setEventFilterFuncs({
+		game.rawHandlerSet.setEventFilterFuncs({
 			addFilter: eventBuffer.addFilter.bind(eventBuffer),
 			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
 		});

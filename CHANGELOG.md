@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.17.0
+* ローディングシーン中に `Game#destroy()` するとエラーになる問題を修正
+  * `Game#handlerSet` の型を (オーバーライドしない) `g.GameHandlerSet` に
+  * `Game#rawHandlerSet: GameHandlerSet` を追加
+
 ## 2.16.0
 * @akashic/akashic-engine@3.14.0 に追従
 

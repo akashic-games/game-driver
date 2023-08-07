@@ -207,9 +207,9 @@ export class GameLoop {
 		this._setLoopRenderMode(loopRenderMode);
 		this._game.setIsSkipAware(conf.skipAwareGame != null ? conf.skipAwareGame : true);
 		this._game.setStorageFunc(this._tickController.storageFunc());
-		this._game.handlerSet.raiseEventTrigger.add(this._onGameRaiseEvent, this);
-		this._game.handlerSet.raiseTickTrigger.add(this._onGameRaiseTick, this);
-		this._game.handlerSet.changeSceneModeTrigger.add(this._handleSceneChange, this);
+		this._game.rawHandlerSet.raiseEventTrigger.add(this._onGameRaiseEvent, this);
+		this._game.rawHandlerSet.raiseTickTrigger.add(this._onGameRaiseTick, this);
+		this._game.rawHandlerSet.changeSceneModeTrigger.add(this._handleSceneChange, this);
 		this._game._onStart.add(this._onGameStarted, this);
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
 		this._tickBuffer.gotNoTickTrigger.add(this._onGotNoTick, this);

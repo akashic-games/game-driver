@@ -55,6 +55,17 @@ describe("Game", function() {
 		expect(game.skippingChangedTrigger).toBe(null);
 	});
 
+	it("can be destroyed - after load", function (done: any) {
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId", gameArgs: { foo: 1 } });
+		game.loadAndDo(() => {
+			game._destroy();
+			done();
+		}, {
+			frame: 0,
+			data: { seed: 0 }
+		});
+	});
+
 	it("notifies on _abortGame()", () => {
 		const rf = new mockrf.ResourceFactory();
 		const handlerSet = new GameHandlerSet({ isSnapshotSaver: false });

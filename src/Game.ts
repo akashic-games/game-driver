@@ -51,7 +51,16 @@ export class Game extends g.Game {
 	abortTrigger: g.Trigger<void> = new g.Trigger();
 
 	player: g.Player;
-	handlerSet: GameHandlerSet;
+
+	/**
+	 * ハンドラセット。
+	 *
+	 * 祖先クラスの `g.Game#handlerSet: g.GameHandlerSet` と同じ値を保持する。
+	 * 利用箇所で逐一ダウンキャストが必要になるのを避けるため、
+	 * (g なしの) `GameHandlerSet` である (そのことに意味がある) 点に注意。
+	 */
+	rawHandlerSet: GameHandlerSet;
+
 	_notifyPassedAgeTable: { [age: number]: boolean } = Object.create(null);
 	_notifiesTargetTimeReached: boolean = false;
 	_isSkipAware: boolean = false;
@@ -61,7 +70,7 @@ export class Game extends g.Game {
 	constructor(param: GameParameterObject) {
 		super(param);
 		this.player = param.player;
-		this.handlerSet = param.handlerSet;
+		this.rawHandlerSet = param.handlerSet;
 		this._gameArgs = param.gameArgs;
 		this._globalGameArgs = param.globalGameArgs;
 		this.skippingChangedTrigger.add(this._onSkippingChanged, this);
@@ -123,7 +132,7 @@ export class Game extends g.Game {
 		this._isSkipAware = aware;
 	}
 
-	_destroy(): void {
+	override _destroy(): void {
 		this.agePassedTrigger.destroy();
 		this.agePassedTrigger = null!;
 		this.targetTimeReachedTrigger.destroy();
@@ -133,7 +142,7 @@ export class Game extends g.Game {
 		this.abortTrigger.destroy();
 		this.abortTrigger = null!;
 		this.player = null!;
-		this.handlerSet = null!;
+		this.rawHandlerSet = null!;
 		this._notifyPassedAgeTable = null!;
 		this._gameArgs = null;
 		this._globalGameArgs = null;
