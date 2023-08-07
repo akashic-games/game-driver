@@ -24,7 +24,7 @@ export class ProfilerClock extends Clock {
 		this._profiler = param.profiler;
 	}
 
-	_onLooperCall(deltaTime: number): number {
+	override _onLooperCall(deltaTime: number): number {
 		const rawDeltaTime = deltaTime;
 
 		if (deltaTime <= 0) {

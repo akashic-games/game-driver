@@ -132,7 +132,7 @@ export class Game extends g.Game {
 		this._isSkipAware = aware;
 	}
 
-	_destroy(): void {
+	override _destroy(): void {
 		this.agePassedTrigger.destroy();
 		this.agePassedTrigger = null!;
 		this.targetTimeReachedTrigger.destroy();
