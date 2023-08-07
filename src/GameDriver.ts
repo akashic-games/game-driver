@@ -412,7 +412,7 @@ export class GameDriver {
 				this._playToken = playToken;
 				this._permission = permission;
 				if (this._game) {
-					this._game.handlerSet.isSnapshotSaver = permission.writeTick;
+					this._game.rawHandlerSet.isSnapshotSaver = permission.writeTick;
 				}
 				resolve();
 			});
