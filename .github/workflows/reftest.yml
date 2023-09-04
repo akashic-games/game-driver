@@ -17,11 +17,11 @@ jobs:
       - name: Use npm@7
         run: npm i -g npm@7 --registry=https://registry.npmjs.org
       - name: Checkout game-driver repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: game-driver
       - name: Checkout engine-files repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: akashic-games/engine-files
           path: engine-files
