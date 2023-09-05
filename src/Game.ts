@@ -2,7 +2,6 @@
 import * as g from "@akashic/akashic-engine";
 import type { GameHandlerSet } from "./GameHandlerSet";
 import type StartPointData from "./StartPointData";
-import type { StorageFunc } from "./StorageFunc";
 
 export interface GameParameterObject extends g.GameParameterObject {
 	player: g.Player;
@@ -115,13 +114,6 @@ export class Game extends g.Game {
 			return true;
 		}
 		return false;
-	}
-
-	setStorageFunc(funcs: StorageFunc): void {
-		this.storage._registerLoad(funcs.storageGetFunc);
-		this.storage._registerWrite(funcs.storagePutFunc);
-		// TODO: akashic-engine 側で書き換えられるようにする
-		this.storage.requestValuesForJoinPlayer = funcs.requestValuesForJoinFunc;
 	}
 
 	getIsSkipAware(): boolean {

@@ -14,18 +14,12 @@ export class MockAmflow implements AMFlow {
 	eventHandlers: ((ev: pl.Event) => void)[];
 
 	requestsGetTicks: GetTicksRequest[];
-	requestsPutStorageData: ((err?: any) => void)[];
-	requestsGetStorageData: ((err?: any) => void)[];
-	storage: { [key: string]: pl.StorageValue };
 
 	constructor() {
 		this.ticks = [];
 		this.tickHandlers = [];
 		this.eventHandlers = [];
 		this.requestsGetTicks = [];
-		this.requestsPutStorageData = [];
-		this.requestsGetStorageData = [];
-		this.storage = <any>Object.create(null);
 	}
 
 	hasEventHandler(h: (pev: pl.Event) => void): boolean {
@@ -134,27 +128,10 @@ export class MockAmflow implements AMFlow {
 		}, 0);
 	}
 
-	// StorageReadKeyはregionKeyしか見ない + StorageValueは一つしか持たない簡易実装なので注意
-	putStorageData(key: pl.StorageKey, value: pl.StorageValue, _options: any, callback: (err: Error | null) => void): void {
-		const wrap = (err?: any): void => {
-			this.requestsPutStorageData = this.requestsPutStorageData.filter((r: any) => {
-				return r !== wrap;
-			});
-			this.storage[key.regionKey] = value;
-			callback(err);
-		};
-		this.requestsPutStorageData.push(wrap);
+	putStorageData(_key: unknown, _value: unknown, _options: unknown, _callback: unknown): void {
+		throw new Error("not implemented")
 	}
-	getStorageData(keys: pl.StorageReadKey[], callback: (error: Error | null, values?: pl.StorageData[]) => void): void {
-		const wrap = (err?: any): void => {
-			this.requestsGetStorageData = this.requestsGetStorageData.filter((r: any) => {
-				return r !== wrap;
-			});
-			const data = keys.map((k: pl.StorageReadKey) => {
-				return { readKey: k, values: [this.storage[k.regionKey]] };
-			});
-			callback(err, data);
-		};
-		this.requestsGetStorageData.push(wrap);
+	getStorageData(_keys: unknown, _callback: unknown): void {
+		throw new Error("not implemented")
 	}
 }

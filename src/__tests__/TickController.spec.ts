@@ -3,7 +3,6 @@ import { Clock } from "../Clock";
 import { EventBuffer } from "../EventBuffer";
 import ExecutionMode from "../ExecutionMode";
 import type { Game } from "../Game";
-import { StorageResolver } from "../StorageResolver";
 import { TickBuffer } from "../TickBuffer";
 import { TickController } from "../TickController";
 import { TickGenerator } from "../TickGenerator";
@@ -47,7 +46,7 @@ describe("TickController", function () {
 		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
 		const clock = new Clock({ fps: 30, platform: pf, maxFramePerOnce: 5 });
 		const eventBuffer = new EventBuffer({ amflow, game });
-		const tickController = new TickController({ amflow, clock, game, eventBuffer, executionMode, errorHandler, errorHandlerOwner });
+		const tickController = new TickController({ amflow, clock, eventBuffer, executionMode, errorHandler, errorHandlerOwner });
 		return {
 			tickController,
 			errorCollector,
@@ -70,6 +69,5 @@ describe("TickController", function () {
 		expect(self._executionMode).toBe(ExecutionMode.Active);
 		expect(self._generator instanceof TickGenerator).toBe(true);
 		expect(self._buffer instanceof TickBuffer).toBe(true);
-		expect(self._storageResolver instanceof StorageResolver).toBe(true);
 	});
 });

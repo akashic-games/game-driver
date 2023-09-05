@@ -5,16 +5,12 @@ import type * as pl from "@akashic/playlog";
 import type { Clock } from "./Clock";
 import type { EventBuffer } from "./EventBuffer";
 import ExecutionMode from "./ExecutionMode";
-import type { Game } from "./Game";
-import type { StorageFunc } from "./StorageFunc";
-import * as sr from "./StorageResolver";
 import { TickBuffer } from "./TickBuffer";
 import { TickGenerator } from "./TickGenerator";
 
 export interface TickControllerParameterObject {
 	amflow: amf.AMFlow;
 	clock: Clock;
-	game: Game;  // TODO: sr.StorageResolverに必要なだけ。なくすべき。
 	eventBuffer: EventBuffer;
 	executionMode: ExecutionMode;
 	startedAt?: number;  // TickBuffer に引き渡す暫定引数
@@ -37,7 +33,6 @@ export class TickController {
 	_started: boolean;
 	_executionMode: ExecutionMode;
 	_generator: TickGenerator;
-	_storageResolver: sr.StorageResolver;
 
 	constructor(param: TickControllerParameterObject) {
 		this.errorTrigger = new g.Trigger<any>();
@@ -59,15 +54,6 @@ export class TickController {
 			amflow: param.amflow,
 			executionMode: param.executionMode,
 			startedAt: param.startedAt
-		});
-		this._storageResolver = new sr.StorageResolver({
-			game: param.game,
-			amflow: param.amflow,
-			tickGenerator: this._generator,
-			tickBuffer: this._buffer,
-			executionMode: param.executionMode,
-			errorHandler: this.errorTrigger.fire,
-			errorHandlerOwner: this.errorTrigger
 		});
 
 		this._generator.tickTrigger.add(this._onTickGenerated, this);
@@ -102,21 +88,12 @@ export class TickController {
 		return this._buffer;
 	}
 
-	storageFunc(): StorageFunc {
-		return {
-			storageGetFunc: this._storageResolver.getStorageFunc,
-			storagePutFunc: this._storageResolver.putStorageFunc,
-			requestValuesForJoinFunc: this._storageResolver.requestValuesForJoinFunc
-		};
-	}
-
 	setExecutionMode(execMode: ExecutionMode): void {
 		if (this._executionMode === execMode)
 			return;
 		this._executionMode = execMode;
 		this._updateGeneratorState();
 		this._buffer.setExecutionMode(execMode);
-		this._storageResolver.setExecutionMode(execMode);
 	}
 
 	_stopTriggerOnTick(): void {
