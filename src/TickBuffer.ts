@@ -504,7 +504,7 @@ export class TickBuffer {
 			for (let j = ticksWithEvents.length - 1; j >= 0; --j) {
 				const tick = ticksWithEvents[j];
 				const pevs = tick[EventIndex.Tick.Events];
-				if (!pevs) // ticksWithEvents は「イベントを持つtick」なのでイベントはない場合もある
+				if (!pevs) // tick がストレージ情報を持っていた時期との互換性のためのチェック。現在の game-driver が生成する tick ではこの条件を満たすことはない
 					continue;
 
 				// この tick までの時間を加算
