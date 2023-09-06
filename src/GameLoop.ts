@@ -388,6 +388,10 @@ export class GameLoop {
 				case "interpolate-local":
 					if (tickMode === "by-clock") {
 						this._tickController.startTick();
+					} else {
+					// Manual の場合: storageDataが乗る可能性がある最初のTickだけ生成させ、あとは生成を止める。(Manualの仕様どおりの挙動)
+					// storageDataがある場合は送らないとPassiveのインスタンスがローディングシーンを終えられない。
+						this._tickController.startTickOnce();
 					}
 					this._clock.frameTrigger.add(this._onFrame, this);
 					break;
