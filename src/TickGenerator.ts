@@ -3,7 +3,6 @@ import * as g from "@akashic/akashic-engine";
 import type * as amf from "@akashic/amflow";
 import type * as pl from "@akashic/playlog";
 import type { EventBuffer } from "./EventBuffer";
-import { JoinResolver } from "./JoinResolver";
 
 export interface TickGeneratorParameterObject {
 	amflow: amf.AMFlow;
@@ -22,7 +21,6 @@ export class TickGenerator {
 
 	_amflow: amf.AMFlow;
 	_eventBuffer: EventBuffer;
-	_joinResolver: JoinResolver;
 
 	_nextAge: number = 0;
 	_generatingTick: boolean = false;
@@ -33,32 +31,13 @@ export class TickGenerator {
 
 		this._amflow = param.amflow;
 		this._eventBuffer = param.eventBuffer;
-		this._joinResolver = new JoinResolver({
-			amflow: param.amflow,
-			errorHandler: this.errorTrigger.fire,
-			errorHandlerOwner: this.errorTrigger
-		});
 	}
 
 	next(): void {
 		if (!this._generatingTick)
 			return;
 
-		const joinLeaves = this._eventBuffer.readJoinLeaves();
-		if (joinLeaves) {
-			for (let i = 0; i < joinLeaves.length; ++i)
-				this._joinResolver.request(joinLeaves[i]);
-		}
-
-		let evs = this._eventBuffer.readEvents();
-		const resolvedJoinLeaves = this._joinResolver.readResolved();
-		if (resolvedJoinLeaves) {
-			if (evs) {
-				evs.push.apply(evs, resolvedJoinLeaves);
-			} else {
-				evs = resolvedJoinLeaves;
-			}
-		}
+		const evs = this._eventBuffer.readEvents();
 
 		this.tickTrigger.fire([
 			this._nextAge++,  // 0: フレーム番号
