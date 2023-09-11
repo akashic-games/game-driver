@@ -14,8 +14,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
-      - name: Use npm@7
-        run: npm i -g npm@7 --registry=https://registry.npmjs.org
       - name: Checkout game-driver repository
         uses: actions/checkout@v3
         with:

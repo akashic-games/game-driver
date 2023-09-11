@@ -3,7 +3,6 @@ import * as g from "@akashic/akashic-engine";
 import type { AMFlow } from "@akashic/amflow";
 import * as pl from "@akashic/playlog";
 import ExecutionMode from "./ExecutionMode";
-import type StorageOnTick from "./StorageOnTick";
 
 const EventIndex = g.EventIndex; // eslint-disable-line @typescript-eslint/naming-convention
 
@@ -87,11 +86,6 @@ export class TickBuffer {
 	 * 取得済みのTickの消化待ちにかかわらず発火されることに注意。
 	 */
 	gotNoTickTrigger: g.Trigger<void> = new g.Trigger();
-
-	/**
-	 * ストレージを含むTickを取得した時にfireされる `g.Trigger` 。
-	 */
-	gotStorageTrigger: g.Trigger<StorageOnTick> = new g.Trigger();
 
 	_amflow: AMFlow;
 	_prefetchThreshold: number;
@@ -304,11 +298,6 @@ export class TickBuffer {
 			this.knownLatestAge = age;
 		}
 
-		const storageData = tick[EventIndex.Tick.StorageData];
-		if (storageData) {
-			this.gotStorageTrigger.fire({ age: tick[EventIndex.Tick.Age], storageData });
-		}
-
 		let i = this._tickRanges.length - 1;
 		for (; i >= 0; --i) {
 			const range = this._tickRanges[i];
@@ -407,13 +396,6 @@ export class TickBuffer {
 				const age = tick[EventIndex.Tick.Age];
 				return start <= age && age < end;
 			});
-		}
-
-		for (let j = 0; j < ticks.length; ++j) {
-			const tick = ticks[j];
-			const storageData = tick[EventIndex.Tick.StorageData];
-			if (storageData)
-				this.gotStorageTrigger.fire({ age: tick[EventIndex.Tick.Age], storageData });
 		}
 
 		const tickRange = { start: start, end: end, ticks: ticks };
@@ -522,7 +504,7 @@ export class TickBuffer {
 			for (let j = ticksWithEvents.length - 1; j >= 0; --j) {
 				const tick = ticksWithEvents[j];
 				const pevs = tick[EventIndex.Tick.Events];
-				if (!pevs) // ticksWithEvents は「ストレージまたはイベントを持つtick」なのでイベントはない場合もある
+				if (!pevs) // tick がストレージ情報を持っていた時期との互換性のためのチェック。現在の game-driver が生成する tick ではこの条件を満たすことはない
 					continue;
 
 				// この tick までの時間を加算

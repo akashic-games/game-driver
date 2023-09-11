@@ -193,7 +193,6 @@ export class GameLoop {
 		this._tickController = new TickController({
 			amflow: param.amflow,
 			clock: this._clock,
-			game: param.game,
 			eventBuffer: param.eventBuffer,
 			executionMode: param.executionMode,
 			startedAt: param.startedAt,
@@ -206,7 +205,6 @@ export class GameLoop {
 
 		this._setLoopRenderMode(loopRenderMode);
 		this._game.setIsSkipAware(conf.skipAwareGame != null ? conf.skipAwareGame : true);
-		this._game.setStorageFunc(this._tickController.storageFunc());
 		this._game.rawHandlerSet.raiseEventTrigger.add(this._onGameRaiseEvent, this);
 		this._game.rawHandlerSet.raiseTickTrigger.add(this._onGameRaiseTick, this);
 		this._game.rawHandlerSet.changeSceneModeTrigger.add(this._handleSceneChange, this);
