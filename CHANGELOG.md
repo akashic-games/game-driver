@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.18.0
+* @akashic/akashic-engine@3.15.0 に追従
+* 旧ストレージ関連の実装を削除
+
 ## 2.17.0
 * ローディングシーン中に `Game#destroy()` するとエラーになる問題を修正
   * `Game#handlerSet` の型を (オーバーライドしない) `g.GameHandlerSet` に
