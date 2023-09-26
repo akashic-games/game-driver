@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.18.1
+* `JoinEvent`, `LeaveEvent` が受け取れない問題を修正
+
 ## 2.18.0
 * @akashic/akashic-engine@3.15.0 に追従
 * 旧ストレージ関連の実装を削除
