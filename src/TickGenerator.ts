@@ -37,7 +37,11 @@ export class TickGenerator {
 		if (!this._generatingTick)
 			return;
 
-		const evs = this._eventBuffer.readEvents();
+		// NOTE: readEvents() と readJoinEventLeaves() は歴史的経緯により分離しているもので、現在は統合することもできる。
+		// ただし統合するとフレーム内のイベントの順序が変化する。この順序が問題になるケースは知られていないが、念のため分離したままにしている。
+		const normalEvents = this._eventBuffer.readEvents();
+		const joinLeaves = this._eventBuffer.readJoinLeaves();
+		const evs = (normalEvents && joinLeaves) ? normalEvents.concat(joinLeaves) : (normalEvents ?? joinLeaves);
 
 		this.tickTrigger.fire([
 			this._nextAge++,  // 0: フレーム番号

@@ -72,4 +72,46 @@ describe("TickGenerator", function () {
 		expect(ticks.length).toBe(3);
 		expect(ticks[2][EventIndex.Tick.Age]).toBe(42);
 	});
+
+	it("generates tick with given events", function () {
+		const amflow = new MockAmflow();
+		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow: amflow, game: game });
+		const self = new TickGenerator({ amflow: amflow, eventBuffer: eventBuffer });
+
+		eventBuffer.setMode({ isLocalReceiver: true, isReceiver: true });
+		self.startStopGenerate(true);
+
+		const ticks: pl.Tick[] = [];
+		self.tickTrigger.add((tick: pl.Tick) => {
+			ticks.push(tick);
+		});
+
+		const je: pl.JoinEvent = [pl.EventCode.Join, 0, "player-id", "player-name"];
+		const msge: pl.MessageEvent = [pl.EventCode.Message, 0, "player-id-2", "Message"];
+
+		eventBuffer.onEvent(je);
+		eventBuffer.onEvent(msge);
+		eventBuffer.processEvents();
+		self.next();
+		expect(ticks.length).toBe(1);
+		expect(ticks[0]).toEqual([0, [msge, je]]);
+
+		eventBuffer.onEvent(msge);
+		eventBuffer.processEvents();
+		self.next();
+		expect(ticks.length).toBe(2);
+		expect(ticks[1]).toEqual([1, [msge]]);
+
+		eventBuffer.onEvent(je);
+		eventBuffer.processEvents();
+		self.next();
+		expect(ticks.length).toBe(3);
+		expect(ticks[2]).toEqual([2, [je]]);
+
+		eventBuffer.processEvents();
+		self.next();
+		expect(ticks.length).toBe(4);
+		expect(ticks[3]).toEqual([3, null]);
+	});
 });
