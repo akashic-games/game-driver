@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## unreleased changes
+## 2.19.0
 * @akashic/akashic-engine@3.16.0 に追従
 * @akashic/amflow@3.3.0 に追従
 * @akashic/pdi-types@1.12.0 に追従
