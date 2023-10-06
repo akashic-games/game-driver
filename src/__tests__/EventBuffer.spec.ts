@@ -576,20 +576,20 @@ describe("EventBuffer", function () {
 		msge.push(true);
 		expect(!!EventBuffer.isEventLocal(msge)).toBe(true);
 
-		// PointDown: Code, Priority, PlayerId, PointerId, X, Y, EntityId, Local
+		// PointDown: Code, Priority, PlayerId, PointerId, X, Y, EntityId, Button, Local
 		const pde: pl.PointDownEvent = [ pl.EventCode.PointDown, 0, "dummyPid", 1, 100, 10, undefined, 0];
 		expect(!!EventBuffer.isEventLocal(pde)).toBe(false);
 		pde.push(true);
 		expect(!!EventBuffer.isEventLocal(pde)).toBe(true);
 
-		// PointMove: Code, Priority, PlayerId, PointerId, X, Y, StartDeltaX, StartDeltaY, PrevDeltaX, PrevDeltaY, EntityId, Local
-		const pme: pl.PointMoveEvent = [ pl.EventCode.PointMove, 0, "dummyPid", 1, 100, 0, 0, 0, 0, 10, undefined];
+		// PointMove: Code, Priority, PlayerId, PointerId, X, Y, StartDeltaX, StartDeltaY, PrevDeltaX, PrevDeltaY, EntityId, Button, Local
+		const pme: pl.PointMoveEvent = [ pl.EventCode.PointMove, 0, "dummyPid", 1, 100, 0, 0, 0, 0, 10, undefined, -1];
 		expect(!!EventBuffer.isEventLocal(pme)).toBe(false);
 		pme.push(true);
 		expect(!!EventBuffer.isEventLocal(pme)).toBe(true);
 
-		// PointUp: Code, Priority, PlayerId, PointerId, X, Y, StartDeltaX, StartDeltaY, PrevDeltaX, PrevDeltaY, EntityId, Local
-		const pue: pl.PointUpEvent = [ pl.EventCode.PointUp, 0, "dummyPid", 1, 100, 10, 0, 0, 0, 0, undefined];
+		// PointUp: Code, Priority, PlayerId, PointerId, X, Y, StartDeltaX, StartDeltaY, PrevDeltaX, PrevDeltaY, EntityId, Button, Local
+		const pue: pl.PointUpEvent = [ pl.EventCode.PointUp, 0, "dummyPid", 1, 100, 10, 0, 0, 0, 0, undefined, 0];
 		expect(!!EventBuffer.isEventLocal(pue)).toBe(false);
 		pue.push(true);
 		expect(!!EventBuffer.isEventLocal(pue)).toBe(true);
