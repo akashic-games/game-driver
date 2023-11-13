@@ -247,8 +247,8 @@ class AudioAsset extends pci.AudioAsset {
 	_failureController: LoadFailureController;
 
 	constructor(necessaryRetryCount: number, id: string, assetPath: string, duration: number,
-	            system: pdi.AudioSystem, loop: boolean, hint: pdi.AudioAssetHint, offset: number) {
-		super(id, assetPath, duration, system, loop, hint, offset);
+	            system: pdi.AudioSystem, loop: boolean, hint: pdi.AudioAssetHint, offset: number, loopOffset: number | undefined) {
+		super(id, assetPath, duration, system, loop, hint, offset, loopOffset);
 		this._failureController = new LoadFailureController(necessaryRetryCount);
 	}
 
@@ -381,8 +381,8 @@ export class ResourceFactory extends pci.ResourceFactory {
 	}
 
 	createAudioAsset(id: string, assetPath: string, duration: number,
-	                 system: pdi.AudioSystem, loop: boolean, hint: pdi.AudioAssetHint, offset?: number): AudioAsset {
-		return new AudioAsset(this._necessaryRetryCount, id, assetPath, duration, system, loop, hint, offset ?? 0);
+	                 system: pdi.AudioSystem, loop: boolean, hint: pdi.AudioAssetHint, offset?: number, loopOffset?: number): AudioAsset {
+		return new AudioAsset(this._necessaryRetryCount, id, assetPath, duration, system, loop, hint, offset ?? 0, loopOffset);
 	}
 
 	createTextAsset(id: string, assetPath: string): TextAsset {

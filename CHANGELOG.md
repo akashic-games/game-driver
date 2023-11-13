@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.20.0-beta.0
+* @akashic/akashic-engine@3.17.0-beta.0 に追従
+* @akashic/game-configuration@2.1.0-beta.1 に追従
+* @akashic/pdi-types@1.13.0-beta.0 に追従
+* @akashic/pdi-common-impl@1.5.0-beta.0 に追従
+
 ## 2.19.0
 * @akashic/akashic-engine@3.16.0 に追従
 * @akashic/amflow@3.3.0 に追従
