@@ -132,19 +132,22 @@ export class GameDriver {
 	 *
 	 * 引数 `param` のうち、省略されなかった値が新たに設定される。
 	 * `startGame()` によりゲームが開始されていた場合、暗黙に `stopGame()` が行われ、完了後 `startGame()` される。
+	 *
+	 * @param param 変更する内容
+	 * @param callback 完了時に呼び出されるコールバック。歴史的経緯により省略可能だが、通常省略せずコールバック呼び出しを待つ必要がある
 	 */
-	changeState(param: GameDriverInitializeParameterObject, callback: (err?: Error) => void): void {
+	changeState(param: GameDriverInitializeParameterObject, callback?: (err?: Error) => void): void {
 		const pausing = this._gameLoop && this._gameLoop.running;
 		if (pausing)
 			this._gameLoop?.stop();
 		this.initialize(param, err => {
 			if (err) {
-				callback(err);
+				callback?.(err);
 				return;
 			}
 			if (pausing)
 				this._gameLoop?.start();
-			callback();
+			callback?.();
 		});
 	}
 

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.19.1
+* `GameDriver#changeState()` のコールバック引数を省略できるように
+
 ## 2.19.0
 * @akashic/akashic-engine@3.16.0 に追従
 * @akashic/amflow@3.3.0 に追従
