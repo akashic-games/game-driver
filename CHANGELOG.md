@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.20.0
+* @akashic/akashic-engine@3.17.0 に追従
+* @akashic/pdi-types@1.13.0 に追従
+
 ## 2.19.1
 * `GameDriver#changeState()` のコールバック引数を省略できるように
 
