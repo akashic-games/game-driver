@@ -78,6 +78,7 @@ describe("GameLoop", function () {
 		expect(self._waitingNextTick).toBe(false);
 		expect(self._skipping).toBe(false);
 		expect(self._lastPollingTickTime).toBe(0);
+		expect(self._deltaTimeBrokenThreshold).toBeUndefined();
 	});
 
 	it("provides the accessors for its properties", function () {
@@ -151,11 +152,13 @@ describe("GameLoop", function () {
 		expect(obtainedConf.originDate).toBeUndefined();
 		expect(obtainedConf.omitInterpolatedTickOnReplay).toBe(loopConf.omitInterpolatedTickOnReplay);
 		expect(obtainedConf.targetAge).toBeUndefined();
+		expect(obtainedConf.deltaTimeBrokenThreshold).toBeUndefined();
 
 		self.setLoopConfiguration({
 			loopMode: undefined!,
 			targetAge: 42,
-			loopRenderMode: LoopRenderMode.None
+			loopRenderMode: LoopRenderMode.None,
+			deltaTimeBrokenThreshold: 300
 		});
 		obtainedConf = self.getLoopConfiguration();
 		expect(obtainedConf.loopMode).toBe(loopConf.loopMode);
@@ -171,6 +174,7 @@ describe("GameLoop", function () {
 		expect(obtainedConf.originDate).toBeUndefined();
 		expect(obtainedConf.omitInterpolatedTickOnReplay).toBe(loopConf.omitInterpolatedTickOnReplay);
 		expect(obtainedConf.targetAge).toBe(42);
+		expect(obtainedConf.deltaTimeBrokenThreshold).toBe(300);
 	});
 
 	it("can notifies the content of skip", function (done: any) {
