@@ -83,6 +83,11 @@ export class Clock {
 	static ANTICIPATE_RATE: number = 0.8;
 
 	/**
+	 * 異常値とみなして無視する `Looper` の呼び出し間隔[ms]のデフォルト値。
+	 */
+	static DEFAULT_DELTA_TIME_BROKEN_THRESHOLD: number = 150;
+
+	/**
 	 * このクロックが一秒あたりに `frameTrigger' をfireする回数(正確にはこの `scaleFactor` 倍)。
 	 * この値は参照のために公開される。
 	 * 外部からのこの値の変更は許容されるが、反映は次の `start()` まで遅延される。
@@ -189,6 +194,14 @@ export class Clock {
 		} else {
 			this.scaleFactor = scaleFactor;
 		}
+	}
+
+	get deltaTimeBrokenThreshold(): number {
+		return this._deltaTimeBrokenThreshold;
+	}
+
+	set deltaTimeBrokenThreshold(threshold: number) {
+		this._deltaTimeBrokenThreshold = threshold;
 	}
 
 	_onLooperCall(deltaTime: number): number {

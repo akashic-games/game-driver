@@ -78,7 +78,7 @@ describe("GameLoop", function () {
 		expect(self._waitingNextTick).toBe(false);
 		expect(self._skipping).toBe(false);
 		expect(self._lastPollingTickTime).toBe(0);
-		expect(self._deltaTimeBrokenThreshold).toBe(150);
+		expect(self._clock.deltaTimeBrokenThreshold).toBe(150);
 	});
 
 	it("provides the accessors for its properties", function () {
