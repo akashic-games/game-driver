@@ -18,8 +18,7 @@ describe("Clock", function() {
 			platform: pf,
 			maxFramePerOnce: 8,
 			frameHandler: target.inc,
-			frameHandlerOwner: target,
-			deltaTimeBrokenThreshold: 150
+			frameHandlerOwner: target
 		});
 
 		expect(clock.fps).toBe(35);
