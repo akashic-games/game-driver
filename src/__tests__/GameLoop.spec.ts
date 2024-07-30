@@ -78,7 +78,7 @@ describe("GameLoop", function () {
 		expect(self._waitingNextTick).toBe(false);
 		expect(self._skipping).toBe(false);
 		expect(self._lastPollingTickTime).toBe(0);
-		expect(self._deltaTimeBrokenThreshold).toBeUndefined();
+		expect(self._deltaTimeBrokenThreshold).toBe(150);
 	});
 
 	it("provides the accessors for its properties", function () {
@@ -120,7 +120,8 @@ describe("GameLoop", function () {
 			targetTimeOffset: undefined,
 			originDate: undefined,
 			omitInterpolatedTickOnReplay: true,
-			targetAge: undefined
+			targetAge: undefined,
+			deltaTimeBrokenThreshold: constants.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD
 		});
 		const loopConf = {
 			loopMode: LoopMode.Replay,
@@ -152,7 +153,7 @@ describe("GameLoop", function () {
 		expect(obtainedConf.originDate).toBeUndefined();
 		expect(obtainedConf.omitInterpolatedTickOnReplay).toBe(loopConf.omitInterpolatedTickOnReplay);
 		expect(obtainedConf.targetAge).toBeUndefined();
-		expect(obtainedConf.deltaTimeBrokenThreshold).toBeUndefined();
+		expect(obtainedConf.deltaTimeBrokenThreshold).toBe(constants.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD);
 
 		self.setLoopConfiguration({
 			loopMode: undefined!,

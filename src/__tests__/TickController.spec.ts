@@ -44,7 +44,7 @@ describe("TickController", function () {
 		const pf = new mockpf.Platform({});
 		const amflow = new MockAmflow();
 		const game = prepareGame({ title: FixtureGame.SimpleGame, playerId: "dummyPlayerId" });
-		const clock = new Clock({ fps: 30, platform: pf, maxFramePerOnce: 5 });
+		const clock = new Clock({ fps: 30, platform: pf, maxFramePerOnce: 5, deltaTimeBrokenThreshold: 150 });
 		const eventBuffer = new EventBuffer({ amflow, game });
 		const tickController = new TickController({ amflow, clock, eventBuffer, executionMode, errorHandler, errorHandlerOwner });
 		return {
