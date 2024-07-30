@@ -44,8 +44,7 @@ describe("Clock", function() {
 		const clock = new Clock({
 			fps: 30,
 			platform: pf,
-			maxFramePerOnce: 10,
-			deltaTimeBrokenThreshold: 150
+			maxFramePerOnce: 10
 		});
 		expect(clock.frameTrigger.length).toBe(0);
 		clock.frameTrigger.add(target.inc, target);
@@ -128,8 +127,7 @@ describe("Clock", function() {
 			platform: pf,
 			maxFramePerOnce: 8,
 			frameHandler: target.inc,
-			frameHandlerOwner: target,
-			deltaTimeBrokenThreshold: 150
+			frameHandlerOwner: target
 		});
 
 		const l = pf.loopers[0];
@@ -228,8 +226,7 @@ describe("Clock", function() {
 			platform: pf,
 			maxFramePerOnce: 8,
 			frameHandler: target.inc,
-			frameHandlerOwner: target,
-			deltaTimeBrokenThreshold: 150
+			frameHandlerOwner: target
 		});
 		const l = pf.loopers[0];
 

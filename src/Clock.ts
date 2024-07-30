@@ -53,7 +53,7 @@ export interface ClockParameterObject {
 	 * この時間が経過していた場合、無視して1フレーム時間進んだものと解釈する。
 	 * 指定されなかった場合、150(`DEFAULT_DELTA_TIME_BROKEN_THRESHOLD`)。
 	 */
-	deltaTimeBrokenThreshold: number;
+	deltaTimeBrokenThreshold?: number;
 
 	/**
 	 * 1フレーム時間経過時に呼び出されるコールバック。
@@ -149,7 +149,7 @@ export class Clock {
 
 		this._platform = param.platform;
 		this._maxFramePerOnce = param.maxFramePerOnce;
-		this._deltaTimeBrokenThreshold = param.deltaTimeBrokenThreshold;
+		this._deltaTimeBrokenThreshold = param.deltaTimeBrokenThreshold || Clock.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD;
 		if (param.frameHandler) {
 			this.frameTrigger.add(param.frameHandler, param.frameHandlerOwner);
 		}

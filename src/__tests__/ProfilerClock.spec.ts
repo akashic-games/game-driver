@@ -28,8 +28,7 @@ describe("ProfilerClock", () => {
 			maxFramePerOnce: 8,
 			frameHandler: target.inc,
 			frameHandlerOwner: target,
-			profiler: profiler,
-			deltaTimeBrokenThreshold: 150
+			profiler: profiler
 		});
 
 		expect(clock.fps).toBe(35);
@@ -71,8 +70,7 @@ describe("ProfilerClock", () => {
 			maxFramePerOnce: 8,
 			frameHandler: target.inc,
 			frameHandlerOwner: target,
-			profiler: profiler,
-			deltaTimeBrokenThreshold: 150
+			profiler: profiler
 		});
 		const l = pf.loopers[0];
 
