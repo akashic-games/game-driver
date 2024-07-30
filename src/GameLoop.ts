@@ -171,7 +171,6 @@ export class GameLoop {
 		this._executionMode = param.executionMode;
 
 		this._targetAge = (conf.targetAge != null) ? conf.targetAge : null;
-		const deltaTimeBrokenThreshold = conf.deltaTimeBrokenThreshold || constants.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD;
 
 		// todo: 本来は、パフォーマンス測定機構を含まないリリースモードによるビルド方式も提供すべき。
 		if (!param.profiler) {
@@ -180,7 +179,7 @@ export class GameLoop {
 				scaleFactor: this._playbackRate,
 				platform: param.platform,
 				maxFramePerOnce: 5,
-				deltaTimeBrokenThreshold
+				deltaTimeBrokenThreshold: conf.deltaTimeBrokenThreshold
 			});
 		} else {
 			this._clock = new ProfilerClock({
@@ -189,7 +188,7 @@ export class GameLoop {
 				platform: param.platform,
 				maxFramePerOnce: 5,
 				profiler: param.profiler,
-				deltaTimeBrokenThreshold
+				deltaTimeBrokenThreshold: conf.deltaTimeBrokenThreshold
 			});
 		}
 
