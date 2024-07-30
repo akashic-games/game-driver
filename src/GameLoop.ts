@@ -112,7 +112,7 @@ export class GameLoop {
 	_sceneLocalMode: g.LocalTickModeString | null = null;
 
 	_targetAge: number | null;
-	_deltaTimeBrokenThreshold?: number;
+	_deltaTimeBrokenThreshold: number;
 	_waitingStartPoint: boolean = false;
 	_lastRequestedStartPointAge: number = -1;
 	_lastRequestedStartPointTime: number = -1;
@@ -172,7 +172,7 @@ export class GameLoop {
 		this._executionMode = param.executionMode;
 
 		this._targetAge = (conf.targetAge != null) ? conf.targetAge : null;
-		this._deltaTimeBrokenThreshold = conf.deltaTimeBrokenThreshold;
+		this._deltaTimeBrokenThreshold = conf.deltaTimeBrokenThreshold || constants.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD;
 
 		// todo: 本来は、パフォーマンス測定機構を含まないリリースモードによるビルド方式も提供すべき。
 		if (!param.profiler) {

@@ -38,3 +38,8 @@ export const DEFAULT_POLLING_TICK_THRESHOLD: number = 10000;
  * 擬似的に無限未来として扱うage。
  */
 export const PSEUDO_INFINITE_AGE = 1892160000; // = 365 * 86400 * 60 = 60FPSで一年分。(特に制限ではないが32bit signed intに収まる)
+
+/**
+ * 異常値とみなして無視する `Looper` の呼び出し間隔[ms]のデフォルト値。
+ */
+export const DEFAULT_DELTA_TIME_BROKEN_THRESHOLD: number = 150;

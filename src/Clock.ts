@@ -53,7 +53,7 @@ export interface ClockParameterObject {
 	 * この時間が経過していた場合、無視して1フレーム時間進んだものと解釈する。
 	 * 指定されなかった場合、150(`DEFAULT_DELTA_TIME_BROKEN_THRESHOLD`)。
 	 */
-	deltaTimeBrokenThreshold?: number;
+	deltaTimeBrokenThreshold: number;
 
 	/**
 	 * 1フレーム時間経過時に呼び出されるコールバック。
@@ -81,11 +81,6 @@ export class Clock {
 	 * 例えば20FPSであれば50msで1フレームだが、50*0.8 = 40ms 時点で1フレーム進めてしまい、次フレームまでの時間を60msにする。
 	 */
 	static ANTICIPATE_RATE: number = 0.8;
-
-	/**
-	 * 異常値とみなして無視する `Looper` の呼び出し間隔[ms]のデフォルト値。
-	 */
-	static DEFAULT_DELTA_TIME_BROKEN_THRESHOLD: number = 150;
 
 	/**
 	 * このクロックが一秒あたりに `frameTrigger' をfireする回数(正確にはこの `scaleFactor` 倍)。
@@ -149,7 +144,7 @@ export class Clock {
 
 		this._platform = param.platform;
 		this._maxFramePerOnce = param.maxFramePerOnce;
-		this._deltaTimeBrokenThreshold = param.deltaTimeBrokenThreshold || Clock.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD;
+		this._deltaTimeBrokenThreshold = param.deltaTimeBrokenThreshold;
 		if (param.frameHandler) {
 			this.frameTrigger.add(param.frameHandler, param.frameHandlerOwner);
 		}
