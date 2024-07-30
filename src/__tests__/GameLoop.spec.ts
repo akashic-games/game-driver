@@ -121,7 +121,7 @@ describe("GameLoop", function () {
 			originDate: undefined,
 			omitInterpolatedTickOnReplay: true,
 			targetAge: undefined,
-			deltaTimeBrokenThreshold: constants.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD
+			deltaTimeBrokenThreshold: self._clock.deltaTimeBrokenThreshold
 		});
 		const loopConf = {
 			loopMode: LoopMode.Replay,
@@ -153,7 +153,7 @@ describe("GameLoop", function () {
 		expect(obtainedConf.originDate).toBeUndefined();
 		expect(obtainedConf.omitInterpolatedTickOnReplay).toBe(loopConf.omitInterpolatedTickOnReplay);
 		expect(obtainedConf.targetAge).toBeUndefined();
-		expect(obtainedConf.deltaTimeBrokenThreshold).toBe(constants.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD);
+		expect(obtainedConf.deltaTimeBrokenThreshold).toBe(self._clock.deltaTimeBrokenThreshold);
 
 		self.setLoopConfiguration({
 			loopMode: undefined!,
