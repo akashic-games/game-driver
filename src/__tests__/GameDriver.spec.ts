@@ -131,5 +131,4 @@ describe("GameDriver", () => {
 			gameDriver._getStartPoint(0).catch(_err => done());
 		});
 	});
-
 });
