@@ -112,6 +112,7 @@ export class GameLoop {
 	_sceneLocalMode: g.LocalTickModeString | null = null;
 
 	_targetAge: number | null;
+	_deltaTimeBrokenThreshold?: number;
 	_waitingStartPoint: boolean = false;
 	_lastRequestedStartPointAge: number = -1;
 	_lastRequestedStartPointTime: number = -1;
@@ -171,6 +172,7 @@ export class GameLoop {
 		this._executionMode = param.executionMode;
 
 		this._targetAge = (conf.targetAge != null) ? conf.targetAge : null;
+		this._deltaTimeBrokenThreshold = conf.deltaTimeBrokenThreshold;
 
 		// todo: 本来は、パフォーマンス測定機構を含まないリリースモードによるビルド方式も提供すべき。
 		if (!param.profiler) {
@@ -178,7 +180,8 @@ export class GameLoop {
 				fps: param.game.fps,
 				scaleFactor: this._playbackRate,
 				platform: param.platform,
-				maxFramePerOnce: 5
+				maxFramePerOnce: 5,
+				deltaTimeBrokenThreshold: this._deltaTimeBrokenThreshold
 			});
 		} else {
 			this._clock = new ProfilerClock({
@@ -186,7 +189,8 @@ export class GameLoop {
 				scaleFactor: this._playbackRate,
 				platform: param.platform,
 				maxFramePerOnce: 5,
-				profiler: param.profiler
+				profiler: param.profiler,
+				deltaTimeBrokenThreshold: this._deltaTimeBrokenThreshold
 			});
 		}
 
@@ -272,7 +276,8 @@ export class GameLoop {
 			targetTimeOffset: this._targetTimeOffset ?? undefined,
 			originDate: this._originDate ?? undefined,
 			omitInterpolatedTickOnReplay: this._omitInterpolatedTickOnReplay,
-			targetAge: this._targetAge ?? undefined
+			targetAge: this._targetAge ?? undefined,
+			deltaTimeBrokenThreshold: this._deltaTimeBrokenThreshold
 		};
 	}
 
@@ -317,6 +322,9 @@ export class GameLoop {
 				this._waitingNextTick = false;
 			}
 			this._targetAge = conf.targetAge;
+		}
+		if (conf.deltaTimeBrokenThreshold != null) {
+			this._deltaTimeBrokenThreshold = conf.deltaTimeBrokenThreshold;
 		}
 	}
 
