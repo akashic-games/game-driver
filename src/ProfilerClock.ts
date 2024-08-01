@@ -31,7 +31,7 @@ export class ProfilerClock extends Clock {
 			// 時間が止まっているか巻き戻っている。初回呼び出しか、あるいは何かがおかしい。時間経過0と見なす。
 			return this._waitTime - this._totalDeltaTime;
 		}
-		if (deltaTime > this._deltaTimeBrokenThreshold) {
+		if (deltaTime > this.deltaTimeBrokenThreshold) {
 			// 間隔が長すぎる。何かがおかしい。時間経過を1フレーム分とみなす。
 			deltaTime = this._waitTime;
 		}

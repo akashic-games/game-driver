@@ -67,7 +67,7 @@ describe("GameDriver", () => {
 				expect(gameDriver._gameLoop).toBeDefined();
 				expect(gameDriver._rendererRequirement).toBeDefined();
 
-				expect(gameDriver._gameLoop?._clock._deltaTimeBrokenThreshold).toBe(loopConf.deltaTimeBrokenThreshold)
+				expect(gameDriver._gameLoop?._clock.deltaTimeBrokenThreshold).toBe(loopConf.deltaTimeBrokenThreshold)
 				done();
 			});
 		});

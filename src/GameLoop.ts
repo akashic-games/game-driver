@@ -322,7 +322,7 @@ export class GameLoop {
 			this._targetAge = conf.targetAge;
 		}
 		if (conf.deltaTimeBrokenThreshold != null) {
-			this._clock.deltaTimeBrokenThreshold = conf.deltaTimeBrokenThreshold;
+			this._clock.setDeltaTimeBrokenThreshold(conf.deltaTimeBrokenThreshold);
 		}
 	}
 
