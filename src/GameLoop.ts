@@ -178,7 +178,8 @@ export class GameLoop {
 				fps: param.game.fps,
 				scaleFactor: this._playbackRate,
 				platform: param.platform,
-				maxFramePerOnce: 5
+				maxFramePerOnce: 5,
+				deltaTimeBrokenThreshold: conf.deltaTimeBrokenThreshold
 			});
 		} else {
 			this._clock = new ProfilerClock({
@@ -186,7 +187,8 @@ export class GameLoop {
 				scaleFactor: this._playbackRate,
 				platform: param.platform,
 				maxFramePerOnce: 5,
-				profiler: param.profiler
+				profiler: param.profiler,
+				deltaTimeBrokenThreshold: conf.deltaTimeBrokenThreshold
 			});
 		}
 
@@ -272,7 +274,8 @@ export class GameLoop {
 			targetTimeOffset: this._targetTimeOffset ?? undefined,
 			originDate: this._originDate ?? undefined,
 			omitInterpolatedTickOnReplay: this._omitInterpolatedTickOnReplay,
-			targetAge: this._targetAge ?? undefined
+			targetAge: this._targetAge ?? undefined,
+			deltaTimeBrokenThreshold: this._clock.deltaTimeBrokenThreshold
 		};
 	}
 
@@ -317,6 +320,9 @@ export class GameLoop {
 				this._waitingNextTick = false;
 			}
 			this._targetAge = conf.targetAge;
+		}
+		if (conf.deltaTimeBrokenThreshold != null) {
+			this._clock.setDeltaTimeBrokenThreshold(conf.deltaTimeBrokenThreshold);
 		}
 	}
 

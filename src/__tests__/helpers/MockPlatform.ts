@@ -1,5 +1,6 @@
 import type * as amf from "@akashic/amflow";
 import type * as pdi from "@akashic/pdi-types";
+import { Surface } from "./MockResourceFactory";
 
 export class Looper implements pdi.Looper {
 	fun: (deltaTime: number) => number;
@@ -58,7 +59,7 @@ export class Platform {
 	}
 
 	getPrimarySurface(): pdi.Surface {
-		return null!;
+		return new Surface(640, 480);
 	}
 
 	getResourceFactory(): pdi.ResourceFactory {

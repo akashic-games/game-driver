@@ -165,7 +165,7 @@ export class Renderer extends pci.Renderer {
 	}
 }
 
-class Surface extends pci.Surface {
+export class Surface extends pci.Surface {
 	createdRenderer!: pdi.Renderer;
 
 	constructor(width: number, height: number, drawable?: any) {

@@ -140,8 +140,8 @@ describe("Clock", function() {
 		expect(l.fun(2)).toBe(waitTime - 2);
 		expect(target.count).toBe(0);
 
-		expect(clock._deltaTimeBrokenThreshold > 2 * waitTime).toBe(true); // _deltaTimeBrokenThreshold はとにかく大きいことだけ確認しておく
-		expect(l.fun(clock._deltaTimeBrokenThreshold + 10)).toBe(waitTime - 2);
+		expect(clock.deltaTimeBrokenThreshold > 2 * waitTime).toBe(true); // deltaTimeBrokenThreshold はとにかく大きいことだけ確認しておく
+		expect(l.fun(clock.deltaTimeBrokenThreshold + 10)).toBe(waitTime - 2);
 		expect(target.count).toBe(1);
 	});
 

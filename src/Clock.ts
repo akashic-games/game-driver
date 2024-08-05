@@ -126,10 +126,14 @@ export class Clock {
 	 */
 	rawFrameTrigger: g.Trigger<void>;
 
+	/**
+	 * 異常値とみなして無視する `Looper` の呼び出し間隔(単位はms)。
+	 * 初期値は DEFAULT_DELTA_TIME_BROKEN_THRESHOLD の値となる。
+	 */
+	deltaTimeBrokenThreshold: number;
+
 	_platform: pdi.Platform;
 	_maxFramePerOnce: number;
-	_deltaTimeBrokenThreshold: number;
-
 	_totalDeltaTime: number;
 	_onLooperCall_bound: (deltaTime: number) => number;
 	_looper: pdi.Looper;
@@ -146,10 +150,10 @@ export class Clock {
 		this.scaleFactor = param.scaleFactor || 1;
 		this.frameTrigger = new g.Trigger<ClockFrameTriggerParameterObject>();
 		this.rawFrameTrigger = new g.Trigger<void>();
+		this.deltaTimeBrokenThreshold = param.deltaTimeBrokenThreshold || Clock.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD;
 
 		this._platform = param.platform;
 		this._maxFramePerOnce = param.maxFramePerOnce;
-		this._deltaTimeBrokenThreshold = param.deltaTimeBrokenThreshold || Clock.DEFAULT_DELTA_TIME_BROKEN_THRESHOLD;
 		if (param.frameHandler) {
 			this.frameTrigger.add(param.frameHandler, param.frameHandlerOwner);
 		}
@@ -196,6 +200,10 @@ export class Clock {
 		}
 	}
 
+	setDeltaTimeBrokenThreshold(threshold: number): void {
+		this.deltaTimeBrokenThreshold = threshold;
+	}
+
 	_onLooperCall(deltaTime: number): number {
 		if (isNaN(deltaTime)) {
 			// NaN が渡された場合 次のフレームまで進行する。
@@ -207,7 +215,7 @@ export class Clock {
 			// 時間が止まっているか巻き戻っている。初回呼び出しか、あるいは何かがおかしい。時間経過0と見なす。
 			return this._waitTime - this._totalDeltaTime;
 		}
-		if (deltaTime > this._deltaTimeBrokenThreshold) {
+		if (deltaTime > this.deltaTimeBrokenThreshold) {
 			// 間隔が長すぎる。何かがおかしい。時間経過を1フレーム分とみなす。
 			deltaTime = this._waitTime;
 		}

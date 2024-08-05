@@ -136,6 +136,13 @@ interface LoopConfiguration {
 	 * そのことを意識して作成されたコンテンツでのみこの値を偽にすべきである。
 	 */
 	omitInterpolatedTickOnReplay?: boolean;
+
+	/**
+	 * 異常値とみなして無視する `Looper` の呼び出し間隔(単位はms)。
+	 * この時間が経過していた場合、無視して1フレーム時間進んだものと解釈する。
+	 * 指定されなかった場合、150(`DEFAULT_DELTA_TIME_BROKEN_THRESHOLD`)。
+	 */
+	deltaTimeBrokenThreshold?: number;
 }
 
 export default LoopConfiguration;
