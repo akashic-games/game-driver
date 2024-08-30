@@ -507,8 +507,10 @@ export class GameLoop {
 						//  時間ベースリプレイでは目標時刻 "以後" には進めないという制約がある。これを単純な実装で守るべく切り上げを断念している)
 						if (targetTime <= nextTickTime) {
 							// 次ティック時刻まで進めると目標時刻を超えてしまう: 目標時刻直前まで動いて抜ける(目標時刻直前までは来ないと目標時刻到達通知が永久にできない)
-							this._omittedTickDuration += targetTime - this._currentTime;
-							this._currentTime = Math.floor(targetTime / this._frameTime) * this._frameTime;
+							const gap = targetTime - this._currentTime;
+							this._omittedTickDuration += gap;
+							// targetTime を直接丸めると誤差が出る場合があるので、代わりに gap だけを丸めて加算する
+							this._currentTime += Math.floor(gap / this._frameTime) * this._frameTime;
 							break;
 						}
 						nextFrameTime = nextTickTime;

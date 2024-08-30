@@ -1027,4 +1027,75 @@ describe("GameLoop", function () {
 		});
 		self.reset(zerothSp);
 	});
+
+	it("doesn't reproduce a bug: currentTime broken by overflow", function (done: any) {
+		// ティック時刻で見たとき間が 1 フレーム分よりも大きく空いている、二つの連続する任意のティック a, b について、
+		//  - 「a の時刻の 1 フレーム分あと」と「b の時刻」の間で、かつ
+		//  - 2024-06-11 以降で、ミリ秒単位で表した時に下 2 桁が 00 になる時刻
+		// を目標時刻にすると、オーバーフローのために GameLoop#_currenTime が目標時刻を超えてしまう不具合の修正を確認する。
+		const startedAt = +new Date("2024-06-20T01:02:03.400");
+		const targetTime = 2000;
+
+		const amflow = new MemoryAmflowClient({
+			playId: "dummyPlayId",
+			tickList: [
+				0,
+				9,
+				[
+					[5, [makeTimestampEvent(3000 + startedAt)]]
+				]
+			],
+			startPoints: [
+				{
+					frame: 0,
+					timestamp: 0,
+					data: {
+						seed: 42,
+						startedAt
+					}
+				}
+			]
+		});
+		const platform = new mockpf.Platform({ amflow });
+		const game = prepareGame({ title: FixtureGame.LocalTickGame, playerId: "dummyPlayerId" });
+		const eventBuffer = new EventBuffer({ amflow, game });
+		const self = new GameLoop({
+			amflow,
+			platform,
+			game,
+			eventBuffer,
+			executionMode: ExecutionMode.Passive,
+			configuration: {
+				loopMode: LoopMode.Replay,
+				targetTimeFunc: () => 2000,
+				omitInterpolatedTickOnReplay: true
+			},
+			startedAt
+		});
+
+		self.start();
+		const looper = self._clock._looper as mockpf.Looper;
+		let timer: any = null;
+		timer = setInterval(() => {
+			looper.fun(self._frameTime);
+			expect(self._currentTime).toBeLessThanOrEqual(startedAt + targetTime); // この不変条件が破られないことを確認する
+		}, 1);
+
+		game.targetTimeReachedTrigger.addOnce(() => {
+			expect(self._currentTime).toBeLessThanOrEqual(startedAt + targetTime);
+			clearInterval(timer);
+			expect(game.age).toBe(5);
+			done();
+		});
+		game.requestNotifyTargetTimeReached();
+
+		expect(self._frameTime).toBe(1000 / 30);   // 30 は fps. LocalTickGame の game.json 参照。
+		self.rawTargetTimeReachedTrigger.add(game._onRawTargetTimeReached, game);
+		game._reset({ age: 0, randSeed: 0 });
+		game.handlerSet.setEventFilterFuncs({
+			addFilter: eventBuffer.addFilter.bind(eventBuffer),
+			removeFilter: eventBuffer.removeFilter.bind(eventBuffer)
+		});
+		game._loadAndStart({ args: undefined });
+	});
 });
