@@ -214,7 +214,7 @@ export class GameDriver {
 	 * @param height プライマリサーフェスの高さ。
 	 * @param rendererCandidates Rendererのタイプ。
 	 */
-	resetPrimarySurface(width: number, height: number, rendererCandidates?: string[]): void {
+	resetPrimarySurface(width: number, height: number, rendererCandidates?: (string | pdi.RendererCandidate)[]): void {
 		rendererCandidates = rendererCandidates ? rendererCandidates
 		                                        : this._rendererRequirement ? this._rendererRequirement.rendererCandidates
 		                                                                    : undefined;
