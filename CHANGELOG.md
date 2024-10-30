@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.23.0
+* @akashic/pdi-types@1.14.0 に追従
+
 ## 2.22.0
 * `GameDriver#initialize()` で引数パラメータ内の `LoopConfiguration` で `deltaTimeBrokenThreshold` を設定できるように
 
