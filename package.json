@@ -57,6 +57,6 @@
   "dependencies": {
     "@akashic/akashic-engine": "~3.18.0",
     "@akashic/amflow-util": "~1.4.0",
-    "@akashic/game-configuration": "~2.2.0"
+    "@akashic/game-configuration": "~2.4.0"
   }
 }
