@@ -55,8 +55,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@akashic/akashic-engine": "~3.19.0",
+    "@akashic/akashic-engine": "~3.20.0",
     "@akashic/amflow-util": "~1.4.0",
-    "@akashic/game-configuration": "~2.4.0"
+    "@akashic/game-configuration": "~2.5.0"
   }
 }
