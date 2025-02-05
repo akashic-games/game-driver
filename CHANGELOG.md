@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.25.0
+* @akashic/pdi-types@1.14.0 に追従
+
 ## 2.24.0
 * @akashic/akashic-engine@3.20.0 に追従
 * @akashic/game-configuration@2.5.0 に追従
