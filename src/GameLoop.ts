@@ -50,7 +50,7 @@ export class GameLoop {
 	 * 実時間ではなく、プレイ開始日時と経過フレーム数から計算される仮想的な時間である。
 	 * この時間情報を元にタイムスタンプイベントの消化待ちを行う。
 	 *
-	 * _crrentTickTime と異なり、ローカルティックを消化している間も進行する。
+	 * _currentTickTime と異なり、ローカルティックを消化している間も進行する。
 	 */
 	_currentTime: number;
 
@@ -125,6 +125,15 @@ export class GameLoop {
 	 * (なお一部の異常系ではこの値が真でも後続 tick を見落としている可能性があるが、その場合はポーリング処理で救うことにする)
 	 */
 	_foundLatestTick: boolean = false;
+
+	/**
+	 * _currentTickTime からローカルティック補間により進められた累積の経過時間。
+	 *
+	 * 通常、_doLocalTick() の呼び出しごとに _frameTime 分だけ加算される。
+	 * tick の消化により _currentTickTime が更新されるタイミングで本変数はリセットされる。
+	 * したがって、 _currentTickTime + localAdvanceTime が、実質的な「現在時刻」となる。
+	 */
+	_localAdvanceTime: number = 0;
 
 	_skipping: boolean = false;
 	_lastPollingTickTime: number = 0;
@@ -233,6 +242,7 @@ export class GameLoop {
 		this._lastRequestedStartPointAge = -1;  // 現在ageを変えた時はリセットしておく(場合によっては不要だが、安全のため)。
 		this._lastRequestedStartPointTime = -1;  // 同上。
 		this._omittedTickDuration = 0;
+		this._localAdvanceTime = 0;
 		this._game._restartWithSnapshot(startPoint);
 	}
 
@@ -420,7 +430,8 @@ export class GameLoop {
 	_doLocalTick(): void {
 		const game = this._game;
 		const pevs = this._eventBuffer.readLocalEvents();
-		this._currentTime += this._frameTime; // ここでは _currenTickTime は進まないことに注意 (ローカルティック消化では進まない)
+		this._currentTime += this._frameTime; // ここでは _currentTickTime は進まないことに注意 (ローカルティック消化では進まない)
+		this._localAdvanceTime += this._frameTime;
 		if (pevs) {
 			game.tick(false, Math.floor(this._omittedTickDuration / this._frameTime), pevs);
 		} else {
@@ -480,7 +491,8 @@ export class GameLoop {
 		}
 
 		if (!this._skipping) {
-			if ((frameGap > this._skipThreshold || this._tickBuffer.currentAge === 0) &&
+			const localFrameGap = (targetTime - (this._currentTickTime + this._localAdvanceTime)) / this._frameTime;
+			if ((localFrameGap > this._skipThreshold || this._tickBuffer.currentAge === 0) &&
 			    (this._tickBuffer.hasNextTick() || (this._omitInterpolatedTickOnReplay && this._foundLatestTick))) {
 				// ここでは常に `frameGap > 0` であることに注意。0の時にskipに入ってもすぐ戻ってしまう
 				const isTargetNear = frameGap <= this._skipThreshold; // (currentAge === 0) の時のみ真になりうることに注意
@@ -542,6 +554,7 @@ export class GameLoop {
 
 			this._currentTime = nextFrameTime;
 			this._currentTickTime = nextTickTime;
+			this._localAdvanceTime = 0;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
 			this._events.length = 0;
@@ -708,6 +721,7 @@ export class GameLoop {
 
 			this._currentTime = nextFrameTime;
 			this._currentTickTime = explicitNextTickTime ?? (this._currentTickTime + this._frameTime);
+			this._localAdvanceTime = 0;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
 			this._events.length = 0;
