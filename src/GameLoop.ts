@@ -474,8 +474,11 @@ export class GameLoop {
 		const game = this._game;
 		const timeGap = targetTime - this._currentTickTime;
 		const frameGap = (timeGap / this._frameTime);
+		const localFrameGap = (targetTime - (this._currentTickTime + this._localAdvanceTime)) / this._frameTime;
 
-		if ((frameGap > this._jumpTryThreshold || frameGap < 0) &&
+		// ここでの下限は frameGap を基準とする点に注意。
+		// (localAdvanceTime の進行分は "巻き戻し" したところで消化する非ローカルティックがないため)
+		if ((localFrameGap > this._jumpTryThreshold || frameGap < 0) &&
 		    (!this._waitingStartPoint) &&
 		    (this._lastRequestedStartPointTime < this._currentTickTime)) {
 			// スナップショットを要求だけして続行する(スナップショットが来るまで進める限りは進む)。
@@ -491,11 +494,10 @@ export class GameLoop {
 		}
 
 		if (!this._skipping) {
-			const localFrameGap = (targetTime - (this._currentTickTime + this._localAdvanceTime)) / this._frameTime;
 			if ((localFrameGap > this._skipThreshold || this._tickBuffer.currentAge === 0) &&
 			    (this._tickBuffer.hasNextTick() || (this._omitInterpolatedTickOnReplay && this._foundLatestTick))) {
 				// ここでは常に `frameGap > 0` であることに注意。0の時にskipに入ってもすぐ戻ってしまう
-				const isTargetNear = frameGap <= this._skipThreshold; // (currentAge === 0) の時のみ真になりうることに注意
+				const isTargetNear = localFrameGap <= this._skipThreshold; // (currentAge === 0) の時のみ真になりうることに注意
 				this._startSkipping(isTargetNear);
 			}
 		}
