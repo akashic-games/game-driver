@@ -40,6 +40,16 @@ export interface GameLoopParameterObejct {
  * start() から stop() までの間、最後に呼び出された _amflow.authenticate() は Permission#readTick を返していなければならない。
  */
 export class GameLoop {
+	/**
+	 * 目標時刻関数を与えたリプレイにおいて次フレームとしてみなす閾値の猶予の比率。
+	 *
+	 * onFrame() の呼び出し間隔と目標時刻の差分とで誤差が生じる場合（典型的には目標時刻が整数値で丸め込まれるようなケース）において、
+	 * その誤差が蓄積されると _localAdvanceTime の値が実際の経過時刻と乖離してしまうことがある。
+	 * それを防ぐため、1フレームの経過時間が経っていなくても、この割合の時間が経過していれば1フレーム分の補間ティックを挿入する。
+	 * その代わりに次フレームにおける猶予時間を長くする。
+	 */
+	static REPLAY_TARGET_TIME_ANTICIPATE_RATE: number = 0.95;
+
 	errorTrigger: g.Trigger<any> = new g.Trigger();
 	rawTargetTimeReachedTrigger: g.Trigger<number> = new g.Trigger();
 
@@ -116,6 +126,7 @@ export class GameLoop {
 	_lastRequestedStartPointAge: number = -1;
 	_lastRequestedStartPointTime: number = -1;
 	_waitingNextTick: boolean = false;
+	_frameTimeTolerance: number; // _frameTime * REPLAY_TARGET_TIME_ANTICIPATE_RATE
 
 	/**
 	 * reset() 後、一度でも最新 (既知最新でなく実際の最新と思われる) tick を見つけたか。
@@ -127,7 +138,7 @@ export class GameLoop {
 	_foundLatestTick: boolean = false;
 
 	/**
-	 * _currentTickTime からローカルティック補間により進められた累積の経過時間。
+	 * _currentTickTime からローカルティック補間または目標時刻により進められた累積の経過時間。
 	 *
 	 * 通常、_doLocalTick() の呼び出しごとに _frameTime 分だけ加算される。
 	 * tick の消化により _currentTickTime が更新されるタイミングで本変数はリセットされる。
@@ -137,6 +148,8 @@ export class GameLoop {
 
 	_skipping: boolean = false;
 	_lastPollingTickTime: number = 0;
+	_lastTargetTime: number = 0;
+	_totalTargetTimeDelta: number = 0;
 
 	_clock: Clock;
 	_tickController: TickController;
@@ -149,6 +162,7 @@ export class GameLoop {
 		this._currentTime = param.startedAt;
 		this._currentTickTime = this._currentTime;
 		this._frameTime = 1000 / param.game.fps;
+		this._frameTimeTolerance = this._frameTime * GameLoop.REPLAY_TARGET_TIME_ANTICIPATE_RATE;
 
 		if (param.errorHandler) {
 			this.errorTrigger.add(param.errorHandler, param.errorHandlerOwner);
@@ -243,6 +257,8 @@ export class GameLoop {
 		this._lastRequestedStartPointTime = -1;  // 同上。
 		this._omittedTickDuration = 0;
 		this._localAdvanceTime = 0;
+		this._lastTargetTime = 0;
+		this._totalTargetTimeDelta = 0;
 		this._game._restartWithSnapshot(startPoint);
 	}
 
@@ -448,11 +464,13 @@ export class GameLoop {
 	_onFrame(frameArg: ClockFrameTriggerParameterObject): void {
 		if (this._loopMode !== LoopMode.Replay || !this._targetTimeFunc) {
 			this._onFrameNormal(frameArg);
+			this._lastTargetTime = 0;
 		} else {
 			const givenTargetTime = this._targetTimeFunc();
 			const targetTime = givenTargetTime + this._realTargetTimeOffset;
 			const prevTickTime = this._currentTickTime;
 			this._onFrameForTimedReplay(targetTime, frameArg);
+			this._lastTargetTime = targetTime;
 			// 目標時刻到達判定: 進めなくなり、あと1フレームで目標時刻を過ぎるタイミングを到達として通知する。
 			// 時間進行を進めていっても目標時刻 "以上" に進むことはないので「過ぎた」タイミングは使えない点に注意。
 			// (また、それでもなお (prevTime <= targetTime) の条件はなくせない点にも注意。巻き戻す時は (prevTime > targetTime) になる)
@@ -516,11 +534,29 @@ export class GameLoop {
 						// これ以上新しいティックが存在しない場合は現在時刻を目標時刻に合わせる。
 						// (_doLocalTick() により現在時刻が this._frameTime 進むのでその直前まで進める)
 						this._currentTime = targetTime - this._frameTime;
+						this._localAdvanceTime = targetTime - this._currentTickTime;
 					}
-					// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
-					// (経緯上ここだけフラグ名と逆っぽい挙動になってしまっている点に注意。TODO フラグを改名する)
-					if (targetTime > nextFrameTime)
-						this._doLocalTick();
+					// 補間ティックによる補正は未来方向のみ考慮する。そうでないと最新ティックより先での過去シーク (targetTimeDelta < 0) で補間ティックが挿入されなくなる。
+					if (!this._skipping && targetTime - this._lastTargetTime > 0) {
+						// 目標時刻関数は絶対時刻となり得るので初回呼び出し時 (_lastTargetTime === 0) は差分が過大になる。したがって差分を 0 として扱う。
+						let targetTimeDelta = this._lastTargetTime !== 0
+							? ((targetTime - this._lastTargetTime) + this._totalTargetTimeDelta)
+							: 0;
+						// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
+						for (let i = 0; i < this._skipTicksAtOnce; ++i) {
+							if (targetTimeDelta <= this._frameTimeTolerance) {
+								// 猶予をもたせてもなお次フレームの時間に満たない場合は補間ティックの挿入を見送る
+								break;
+							}
+							targetTimeDelta -= this._frameTime;
+							this._doLocalTick();
+						}
+						this._totalTargetTimeDelta = targetTimeDelta;
+					} else {
+						// (経緯上ここだけフラグ名と逆っぽい挙動になってしまっている点に注意。TODO フラグを改名する)
+						if (targetTime > nextFrameTime)
+							this._doLocalTick();
+					}
 				}
 				break;
 			}
