@@ -350,6 +350,7 @@ export class GameLoop {
 		if (conf.deltaTimeBrokenThreshold != null) {
 			this._clock.setDeltaTimeBrokenThreshold(conf.deltaTimeBrokenThreshold);
 		}
+		this._totalTargetTimeDelta = 0;
 	}
 
 	addTickList(tickList: pl.TickList): void {
@@ -536,27 +537,25 @@ export class GameLoop {
 						this._currentTime = targetTime - this._frameTime;
 						this._localAdvanceTime = targetTime - this._currentTickTime;
 					}
-					// 補間ティックによる補正は未来方向のみ考慮する。そうでないと最新ティックより先での過去シーク (targetTimeDelta < 0) で補間ティックが挿入されなくなる。
-					if (!this._skipping && targetTime - this._lastTargetTime > 0) {
-						// 目標時刻関数は絶対時刻となり得るので初回呼び出し時 (_lastTargetTime === 0) は差分が過大になる。したがって差分を 0 として扱う。
-						let targetTimeDelta = this._lastTargetTime !== 0
-							? ((targetTime - this._lastTargetTime) + this._totalTargetTimeDelta)
-							: 0;
-						// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
-						for (let i = 0; i < this._skipTicksAtOnce; ++i) {
-							if (targetTimeDelta <= this._frameTimeTolerance) {
-								// 猶予をもたせてもなお次フレームの時間に満たない場合は補間ティックの挿入を見送る
-								break;
-							}
-							targetTimeDelta -= this._frameTime;
-							this._doLocalTick();
-						}
-						this._totalTargetTimeDelta = targetTimeDelta;
-					} else {
-						// (経緯上ここだけフラグ名と逆っぽい挙動になってしまっている点に注意。TODO フラグを改名する)
-						if (targetTime > nextFrameTime)
-							this._doLocalTick();
+					// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
+					let targetTimeDelta = 0;
+					if (this._skipping || targetTime - this._lastTargetTime <= 0) {
+						// スキップ中または "実ティックを超えない範囲" での過去シーク (frameGap > 0 && targetTimeDelta < 0) では常に補間ティックを挿入する。
+						// (e.g. currentTickTime = 100 において targetTime が 200 から 150 に変更されるようなケース)
+						targetTimeDelta = this._frameTime;
+					} else if (this._lastTargetTime !== 0) {
+						// 目標時刻関数は絶対時刻となり得るので初回呼び出し時 (_lastTargetTime === 0) は差分が過大になる。したがって targetTimeDelta を算出しない。
+						targetTimeDelta = ((targetTime - this._lastTargetTime) + this._totalTargetTimeDelta);
 					}
+					for (let i = consumedFrame; i < this._skipTicksAtOnce; ++i) {
+						if (targetTimeDelta <= this._frameTimeTolerance) {
+							// 猶予をもたせてもなお次フレームの時間に満たない場合は補間ティックの挿入を次フレームまで見送る
+							break;
+						}
+						targetTimeDelta -= this._frameTime;
+						this._doLocalTick();
+					}
+					this._totalTargetTimeDelta = targetTimeDelta;
 				}
 				break;
 			}
@@ -593,6 +592,7 @@ export class GameLoop {
 			this._currentTime = nextFrameTime;
 			this._currentTickTime = nextTickTime;
 			this._localAdvanceTime = 0;
+			this._totalTargetTimeDelta = 0;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
 			this._events.length = 0;
@@ -814,6 +814,7 @@ export class GameLoop {
 			// コマ送り実行時、Tickの受信は実行に影響しない。
 			return;
 		}
+		this._totalTargetTimeDelta = 0;
 		this._stopWaitingNextTick();
 	}
 
