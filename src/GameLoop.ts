@@ -539,7 +539,7 @@ export class GameLoop {
 					}
 					// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
 					let targetTimeDelta = 0;
-					if (this._skipping || targetTime - this._lastTargetTime <= 0) {
+					if (this._skipping || targetTime - this._lastTargetTime < 0) {
 						// スキップ中または "実ティックを超えない範囲" での過去シーク (frameGap > 0 && targetTimeDelta < 0) では常に補間ティックを挿入する。
 						// (e.g. currentTickTime = 100 において targetTime が 200 から 150 に変更されるようなケース)
 						targetTimeDelta = this._frameTime;
