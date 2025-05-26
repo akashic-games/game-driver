@@ -350,7 +350,11 @@ export class GameLoop {
 		if (conf.deltaTimeBrokenThreshold != null) {
 			this._clock.setDeltaTimeBrokenThreshold(conf.deltaTimeBrokenThreshold);
 		}
+
+		// 以下は本来はプロパティごとに条件付き（e.g. deltaTimeBrokenThreshold のみが変更された場合など）でリセットすべきであるが、対象が多く条件分岐が煩雑になるため無条件にリセットしている。
+		// 本メソッドは滅多に呼ばれず、次の 1 フレームの補間ティックが少なくなる程度のため影響も軽微である。
 		this._totalTargetTimeDelta = 0;
+		this._lastTargetTime = 0;
 	}
 
 	addTickList(tickList: pl.TickList): void {
@@ -465,7 +469,6 @@ export class GameLoop {
 	_onFrame(frameArg: ClockFrameTriggerParameterObject): void {
 		if (this._loopMode !== LoopMode.Replay || !this._targetTimeFunc) {
 			this._onFrameNormal(frameArg);
-			this._lastTargetTime = 0;
 		} else {
 			const givenTargetTime = this._targetTimeFunc();
 			const targetTime = givenTargetTime + this._realTargetTimeOffset;
@@ -539,11 +542,12 @@ export class GameLoop {
 					}
 					// ティックがなく、目標時刻に到達していない場合、補間ティックを挿入する。
 					let targetTimeDelta = 0;
-					if (this._skipping || targetTime - this._lastTargetTime < 0) {
-						// スキップ中または "実ティックを超えない範囲" での過去シーク (frameGap > 0 && targetTimeDelta < 0) では常に補間ティックを挿入する。
+					if (this._skipping || targetTime - this._lastTargetTime < 0 || this._lastTargetTime === 0) {
+						// スキップ中または "実ティックを超えない範囲" での過去シーク (frameGap > 0 && targetTimeDelta < 0) では常に補間ティックを一つだけ挿入する。
 						// (e.g. currentTickTime = 100 において targetTime が 200 から 150 に変更されるようなケース)
+						// また、初回呼び出し時 (_lastTargetTime === 0) は差分が過大になるため、同様に 1 フレーム分の補間ティックを挿入する。
 						targetTimeDelta = this._frameTime;
-					} else if (this._lastTargetTime !== 0) {
+					} else {
 						// 目標時刻関数は絶対時刻となり得るので初回呼び出し時 (_lastTargetTime === 0) は差分が過大になる。したがって targetTimeDelta を算出しない。
 						targetTimeDelta = ((targetTime - this._lastTargetTime) + this._totalTargetTimeDelta);
 					}
