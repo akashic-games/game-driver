@@ -61,6 +61,11 @@ export interface EventFilterEntry {
  * 詳細は `setMode()` のコメントを参照。
  */
 export class EventBuffer implements pdi.PlatformEventHandler {
+	/**
+	 * ローカルイベントを受信した時にfireされる `g.Trigger` 。
+	 */
+	onLocalEventReceive: g.Trigger<pl.Event> = new g.Trigger();
+
 	_amflow: AMFlow;
 	_isLocalReceiver: boolean;
 	_isReceiver: boolean;
@@ -202,6 +207,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 				!(this._skipping && this._discardsLocalEventsDuringSkip)
 			) {
 				this._unfilteredLocalEvents.push(pev);
+				this.onLocalEventReceive.fire(pev);
 			}
 			return;
 		}
@@ -226,6 +232,7 @@ export class EventBuffer implements pdi.PlatformEventHandler {
 
 	/**
 	 * filterを無視してイベントを追加する。
+	 * (本メソッド経由の場合 `onLocalEventReceive` の発火は不定であることに注意)
 	 */
 	addEventDirect(pev: pl.Event): void {
 		if (EventBuffer.isEventLocal(pev)) {

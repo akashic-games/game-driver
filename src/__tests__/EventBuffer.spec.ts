@@ -59,10 +59,14 @@ describe("EventBuffer", function () {
 		const sent: pl.Event[] = [];
 		amflow.onEvent(sent.push.bind(sent));
 
+		const localEvents: pl.Event[] = [];
+		self.onLocalEventReceive.add(ev => void localEvents.push(ev));
+
 		self.onEvent(msge);
 		self.processEvents();
 		expect(sent.length).toBe(0);
 		expect(self.readLocalEvents()).toEqual([msge]);
+		expect(localEvents).toEqual([msge]);
 
 		self.setMode({ isLocalReceiver: false });
 
@@ -70,6 +74,7 @@ describe("EventBuffer", function () {
 		self.processEvents();
 		expect(sent.length).toBe(0);
 		expect(self.readLocalEvents()).toEqual(null);
+		expect(localEvents).toEqual([msge]); // 変化なし
 
 		self.addEventDirect(msge);
 		expect(sent.length).toBe(0);
@@ -81,6 +86,7 @@ describe("EventBuffer", function () {
 		self.addEventDirect(msge); // パス稼ぎ
 		expect(sent.length).toBe(0);
 		expect(self.readLocalEvents()).toEqual([msge, msge]);
+		expect(localEvents).toEqual([msge]); // 変化なし
 	});
 
 	it("drops received events if isDiscarder", function () {
@@ -421,6 +427,9 @@ describe("EventBuffer", function () {
 		const sent: pl.Event[] = [];
 		amflow.onEvent(sent.push.bind(sent));
 
+		const localEvents: pl.Event[] = [];
+		self.onLocalEventReceive.add(ev => void localEvents.push(ev));
+
 		self.setMode({ isSender: true, defaultEventPriority: 1 });
 
 		// ローカルイベント
@@ -432,6 +441,7 @@ describe("EventBuffer", function () {
 		expect(self._localBuffer).toEqual([msge]);
 		expect(self._buffer).toEqual([]);
 		expect(self._joinLeaveBuffer).toEqual([]);
+		expect(localEvents).toEqual([msge]);
 
 		// 非ローカルイベント
 		// Message: Code, EventFlags, PlayerId, Message, Local
@@ -444,6 +454,7 @@ describe("EventBuffer", function () {
 		expect(self._buffer).toEqual([]);
 		expect(self._joinLeaveBuffer).toEqual([]);
 		expect(msge2[EventIndex.Message.EventFlags]).toBe(1);  // 優先度省略 (null) が onEvent() で上書きされた
+		expect(localEvents).toEqual([msge]); // 変化なし
 
 		// Joinイベント
 		// Join: Code, EventFlags, PlayerId, PlayerName, StorageData, Local
@@ -454,6 +465,7 @@ describe("EventBuffer", function () {
 		expect(self._localBuffer).toEqual([msge]);
 		expect(self._buffer).toEqual([]);
 		expect(self._joinLeaveBuffer).toEqual([]);
+		expect(localEvents).toEqual([msge]); // 変化なし
 
 		// AMFlow経由 - receiver ではないので何も起きない
 		// PointDown: Code, EventFlags, PlayerId, PointerId, X, Y, EntityId, Local
@@ -471,6 +483,7 @@ describe("EventBuffer", function () {
 		expect(self._localBuffer).toEqual([]);
 		expect(self._buffer).toEqual([]);
 		expect(self._joinLeaveBuffer).toEqual([]);
+		expect(localEvents).toEqual([msge]); // 変化なし
 	});
 
 	it("can handle point events", function (done: () => void) {
