@@ -113,6 +113,14 @@ export class Clock {
 	running: boolean;
 
 	/**
+	 * クロックが停止中か。
+	 * 本値が真の場合、start() してもクロックは実行されない。
+	 * suspend() された後、resume() されるまでの間、またその時のみ真。
+	 * この値は参照のために公開される。この値の変更には `suspend()`, `resume()` を用いること。
+	 */
+	suspended: boolean;
+
+	/**
 	 * 1フレーム時間が経過した時にfireされる `g.Trigger` 。
 	 */
 	frameTrigger: g.Trigger<ClockFrameTriggerParameterObject>;
@@ -137,6 +145,7 @@ export class Clock {
 	_totalDeltaTime: number;
 	_onLooperCall_bound: (deltaTime: number) => number;
 	_looper: pdi.Looper;
+	_looperRunning: boolean;
 
 	// this.fps と this.scaleFactor から定まる値のキャッシュ。
 	_waitTime: number;             // 1/(FPS * scaleFactor)
@@ -159,9 +168,11 @@ export class Clock {
 		}
 
 		this.running = false;
+		this.suspended = false;
 		this._totalDeltaTime = 0;
 		this._onLooperCall_bound = this._onLooperCall.bind(this);
 		this._looper = this._platform.createLooper(this._onLooperCall_bound);
+		this._looperRunning = false;
 
 		this._waitTime = 0;
 		this._waitTimeDoubled = 0;
@@ -175,15 +186,25 @@ export class Clock {
 			return;
 		this._totalDeltaTime = 0;
 		this._updateWaitTimes(this.fps, this.scaleFactor);
-		this._looper.start();
 		this.running = true;
+		this._applyLooperState();
 	}
 
 	stop(): void {
 		if (!this.running)
 			return;
-		this._looper.stop();
 		this.running = false;
+		this._applyLooperState();
+	}
+
+	suspend(): void {
+		this.suspended = true;
+		this._applyLooperState();
+	}
+
+	resume(): void {
+		this.suspended = false;
+		this._applyLooperState();
 	}
 
 	/**
@@ -254,5 +275,17 @@ export class Clock {
 		this._waitTimeMax = Math.max(scaleFactor * (1000 * this._maxFramePerOnce / realFps) | 0, 1);
 		this._skipFrameWaitTime = (this._waitTime * Clock.ANTICIPATE_RATE) | 0;
 		this._realMaxFramePerOnce = this._maxFramePerOnce * scaleFactor;
+	}
+
+	private _applyLooperState(): void {
+		const shouldRun = this.running && !this.suspended;
+
+		if (shouldRun && !this._looperRunning) {
+			this._looper.start();
+			this._looperRunning = true;
+		} else if (!shouldRun && this._looperRunning) {
+			this._looper.stop();
+			this._looperRunning = false;
+		}
 	}
 }

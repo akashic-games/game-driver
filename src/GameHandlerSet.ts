@@ -16,6 +16,7 @@ export class GameHandlerSet implements g.GameHandlerSet {
 	raiseTickTrigger: g.Trigger<pl.Event[] | undefined> = new g.Trigger();
 	snapshotTrigger: g.Trigger<amf.StartPoint> = new g.Trigger();
 	changeSceneModeTrigger: g.Trigger<g.SceneMode> = new g.Trigger();
+	changeLocalTickSuspendedTrigger: g.Trigger<boolean> = new g.Trigger();
 	isSnapshotSaver: boolean;
 	_getCurrentTimeFunc: (() => number) | null = null;
 	_eventFilterFuncs: GameEventFilterFuncs | null = null;
@@ -83,6 +84,14 @@ export class GameHandlerSet implements g.GameHandlerSet {
 	getInstanceType(): "active" | "passive" {
 		// NOTE: Active かどうかは `shouldSaveSnapshot()` と等価なので、簡易対応としてこの実装を用いる。
 		return this.shouldSaveSnapshot() ? "active" : "passive";
+	}
+
+	suspendLocalTick(): void {
+		this.changeLocalTickSuspendedTrigger.fire(true);
+	}
+
+	resumeLocalTick(): void {
+		this.changeLocalTickSuspendedTrigger.fire(false);
 	}
 
 	saveSnapshot(
