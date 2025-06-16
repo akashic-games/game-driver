@@ -293,6 +293,7 @@ export class GameLoop {
 	setExecutionMode(execMode: ExecutionMode): void {
 		this._executionMode = execMode;
 		this._tickController.setExecutionMode(execMode);
+		// resume() が必要でないケースもありうるが、条件が煩雑で影響も軽微なので無条件で suspend を解除する
 		this.resume();
 	}
 
@@ -362,6 +363,7 @@ export class GameLoop {
 			this._clock.setDeltaTimeBrokenThreshold(conf.deltaTimeBrokenThreshold);
 		}
 
+		// resume() が必要でないケースもありうるが、条件が煩雑で影響も軽微なので無条件で suspend を解除する
 		this.resume();
 
 		// 以下は本来はプロパティごとに条件付き（e.g. deltaTimeBrokenThreshold のみが変更された場合など）でリセットすべきであるが、対象が多く条件分岐が煩雑になるため無条件にリセットしている。
@@ -453,6 +455,9 @@ export class GameLoop {
 	}
 
 	_handleLocalTickSuspended(suspended: boolean): void {
+		// 以下に該当する場合は clock を suspend しない。
+		//  - Active: tick が生成できなくなるため
+		//  - Replay: targetTimeFunc() の呼び出しをポーリングできなくなるため
 		if (this._executionMode === ExecutionMode.Active || this._loopMode !== LoopMode.Realtime)
 			return;
 
