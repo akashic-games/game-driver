@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.26.0
+* @akashic/akashic-engine@3.21.0 に追従
+
 ## 2.25.1
 * 内部モジュールの更新
 

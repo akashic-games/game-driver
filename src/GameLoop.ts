@@ -233,10 +233,12 @@ export class GameLoop {
 		this._game.rawHandlerSet.raiseEventTrigger.add(this._onGameRaiseEvent, this);
 		this._game.rawHandlerSet.raiseTickTrigger.add(this._onGameRaiseTick, this);
 		this._game.rawHandlerSet.changeSceneModeTrigger.add(this._handleSceneChange, this);
+		this._game.rawHandlerSet.changeLocalTickSuspendedTrigger.add(this._handleLocalTickSuspended, this);
 		this._game._onStart.add(this._onGameStarted, this);
 		this._tickBuffer.gotNextTickTrigger.add(this._onGotNextFrameTick, this);
 		this._tickBuffer.gotNoTickTrigger.add(this._onGotNoTick, this);
 		this._tickBuffer.start();
+		this._eventBuffer.onLocalEventReceive.add(this._onReceiveLocalEvent, this);
 		this._updateGameAudioSuppression();
 	}
 
@@ -272,6 +274,14 @@ export class GameLoop {
 		this.running = false;
 	}
 
+	suspend(): void {
+		this._clock.suspend();
+	}
+
+	resume(): void {
+		this._clock.resume();
+	}
+
 	setNextAge(age: number): void {
 		this._tickController.setNextAge(age);
 	}
@@ -283,6 +293,8 @@ export class GameLoop {
 	setExecutionMode(execMode: ExecutionMode): void {
 		this._executionMode = execMode;
 		this._tickController.setExecutionMode(execMode);
+		// resume() が必要でないケースもありうるが、条件が煩雑で影響も軽微なので無条件で suspend を解除する
+		this.resume();
 	}
 
 	getLoopConfiguration(): LoopConfiguration {
@@ -350,6 +362,9 @@ export class GameLoop {
 		if (conf.deltaTimeBrokenThreshold != null) {
 			this._clock.setDeltaTimeBrokenThreshold(conf.deltaTimeBrokenThreshold);
 		}
+
+		// resume() が必要でないケースもありうるが、条件が煩雑で影響も軽微なので無条件で suspend を解除する
+		this.resume();
 
 		// 以下は本来はプロパティごとに条件付き（e.g. deltaTimeBrokenThreshold のみが変更された場合など）でリセットすべきであるが、対象が多く条件分岐が煩雑になるため無条件にリセットしている。
 		// 本メソッドは滅多に呼ばれず、次の 1 フレームの補間ティックが少なくなる程度のため影響も軽微である。
@@ -436,6 +451,21 @@ export class GameLoop {
 					this.errorTrigger.fire(new Error("Unknown LocalTickMode: " + localMode));
 					return;
 			}
+		}
+	}
+
+	_handleLocalTickSuspended(suspended: boolean): void {
+		// 以下に該当する場合は clock を suspend しない。
+		//  - Active: tick が生成できなくなるため
+		//  - Replay: targetTimeFunc() の呼び出しをポーリングできなくなるため
+		if (this._executionMode === ExecutionMode.Active || this._loopMode !== LoopMode.Realtime)
+			return;
+
+		if (suspended) {
+			if (!this._tickBuffer.hasNextTick())
+				this.suspend();
+		} else {
+			this.resume();
 		}
 	}
 
@@ -580,11 +610,13 @@ export class GameLoop {
 					if (targetTime <= nextTickTime) {
 						// 次ティック時刻まで進めると目標時刻を超えてしまう: 目標時刻直前まで動いて抜ける(目標時刻直前までは来ないと目標時刻到達通知が永久にできない)
 						this._omittedTickDuration += targetTime - this._currentTickTime;
+						this._localAdvanceTime += targetTime - this._currentTickTime;
 						this._currentTime = Math.floor(targetTime / this._frameTime) * this._frameTime;
 						break;
 					}
 					nextFrameTime = nextTickTime;
 					this._omittedTickDuration += nextTickTime - this._currentTickTime;
+					this._localAdvanceTime += nextTickTime - this._currentTickTime;
 				} else {
 					if (this._sceneLocalMode === "interpolate-local") {
 						this._doLocalTick();
@@ -752,6 +784,7 @@ export class GameLoop {
 					// リプレイモードに切り替えた時に矛盾しないよう時刻を補正する(当該ティック時刻まで待った扱いにする)。
 					nextFrameTime = Math.ceil(explicitNextTickTime / this._frameTime) * this._frameTime;
 					this._omittedTickDuration += nextFrameTime - this._currentTickTime;
+					this._localAdvanceTime += nextFrameTime - this._currentTickTime;
 				} else {
 					if (this._sceneLocalMode === "interpolate-local") {
 						this._doLocalTick();
@@ -763,7 +796,6 @@ export class GameLoop {
 
 			this._currentTime = nextFrameTime;
 			this._currentTickTime = explicitNextTickTime ?? (this._currentTickTime + this._frameTime);
-			this._localAdvanceTime = 0;
 			const tick = this._tickBuffer.consume();
 			let consumedAge = -1;
 			this._events.length = 0;
@@ -785,6 +817,7 @@ export class GameLoop {
 					sceneChanged = game.tick(true, Math.floor(this._omittedTickDuration / this._frameTime), this._events);
 				}
 				this._omittedTickDuration = 0;
+				this._localAdvanceTime = 0;
 			} else {
 				// 時間は経過しているが消費すべきティックが届いていない
 				this._tickBuffer.requestTicks();
@@ -812,6 +845,9 @@ export class GameLoop {
 	}
 
 	_onGotNextFrameTick(): void {
+		// Tickを受信したら問答無用でクロックを開始する。
+		this.resume();
+
 		if (!this._waitingNextTick)
 			return;
 		if (this._loopMode === LoopMode.FrameByFrame) {
@@ -874,6 +910,10 @@ export class GameLoop {
 
 	_onEventsProcessed(): void {
 		this._eventBuffer.processEvents(this._sceneLocalMode === "full-local");
+	}
+
+	_onReceiveLocalEvent(_pev: pl.Event): void {
+		this.resume();
 	}
 
 	_setLoopRenderMode(mode: LoopRenderMode): void {

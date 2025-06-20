@@ -300,4 +300,61 @@ describe("Clock", function() {
 
 		clock.stop();
 	});
+
+	function createMockClockAndLooper() {
+		const pf = new mockpf.Platform({});
+		const fps = 50;
+		const clock = new Clock({
+			fps: fps,
+			platform: pf,
+			maxFramePerOnce: 8,
+		});
+		const looper = clock._looper as mockpf.Looper;
+		looper.start = jest.fn();
+		looper.stop = jest.fn();
+		return { clock, looper };
+	}
+
+	it("should call Looper#start() once when start() is called", () => {
+		const { clock, looper } = createMockClockAndLooper();
+		clock.start();
+		expect(looper.start).toHaveBeenCalledTimes(1);
+	});
+
+	it("should not call Looper#start() again if already running", () => {
+		const { clock, looper } = createMockClockAndLooper();
+		clock.start();
+		clock.start();
+		expect(looper.start).toHaveBeenCalledTimes(1);
+	});
+
+	it("should call Looper#stop() once when stop() is called after start()", () => {
+		const { clock, looper } = createMockClockAndLooper();
+		clock.start();
+		clock.stop();
+		expect(looper.stop).toHaveBeenCalledTimes(1);
+	});
+
+	it("should call Looper#stop() once when suspend() is called while running", () => {
+		const { clock, looper } = createMockClockAndLooper();
+		clock.start();
+		clock.suspend();
+		expect(looper.stop).toHaveBeenCalledTimes(1);
+	});
+
+	it("should call Looper#start() again when resume() is called after suspend()", () => {
+		const { clock, looper } = createMockClockAndLooper();
+		clock.start();
+		clock.suspend();
+		clock.resume();
+		expect(looper.start).toHaveBeenCalledTimes(2);
+		expect(looper.stop).toHaveBeenCalledTimes(1);
+	});
+
+	it("should not call Looper#start() when resume() is called while not running", () => {
+		const { clock, looper } = createMockClockAndLooper();
+		clock.suspend();
+		clock.resume();
+		expect(looper.start).not.toHaveBeenCalled();
+	});
 });
