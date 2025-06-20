@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## unreleased changes
+## 2.26.0
 * @akashic/akashic-engine@3.21.0 に追従
 
 ## 2.25.1
