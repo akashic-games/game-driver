@@ -54,5 +54,12 @@
     "@akashic/akashic-engine": "~3.21.0",
     "@akashic/amflow-util": "~1.5.0",
     "@akashic/game-configuration": "~2.5.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.11.0",
+      "onFail": "error"
+    }
   }
 }
