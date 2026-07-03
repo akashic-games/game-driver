@@ -51,5 +51,12 @@
   "dependencies": {
     "@akashic/akashic-engine": "~1.14.0",
     "es6-promise": "^4.2.8"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.11.0",
+      "onFail": "error"
+    }
   }
 }
